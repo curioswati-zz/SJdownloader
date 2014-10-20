@@ -1,5 +1,5 @@
 """
-The pdf converter main module.
+The downloader main module.
 It creates a GUI window with the help of two classes.
 It import:
     -wx
@@ -8,23 +8,30 @@ It import:
 import wx
 from class_Mypanel import Mypanel
 
-app = wx.App()
+def main():
+    '''
+    The main function which creates the window and box objects and uses
+    Mypanel class for creating widgets and binding events.
+    '''
+    app = wx.App()
 
-#window object
-win = wx.Frame(None,title = "simple Editor",size=(500,400))
+    #window object
+    win = wx.Frame(None,title = "Downloader",size=(500,400))
 
-#box object
-bkg = wx.Panel(win)
+    #box object
+    bkg = wx.Panel(win)
 
-#packing the box
-Mypanel(bkg,win)
+    #packing the box
+    Mypanel(bkg,win)
 
+    #show the window
+    win.Show()
 
-#show the window
-win.Show()
+    #execute the loop for maintaining the window
+    app.MainLoop()
 
-#execute the loop for maintaining the window
-app.MainLoop()
+    #destroy window
+    #win.Destroy()
 
-#destroy window
-#win.Destroy()
+if __name__ == '__main__':
+    main()

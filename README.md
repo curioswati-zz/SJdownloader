@@ -7,6 +7,7 @@ It includes a few scripts.
 The GUI script is the main script to run.
 First input is the URL, of the main page.
 Second input is the directory name, where to save the images.
+Third optional input is a regex pattern to filter the links according to user needs.
 
 Standard modules used:
 ---------------------
