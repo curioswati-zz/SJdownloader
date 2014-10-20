@@ -30,7 +30,6 @@ def main(urls, path):
 
     print "Downloading into "+path+" ..."
     for url in urls:
-        print url
         name = extract_name(url)
         print name
         try:
@@ -40,7 +39,6 @@ def main(urls, path):
             save_file.close()
         except:
             print "The connection could not establish"
-        #urllib.urlretrieve(url,path+"/"+name)                       #saving the image, while opening
             
 if __name__ == "__main__":
     main(url,dir_)
