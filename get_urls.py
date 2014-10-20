@@ -9,6 +9,7 @@ It defines:
   -main
   -get_all_links
   -get_next_url
+  -get_page
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ''''''''''''''''''''''''''
 '''Required modules'''
@@ -23,29 +24,47 @@ def get_next_url(page):
     Finally returns that url, and its end point.
     returns none and 0, if href is not found.''
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    print "entered get_next"
+    #print "entered get_next"
     
     start_link = page.find('href=')                       #to find if any url exist.
-    if start_link == -1:                                  #if url not found
-        return None,0
-    start_url_at = page.find('"',start_link+1)            #starting of the url string.
-    url_end = page.find('"',start_url_at+1)               #end of the url string. 
-    url = page[start_url_at+1:url_end]                    #the url.
-    return url,url_end                                    #url, and its end point.
+    start_src = page.find('src=')                         #to find if any src exist.
 
-def get_all_links(page):
+    if start_link:        
+        start_url_at = page.find('"',start_link+1)            #starting of the url string.
+        url_end = page.find('"',start_url_at+1)               #end of the url string. 
+        url = page[start_url_at+1:url_end]                    #the url.
+
+    if start_src:        
+        start_src_at = page.find('"',start_src+1)            #starting of the url string.
+        src_end = page.find('"',start_src_at+1)               #end of the url string. 
+        src = page[start_src_at+1:src_end]                    #the url.
+
+    if url_end > src_end:
+        end = url_end
+    else:
+        end = src_end
+
+    return url,src,end                                    #url, and its end point.
+
+def get_all_links(page,home_url):
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     ''This module collects all urls from the input page
     It calls get_next_target to get a url in the page.
     one by one collects urls and return a list of them.''
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    print "entered get_all_links"
+    #   print "entered get_all_links"
     urls = []
     while True:
-        url,end_pos =  get_next_url(page)                 #collecting the url and the position on the page, where url ends.
-        if url:                                           #if url was found.
-            urls.append(url)                              #creating an entry in the list.
-            page = page[end_pos:]                         #extracting the remaining part of the page after the end_pos.
+        url,src,end_pos =  get_next_url(page)                 #collecting the url and the position on the page, where url ends.
+        if url or src:                                        #if url was found.
+            if not url.startswith("http"):
+                url = home_url+url
+                
+            if not src.startswith("http"):
+                src = home_url+src
+                
+            urls.extend([url,src])                            #creating an entry in the list.
+            page = page[end_pos:]                             #extracting the remaining part of the page after the end_pos.
         else:
             break
     return urls
@@ -58,14 +77,15 @@ def get_page(page):
     If any network error occurs and page is not fetched, it provides
     the user with suitable message.''
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    print "entered get_page"
+    #print "entered get_page"
     try:
         return urllib.urlopen(page).read()
     except:
         print "There was some problem fetching the file."
         return None
 
-def main(url):
-    print "Entered get_urls"
-    page = get_page(url)
-    return get_all_links(page)                            #all the urls found on the page.
+def main(home_url):
+    #print "Entered get_urls"
+    page = get_page(home_url)
+    if page:
+        return get_all_links(page,home_url)                            #all the urls found on the page.
