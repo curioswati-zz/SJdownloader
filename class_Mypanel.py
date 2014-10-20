@@ -10,6 +10,7 @@ It imports:
 It defines:
     -__init__
     -download
+    -filter
     -browse
     -cancel
     -close
@@ -17,7 +18,7 @@ It defines:
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 """Required modules"""
 import wx
-import get_images
+import get_urls,downloader
 import re
 
 class Mypanel(object):
@@ -80,8 +81,12 @@ class Mypanel(object):
         bkg.SetSizer(hbox)
 
     def download(self,event):
-        url = self.url.GetValue()
-        
+        urls_to_download = self.contents.GetValue().split('\n')
+        try:
+            downloader.main(urls_to_download,self.path)
+        except AttributeError:
+            print "Please select a location"
+            
     def browse(self,event):
         '''
         The function is bind with the browse button.
@@ -98,9 +103,11 @@ class Mypanel(object):
 
         dlg.SetPath(dir_)
         if dlg.ShowModal() == wx.ID_OK:
-            self.log.WriteText('You selected: %s\n' % dlg.GetPath())
+            print('You selected: %s\n' % dlg.GetPath())
+            self.path = dlg.GetPath()
 
         dlg.Destroy()
+        self.dir.SetValue(self.path)
         
     def cancel(self,event):
         self.url.SetValue(" ")
@@ -112,15 +119,16 @@ class Mypanel(object):
         It uses regex to filter and display a list of urls matching the pattern.
         The pattern is specified in the box called regex.
         '''
-        
-        pattern = re.compile(self.regex.GetValue())
+
         urls = get_urls.main(self.url.GetValue())
-        urls = '\n'.join(urls)
+        pattern = re.compile(self.regex.GetValue())
+        if urls:
+            urls = '\n'.join(urls)
 
-        filtered = re.findall(pattern,urls)
-        filtered = '\n'.join(filtered)
+            filtered = re.findall(pattern,urls)
+            filtered = '\n'.join(filtered)
 
-        self.contents.SetValue(filtered)
+            self.contents.SetValue(filtered)
         
     def close(self,event):
         self.win.Destroy()
