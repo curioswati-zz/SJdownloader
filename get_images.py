@@ -21,7 +21,7 @@ def get_image_url(page):
     """ 
     Returns image urls found on page. 
     """
-    start = page.find("src=")                                           #recognize image with src tag
+    start = page.find("href=")                                          #recognize image with src tag
     if start == -1:                                                     #if no src found
         return None,0
     url_start = page.find('"',start+1)                                
@@ -29,22 +29,42 @@ def get_image_url(page):
     url = page[url_start:url_end]                                       #extracting the url from src
     return url,url_end
 
-def get_images(home_url,page,path):
+def get_all_urls(home_url):
     """
-    Downloads images using image_urls found on page. 
+    Finds all image urls on page
     """
-    while True:
-        url,end = get_image_url(page)
-        if url:
-            if url.endswith(".jpg") or url.endswith(".jpeg"):
-                if not url.startswith("http"):                           #if url was referenced from home_url; 
-                    url = home_url+url[2:]                               #add that
-                name = extract_name(url)                                 #extracting name of the image
-                print name
-                urllib.urlretrieve(url,path+"/"+name)                    #saving the image, while opening
-            page = page[end:]                                            #moving forward in the page
-        else:   
-            break
+    page = get_page(home_url)
+    if page:
+        urls = []
+        while True:
+            url,end = get_image_url(page)
+            if url:
+                if not url.startswith("http"):
+                    url = home_url+url[2:]   
+                urls.append(url)
+                page = page[end:]
+
+            else:
+                break
+    return urls
+            
+##def get_images(home_url,page,path):
+##    """
+##    Downloads images using image_urls found on page. 
+##    """
+##    while True:
+##        
+##        if url:
+##            if url.endswith(".jpg") or url.endswith(".jpeg"):
+##                if not url.startswith("http"):                           #if url was referenced from home_url; 
+##                    url = home_url+url[2:]                               #add that
+##                name = extract_name(url)                                 #extracting name of the image
+##                print name
+##                urllib.urlretrieve(url,path+"/"+name)                    #saving the image, while opening
+##            page = page[end:]                                            #moving forward in the page
+##        else:   
+##            break
+##
 
 def extract_name(url):
     """
