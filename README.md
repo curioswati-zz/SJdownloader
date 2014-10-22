@@ -1,13 +1,21 @@
 Downloader is a python project created for downloading stuff from internet.
 * * *
 
+Introduction:
+------------
+The project is initiated to provide a simple but yet powerful tool to download content from internet easily. It is not for commercial use. It provides a GUI based interface, where the user needs to enter url of site.
+All the links available on the page are listed as soon as the url is entered.
+There is option available to filter links according to user requirement.
+I hope, it will be of help to all.
+
 Instructions:
 ------------
-It includes a few scripts.
-The GUI script is the main script to run.
-First input is the URL, of the main page.
-Second input is the directory name, where to save the images.
-Third optional input is a regex pattern to filter the links according to user needs.
+The project is under work.
+Until now, it has individual python scripts for various tasks, which are all written here only. The GUI script is the main script to run.
+
+Dependencies:
+-------------
+There are no external packages needed, all the requirements are satisfied by the python itself. They are listed in standard modules section. As for now, the scripts requires wxpython to run.
 
 Standard modules used:
 ---------------------
