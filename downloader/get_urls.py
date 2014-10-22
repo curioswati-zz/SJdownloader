@@ -21,30 +21,31 @@ def get_next_url(page):
     ''This module finds the first url from the input page.
     where the href tag is found, is the starting of url.
     from the double qoutes, it finds end of the url.
-    Finally returns that url, and its end point.
-    returns none and 0, if href is not found.''
+    In the same way, it extracts src tags to find image and video urls.
+    Finally returns the url and src, and its end point.
+    returns none and 0, if both the href and src are not found.''
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     #print "entered get_next"
     
-    start_link = page.find('href=')                       #to find if any url exist.
-    start_src = page.find('src=')                         #to find if any src exist.
+    start_link = page.find('href=')                    #to find if any url exist.
+    start_src = page.find('src=')                      #to find if any src exist.
 
     if start_link:        
-        start_url_at = page.find('"',start_link+1)            #starting of the url string.
-        url_end = page.find('"',start_url_at+1)               #end of the url string. 
-        url = page[start_url_at+1:url_end]                    #the url.
+        start_url_at = page.find('"',start_link+1)     #starting of the url string.
+        url_end = page.find('"',start_url_at+1)        #end of the url string. 
+        url = page[start_url_at+1:url_end]             #the url.
 
     if start_src:        
-        start_src_at = page.find('"',start_src+1)            #starting of the url string.
-        src_end = page.find('"',start_src_at+1)               #end of the url string. 
-        src = page[start_src_at+1:src_end]                    #the url.
+        start_src_at = page.find('"',start_src+1)      #starting of the src string.
+        src_end = page.find('"',start_src_at+1)        #end of the src string. 
+        src = page[start_src_at+1:src_end]             #the src.
 
     if url_end > src_end:
         end = url_end
     else:
         end = src_end
 
-    return url,src,end                                    #url, and its end point.
+    return url,src,end                                 #url, and its end point.
 
 def get_all_links(page,home_url):
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -55,16 +56,17 @@ def get_all_links(page,home_url):
     #   print "entered get_all_links"
     urls = []
     while True:
-        url,src,end_pos =  get_next_url(page)                 #collecting the url and the position on the page, where url ends.
-        if url or src:                                        #if url was found.
-            if not url.startswith("http"):
-                url = home_url+url
+        url,src,end_pos =  get_next_url(page)          #collecting the url and the position on the page, where url ends.
+        if url or src:                                 #if url was found.
+                                            
+            if not url.startswith("http"):             #if url is referenced from home page, then adding that to           
+                url = home_url+url                      #the starting of url.
                 
             if not src.startswith("http"):
                 src = home_url+src
                 
-            urls.extend([url,src])                            #creating an entry in the list.
-            page = page[end_pos:]                             #extracting the remaining part of the page after the end_pos.
+            urls.extend([url,src])                     #creating entry in the list.
+            page = page[end_pos:]                      #extracting the remaining part of the page after the end_pos.
         else:
             break
     return urls
@@ -88,4 +90,4 @@ def main(home_url):
     #print "Entered get_urls"
     page = get_page(home_url)
     if page:
-        return get_all_links(page,home_url)                            #all the urls found on the page.
+        return get_all_links(page,home_url)            #all the urls found on the page.
