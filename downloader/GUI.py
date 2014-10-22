@@ -16,7 +16,7 @@ def main():
     app = wx.App()
 
     #window object
-    win = wx.Frame(None,title = "Downloader",size=(500,400))
+    win = wx.Frame(None,title = "Downloader",size=(600,500))
 
     #box object
     bkg = wx.Panel(win)
