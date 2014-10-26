@@ -30,22 +30,27 @@ def get_next_url(page):
     start_link = page.find('href=')                    #to find if any url exist.
     start_src = page.find('src=')                      #to find if any src exist.
 
-    if start_link:        
+    #setting default, for when nothing found
+    url_end = 0
+    src_end = 0
+    url = src = None
+
+    if start_link != -1:        
         start_url_at = page.find('"',start_link+1)     #starting of the url string.
         url_end = page.find('"',start_url_at+1)        #end of the url string. 
         url = page[start_url_at+1:url_end]             #the url.
 
-    if start_src:        
+    if start_src != -1:        
         start_src_at = page.find('"',start_src+1)      #starting of the src string.
         src_end = page.find('"',start_src_at+1)        #end of the src string. 
         src = page[start_src_at+1:src_end]             #the src.
 
-    if url_end > src_end:
+    if url_end < src_end:
         end = url_end
     else:
         end = src_end
 
-    return url,src,end                                 #url, and its end point.
+    return url,src, end                                 #url, and its end point.
 
 def get_all_links(page,home_url):
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -56,18 +61,22 @@ def get_all_links(page,home_url):
     #   print "entered get_all_links"
     urls = []
     while True:
-        url,src,end_pos =  get_next_url(page)          #collecting the url and the position on the page, where url ends.
-        if url or src:                                 #if url was found.
-                                            
+        url, src, end_pos =  get_next_url(page)        #collecting the url and the position on the page, where url ends.
+        
+        if url and url not in urls:                    #if url was found.                       
             if not url.startswith("http"):             #if url is referenced from home page, then adding that to           
-                url = home_url+url                      #the starting of url.
-                
-            if not src.startswith("http"):
-                src = home_url+src
-                
-            urls.extend([url,src])                     #creating entry in the list.
-            page = page[end_pos:]                      #extracting the remaining part of the page after the end_pos.
-        else:
+                url = home_url+url                     #the starting of url.
+            urls.append(url)
+
+        if src and src not in urls:                    #if src was found.                       
+            if src and (not src.startswith("http")
+                        and not src.endswith('js')
+                        and not src.endswith('css')):
+                src = home_url+src                     #the starting of url.
+            urls.append(src)                           #creating entry in the list.
+            
+        page = page[end_pos+1:]                        #extracting the remaining part of the page after the end_pos.
+        if not url and not src:
             break
     return urls
 
