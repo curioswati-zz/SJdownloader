@@ -78,6 +78,17 @@ class Mypanel(object):
         cb8 = wx.CheckBox(bkg, -1, "mp3",
                           (70, 310), (75, 25))
 
+        #Binding events with checkboxes
+        
+        cb1.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
+        cb2.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
+        cb3.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
+        cb4.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
+        cb5.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
+        cb6.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
+        cb7.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
+        cb8.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
+
         #--------------------------------------------------------------------------
 
         #WRAPPING UP THE BOXES
@@ -93,6 +104,7 @@ class Mypanel(object):
 
         #The checkBoxes        
         vbox12 = wx.BoxSizer(wx.VERTICAL)
+        
         vbox12.Add(cb1, proportion=0,flag=wx.EXPAND
                       |wx.ALL,border=2)
         vbox12.Add(cb2, proportion=0,flag=wx.EXPAND
@@ -159,6 +171,12 @@ class Mypanel(object):
         hbox.Add(vbox2,proportion = 0,flag = wx.EXPAND,border = 5)
 
         bkg.SetSizer(hbox)
+
+    #--------------------------------------------------------------------------
+        self.toDownload = []
+    def EvtCheckBox(self, event):
+        if event.IsChecked():
+            self.toDownload.append(event.GetString())
         
     #--------------------------------------------------------------------------
     def enter(self, event):
@@ -166,7 +184,6 @@ class Mypanel(object):
         The function to prepare a list of all urls found on home page,
         It works on text_enter_event of textctrl box called 'url'.
         '''
-        #print "hello"
         self.urls = get_urls.main(self.url.GetValue())
         if self.urls:
 
@@ -175,17 +192,18 @@ class Mypanel(object):
                 self.contents.Destroy()
 
             self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
-                                                  (488,245),self.urls,
-                                                  style = wx.HSCROLL)
+                                              (488,245),self.urls,
+                                              style = wx.HSCROLL)
             
             self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND
                       |wx.ALL,border=5
                       )
 
+            self.toDownload = []
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox)
-
+            
             #setting the count of links
-            self.count.SetValue("No of links found: "+str(len(self.urls)))
+            self.count.SetValue("No. of links found: "+str(len(self.urls)))
 
 
     #--------------------------------------------------------------------------
@@ -258,7 +276,7 @@ class Mypanel(object):
             
             self.check_list.Destroy()                                       #Destriying old list
             self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),         #creating new filtered list
-                                              (388,245),filtered,
+                                              (488,245),filtered,
                                               style = wx.HSCROLL)
 
             self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND      #Adding the list box to container
@@ -271,6 +289,8 @@ class Mypanel(object):
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
             self.check_list.SetSelection(0)
 
+            self.count.SetValue("No. of links found: "+str(len(filtered)))
+
     def EvtCheckListBox(self, event):
         '''
         Function to implement checking and unchecking of list items.
@@ -280,14 +300,19 @@ class Mypanel(object):
         index = event.GetSelection()
         label = self.check_list.GetString(index)
         status = 'un'
+        string_at_index = self.check_list.GetString(index)
         
         if self.check_list.IsChecked(index):
-            self.toDownload.append(self.check_list.GetString(index))
+            self.toDownload.append(string_at_index)
             status = ''
             self.check_list.SetSelection(index)                             #so that (un)checking also selects (moves the highlight)
+            
         if not self.check_list.IsChecked(index):
-            self.toDownload.pop(index)
-            self.check_list.SetSelection(0)        
+            self.toDownload.remove(string_at_index)
+            self.check_list.SetSelection(0)
+
+        print self.toDownload
+
 
             
     #--------------------------------------------------------------------------        
