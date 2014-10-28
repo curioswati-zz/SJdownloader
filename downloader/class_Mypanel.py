@@ -171,13 +171,31 @@ class Mypanel(object):
         hbox.Add(vbox2,proportion = 0,flag = wx.EXPAND,border = 5)
 
         bkg.SetSizer(hbox)
-
+        
     #--------------------------------------------------------------------------
-        self.toDownload = []
     def EvtCheckBox(self, event):
         if event.IsChecked():
-            self.toDownload.append(event.GetString())
-        
+            cb = event.GetEventObject()
+            reg = '.*.'+cb.GetLabelText()
+            
+            pattern = re.compile(reg)
+            filtered = re.findall(reg, '\n'.join(self.urls))
+
+            self.check_list.Destroy()
+            self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
+                                              (488,245),filtered,
+                                              style = wx.HSCROLL)
+
+            self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND      #Adding the list box to container
+                  |wx.ALL,border=5 
+                  )
+
+            self.toDownload = []            
+            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
+            self.check_list.SetSelection(0)
+
+            self.count.SetValue("No. of links found: "+str(len(filtered)))            
+            
     #--------------------------------------------------------------------------
     def enter(self, event):
         '''
