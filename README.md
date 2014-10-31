@@ -17,7 +17,12 @@ To setup the binaries, cd to the downloader inside the repo, and
 
 Dependencies:
 -------------
-There are no external packages needed, all the requirements are satisfied by the python itself. They are listed in standard modules section. As for now, the scripts requires wxpython to run.
+Requires:
+[wxpython][]
+[py2exe][] for creating binaries:
+<code>$pip install py2exe</code>
+
+There are no other external packages needed, all the requirements are satisfied by the python itself. They are listed in standard modules section. As for now, the scripts requires wxpython to run.
 
 Standard modules used:
 ---------------------
@@ -27,7 +32,7 @@ In the script, it is used for listing files in directories, and checking existen
 For more information on OS, read the [documentation of OS][] .
 
 wxpython is a module used for creating GUIs in python.
-[wxpython][]
+[documentation of wxpython][]
 
 urllib provides a high level interface for fetching data across the world wide web.
 For more information on OS, read the [documentation of urllib][]
@@ -36,4 +41,6 @@ Rest and required information is provided in the script itself.
 
 [documentation of OS]: https://docs.python.org/2/library/os.html
 [documentation of urllib]:https://docs.python.org/2/library/urllib.html
-[wxpython]: http://wxpython.org/Phoenix/docs/html/main.html
+[documentation of wxpython]: http://wxpython.org/Phoenix/docs/html/main.html
+[wxpython]: http://www.wxpython.org/download.php
+[py2exe]: https://pypi.python.org/pypi/py2exe/0.9.2.0
