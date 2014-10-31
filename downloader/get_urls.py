@@ -87,14 +87,15 @@ def get_page(page):
     the user with suitable error message.''
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     try:
-        return urllib.urlopen(page).read()
+        return (urllib.urlopen(page).read(), None)
     except:
-        return None, "There was some problem fetching the file."
+        return (None, "There was some problem fetching the file.")
 
 def main(home_url):
 
     page, error = get_page(home_url)
     if page:
-        return get_all_links(page,home_url)            #all the urls found on the page.
+        return (None, get_all_links(page,home_url))    #all the urls found on the page and none for error. 
     else:
-        return error
+        return (error, None)                           #error and none for urls.
+ 
