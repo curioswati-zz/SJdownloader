@@ -61,17 +61,25 @@ def get_all_links(page,home_url):
     while True:
         url, src, end_pos =  get_next_url(page)        #collecting the urls and the position on the page, where url ends.
         
-        if url and url not in urls:                    #if url was found.                       
-            if not url.startswith("http"):             #if url is referenced from home page, then adding that to           
-                url = home_url+url                      #the starting of url.
-            urls.append(url)
+        if url:                                        #if url was found.
+            if (not url.startswith("http")
+                and not url.startswith("https")):      #if url is referenced from home page, then adding that to
+                url = home_url+url                     #the starting of url.
 
-        if src and src not in urls:                    #if src was found.                       
-            if src and (not src.startswith("http")     
-                        and not src.endswith('js')     #when its not a javascript of css file.
-                        and not src.endswith('css')):
-                src = home_url+src                     #the starting of url.
-            urls.append(src)                           #creating entry in the list.
+            if url not in urls:
+                urls.append(url)
+
+        if src:                                        #if src was found.
+            if src.startswith('//'):
+                src = 'http:'+src
+            
+            if (not src.startswith("http")
+                and not src.endswith('js')             #when its not a javascript of css file.
+                and not src.endswith('css')):
+                src = home_url+src
+
+            if src not in urls:
+                urls.append(src)                       #creating entry in the list.
             
         page = page[end_pos+1:]                        #extracting the remaining part of the page after the end_pos.
         if not url and not src:                        #no urls or srcs were found. 
