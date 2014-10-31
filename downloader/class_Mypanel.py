@@ -417,7 +417,7 @@ class Mypanel(object):
             self.toDownload.remove(string_at_index)
             self.check_list.SetSelection(0)
 
-        print self.toDownload
+        #print self.toDownload
             
     #--------------------------------------------------------------------------        
     def close(self,event):
