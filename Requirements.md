@@ -1,7 +1,7 @@
-It requires following packages:</br>
-for the GUI part:</br>
+It requires following packages:<br/>
+for the GUI part:
 [wxpython][]<br/>
-for binary creation:<br/>
+for binary creation:
 [py2exe][]<br/>
 or<br/>
 <code>$pip install py2exe</code><br/>
