@@ -11,10 +11,13 @@ It imports:
     -downloader_script
 It defines:
     -__init__
+    -EvtCheckBox
+    -enter
     -download
-    -filter
     -browse
     -cancel
+    -filter
+    -EvtCheckListBox
     -close
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 """Required modules"""
@@ -43,7 +46,7 @@ class Mypanel(object):
         fbtn = wx.Button(bkg,label="Filter",size=(80,25))
         fbtn.Bind(wx.EVT_BUTTON,self.filter)
 
-
+        #--------------------------------------------------------------------------
         #defining text areas; to input text
         
         self.url = wx.TextCtrl(bkg,size=(390,25),pos=(5,5),
@@ -58,7 +61,7 @@ class Mypanel(object):
         self.regex = wx.TextCtrl(bkg,size=(255,25),pos=(420,310))
         self.progress = wx.TextCtrl(bkg,size=(390,25),pos=(5,335))
 
-
+        #--------------------------------------------------------------------------
         #Adding CheckBoxes
 
         cb1 = wx.CheckBox(bkg, -1, "jpeg",
@@ -163,38 +166,48 @@ class Mypanel(object):
         vbox2.Add(vbox21,proportion=1,flag=wx.EXPAND)
         vbox2.Add(vbox22,proportion=0)
 
-        #--------------------------------------------------------------------------
-             
+        #--------------------------------------------------------------------------      
         #Vertical boxes into horizontal hbox.  
         hbox = wx.BoxSizer()
         hbox.Add(vbox1,proportion = 1,flag = wx.EXPAND|wx.BOTTOM)
         hbox.Add(vbox2,proportion = 0,flag = wx.EXPAND,border = 5)
 
         bkg.SetSizer(hbox)
+
+        #an empty list for checkbox filter.
+        self.filtered = []
         
     #--------------------------------------------------------------------------
     def EvtCheckBox(self, event):
-        if event.IsChecked():
-            cb = event.GetEventObject()
-            reg = '.*.'+cb.GetLabelText()
+        check_box = event.GetEventObject()
+        regex = '.*.'+check_box.GetLabelText()                          #creating a regex pattern based on
+                                                                         #the label str of selected checkbox.
             
-            pattern = re.compile(reg)
-            filtered = re.findall(reg, '\n'.join(self.urls))
+        pattern = re.compile(regex)
+        filtered = re.findall(regex, '\n'.join(self.urls))
 
+        if event.IsChecked():
+            self.filtered.extend(filtered)
+
+        else:
+            for item in filtered:
+                self.filtered.remove(item)
+
+        if self.check_list:
             self.check_list.Destroy()
-            self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
-                                              (488,245),filtered,
-                                              style = wx.HSCROLL)
+        self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
+                                          (488,245),self.filtered,
+                                          style = wx.HSCROLL)
 
-            self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND      #Adding the list box to container
-                  |wx.ALL,border=5 
-                  )
+        self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND      #Adding the list box to container
+              |wx.ALL,border=5 
+              )
 
-            self.toDownload = []            
-            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
-            self.check_list.SetSelection(0)
+        self.toDownload = []            
+        self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
+        self.check_list.SetSelection(0)
 
-            self.count.SetValue("No. of links found: "+str(len(filtered)))            
+        self.count.SetValue("No. of links found: "+str(len(filtered)))            
             
     #--------------------------------------------------------------------------
     def enter(self, event):
@@ -202,7 +215,7 @@ class Mypanel(object):
         The function to prepare a list of all urls found on home page,
         It works on text_enter_event of textctrl box called 'url'.
         '''
-        self.urls = get_urls.main(self.url.GetValue())
+        error, self.urls = get_urls.main(self.url.GetValue())
         if self.urls:
 
             #destroying the contents box, so as to put the checklist inplace.
@@ -223,6 +236,9 @@ class Mypanel(object):
             #setting the count of links
             self.count.SetValue("No. of links found: "+str(len(self.urls)))
 
+        else:
+            self.contents.SetValue(error)
+
 
     #--------------------------------------------------------------------------
     def download(self,event):
@@ -234,9 +250,44 @@ class Mypanel(object):
         '''
         urls_to_download = self.toDownload
         try:
-            downloader_script.main(urls_to_download,self.path)
+            error = downloader_script.main(urls_to_download,self.path)
+            if error:
+                self.progress.SetValue(error)
+                
         except AttributeError:
-            print "Please select a location"
+            self.dir.SetValue("Please select a location")
+
+##        max = 50
+##
+##        self.progress = wx.ProgressDialog("Progress dialog example",
+##                               "Downloading...",
+##                               maximum = max,
+##                               parent=self.bkg,
+##                               style = 0
+##                                | wx.PD_APP_MODAL
+##                                | wx.PD_CAN_ABORT
+##                                #| wx.PD_CAN_SKIP
+##                                #| wx.PD_ELAPSED_TIME
+##                                | wx.PD_ESTIMATED_TIME
+##                                | wx.PD_REMAINING_TIME
+##                                #| wx.PD_AUTO_HIDE
+##                                )
+##
+##        keepGoing = True
+##        count = 0
+##
+##        while keepGoing and count < max:
+##            count += 1
+##            wx.MilliSleep(10)
+##            wx.Yield()
+##            
+##            if count >= max / 2:
+##                (keepGoing, skip) = self.progress.Update(count)
+##            else:
+##                (keepGoing, skip) = self.progress.Update(count)
+##
+##                
+##        self.progress.Destroy()
 
     #--------------------------------------------------------------------------
     def browse(self,event):
@@ -257,9 +308,10 @@ class Mypanel(object):
         if dlg.ShowModal() == wx.ID_OK:
             print('You selected: %s\n' % dlg.GetPath())
             self.path = dlg.GetPath()
+            self.dir.SetValue(self.path)
 
         dlg.Destroy()
-        self.dir.SetValue(self.path)
+        
         
     #--------------------------------------------------------------------------
     def cancel(self,event):
@@ -267,7 +319,10 @@ class Mypanel(object):
         This is bound to cancel button, when pressed, it clears all text areas.
         '''
         self.url.SetValue(" ")
-        self.check_list.Destroy()
+        try:
+            self.check_list.Destroy()
+        except Exception:
+            pass
         self.regex.SetValue(" ")
         self.count.SetValue(" ")
         self.contents = wx.TextCtrl(self.bkg,style = wx.TE_MULTILINE|wx.HSCROLL,
@@ -292,7 +347,8 @@ class Mypanel(object):
 
             filtered = re.findall(pattern,'\n'.join(self.urls))
             
-            self.check_list.Destroy()                                       #Destriying old list
+            if self.check_list:
+                self.check_list.Destroy()                                       #Destriying old list
             self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),         #creating new filtered list
                                               (488,245),filtered,
                                               style = wx.HSCROLL)
@@ -329,7 +385,7 @@ class Mypanel(object):
             self.toDownload.remove(string_at_index)
             self.check_list.SetSelection(0)
 
-        print self.toDownload
+        #print self.toDownload
 
 
             
