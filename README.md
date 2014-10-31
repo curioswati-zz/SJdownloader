@@ -18,7 +18,8 @@ To setup the binaries, cd to the downloader inside the repo, and
 Dependencies:
 -------------
 Requires:
-[wxpython][]
+[msvcp90.dll][]: It is required for creating binary.
+[wxpython][],
 [py2exe][] for creating binaries:
 <code>$pip install py2exe</code>
 
@@ -44,3 +45,4 @@ Rest and required information is provided in the script itself.
 [documentation of wxpython]: http://wxpython.org/Phoenix/docs/html/main.html
 [wxpython]: http://www.wxpython.org/download.php
 [py2exe]: https://pypi.python.org/pypi/py2exe/0.9.2.0
+[msvcp90.dll]: http://www.dll-files.com/dllindex/dll-files.shtml?msvcp90
