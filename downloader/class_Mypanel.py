@@ -176,6 +176,8 @@ class Mypanel(object):
 
         #an empty list for checkbox filter.
         self.filtered = []
+        #for keeping track of old regex filtered list
+        self.old_filtered = []
         
     #--------------------------------------------------------------------------
     def EvtCheckBox(self, event):
@@ -189,25 +191,35 @@ class Mypanel(object):
         if event.IsChecked():
             self.filtered.extend(filtered)
 
-        else:
+        if not event.IsChecked():
             for item in filtered:
                 self.filtered.remove(item)
 
-        if self.check_list:
-            self.check_list.Destroy()
-        self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
-                                          (488,245),self.filtered,
-                                          style = wx.HSCROLL)
+        if filtered:
+            
+            if self.check_list:
+                self.check_list.Destroy()
 
-        self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND      #Adding the list box to container
-              |wx.ALL,border=5 
-              )
+            if self.filtered:
+                self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
+                                                  (488,245),self.filtered,
+                                                  style = wx.HSCROLL)
+
+                self.count.SetValue("No. of links found: "+str(len(self.filtered)))
+            else:
+                self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
+                                                  (488,245),self.urls,
+                                                  style = wx.HSCROLL)
+
+                self.count.SetValue("No. of links found: "+str(len(self.urls)))
+
+            self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND      #Adding the list box to container
+                  |wx.ALL,border=5 
+                  )
 
         self.toDownload = []            
         self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
-        self.check_list.SetSelection(0)
-
-        self.count.SetValue("No. of links found: "+str(len(filtered)))            
+        self.check_list.SetSelection(0)            
             
     #--------------------------------------------------------------------------
     def enter(self, event):
@@ -222,9 +234,16 @@ class Mypanel(object):
             if self.contents:
                 self.contents.Destroy()
 
+            try:
+                self.check_list.Destroy()
+                self.filtered = []
+            except:
+                pass
+
             self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
                                               (488,245),self.urls,
                                               style = wx.HSCROLL)
+            self.count.SetValue("No. of links found: "+str(len(self.urls)))
             
             self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND
                       |wx.ALL,border=5
@@ -234,7 +253,6 @@ class Mypanel(object):
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox)
             
             #setting the count of links
-            self.count.SetValue("No. of links found: "+str(len(self.urls)))
 
         else:
             self.contents.SetValue(error)
@@ -341,19 +359,35 @@ class Mypanel(object):
         It uses regex to filter and display a list of urls matching the pattern.
         The pattern is specified in the box called regex.
         '''
-        
-        pattern = re.compile(self.regex.GetValue())
+
+        pattern = self.regex.GetValue()
         if self.urls:
 
-            filtered = re.findall(pattern,'\n'.join(self.urls))
-            
-            if self.check_list:
-                self.check_list.Destroy()                                       #Destriying old list
-            self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),         #creating new filtered list
-                                              (488,245),filtered,
-                                              style = wx.HSCROLL)
+            if pattern:
+                pattern = re.compile(pattern)
+                filtered = re.findall(pattern,'\n'.join(self.urls))
+                self.filtered.extend(filtered)
+                self.old_filtered = filtered
 
-            self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND      #Adding the list box to container
+            else:
+                for item in self.old_filtered:
+                    self.filtered.remove(item)
+
+            if self.check_list:
+                self.check_list.Destroy()                                      #Destroying old list
+
+            if self.filtered:    
+                self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),         #creating new filtered list
+                                                  (488,245),self.filtered,
+                                                  style = wx.HSCROLL)
+                self.count.SetValue("No. of links found: "+str(len(self.filtered)))
+            else:
+                self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
+                                                  (488,245),self.urls,
+                                                  style = wx.HSCROLL)
+                self.count.SetValue("No. of links found: "+str(len(self.urls)))
+
+            self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND         #Adding the list box to container
                   |wx.ALL,border=5 
                   )
 
@@ -362,8 +396,6 @@ class Mypanel(object):
             
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
             self.check_list.SetSelection(0)
-
-            self.count.SetValue("No. of links found: "+str(len(filtered)))
 
     def EvtCheckListBox(self, event):
         '''
@@ -385,9 +417,7 @@ class Mypanel(object):
             self.toDownload.remove(string_at_index)
             self.check_list.SetSelection(0)
 
-        #print self.toDownload
-
-
+        print self.toDownload
             
     #--------------------------------------------------------------------------        
     def close(self,event):
