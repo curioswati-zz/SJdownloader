@@ -101,9 +101,11 @@ def get_page(page):
 
 def main(home_url):
 
-    page, error = get_page(home_url)
-    if page:
-        return (None, get_all_links(page,home_url))    #all the urls found on the page and none for error. 
-    else:
-        return (error, None)                           #error and none for urls.
+    if (home_url.startswith("http")
+        or '.html' in home_url):
+        page, error = get_page(home_url)
+        if page:
+            return (None, get_all_links(page,home_url))    #all the urls found on the page and none for error.
+        return (error, None)
+    return ("Not a valid url", None)                                   #error and none for urls.
  
