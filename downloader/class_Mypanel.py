@@ -1,6 +1,6 @@
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 This is the Mypanel class for GUI module.
-It creates the buttons and packs them into box.
+It creates the widgets like buttons and textAreas; packs them into container.
 It also implements the binding of buttons to various events using functions to
 filter, browse location, and download content.
 
@@ -15,7 +15,7 @@ It defines:
     -enter
     -download
     -browse
-    -cancel
+    -reset
     -filter
     -EvtCheckListBox
     -close
@@ -23,63 +23,101 @@ It defines:
 """Required modules"""
 import wx
 import get_urls,downloader_script
-import re
+import re,os
 
 class Mypanel(object):
-    def __init__(self,bkg,win):
-        self.win = win
-        self.bkg = bkg
-        
-        #creating buttons
-        download_btn = wx.Button(bkg,label = "download",size=(80,25))
-        download_btn.Bind(wx.EVT_BUTTON,self.download)
+    def __init__(self,panel,win):
+        self.win = win                                                      #The window object
+        self.panel = panel                                                  #The panel object
 
-        browse_btn = wx.Button(bkg,label = "browse",size=(80,25))
+        box = wx.StaticBox(self.panel, -1, "The intro Box",size=(800,400))
+        self.introsizer = wx.StaticBoxSizer(box)
+        #--------------------------------------------------------------------------
+        #creating buttons, and binding events with them, that occurs on click.
+
+        #calls (enter) method
+        show_btn = wx.Button(panel,label = "Show Links",size=(80,25))
+        show_btn.Bind(wx.EVT_BUTTON,self.enter)
+        show_btn.SetToolTipString("Click to show found links")
+
+        #calls browse method;
+        browse_btn = wx.Button(panel,label = "browse",size=(80,25))
         browse_btn.Bind(wx.EVT_BUTTON,self.browse)
+        browse_btn.SetToolTipString("Select location")
 
-        cancel_btn = wx.Button(bkg,label = "cancel",size=(80,25))
-        cancel_btn.Bind(wx.EVT_BUTTON,self.cancel)
+        #calls reset method
+        reset_btn = wx.Button(panel,label = "Reset",size=(80,25))
+        reset_btn.Bind(wx.EVT_BUTTON,self.reset)
+        reset_btn.SetToolTipString("Reset downloader")
 
-        clsbtn = wx.Button(bkg,label = "CLOSE",size=(80,25))
-        clsbtn.Bind(wx.EVT_BUTTON,self.close)
+        #calls download metod
+        download_btn = wx.Button(panel,label = "download",size=(80,25))
+        download_btn.Bind(wx.EVT_BUTTON,self.download)
+        download_btn.SetToolTipString("Start download")
 
-        fbtn = wx.Button(bkg,label="Filter",size=(80,25))
-        fbtn.Bind(wx.EVT_BUTTON,self.filter)
+        #calls filter method
+        filter_btn = wx.Button(panel,label="Filter",size=(60,25),style=wx.NO_BORDER)
+        filter_btn.Bind(wx.EVT_BUTTON,self.filter)
+        filter_btn.SetToolTipString("Filter links")
 
         #--------------------------------------------------------------------------
         #defining text areas; to input text
+        '''
+        >>>"http://www.google.com/" -> keyed in url_field
+        calls (enter)
+        >>>C:\Python27 -> keyed in dir
+        >>>.*.jpg -> keyed in regex
+        '''
         
-        self.url = wx.TextCtrl(bkg,size=(390,25),pos=(5,5),
-                               style=wx.TE_PROCESS_ENTER)
-        self.url.Bind(wx.EVT_TEXT_ENTER, self.enter)
-        self.dir = wx.TextCtrl(bkg,size=(390,25),pos=(5,30))
-        self.contents = wx.TextCtrl(bkg,style = wx.TE_MULTILINE|wx.HSCROLL,
-                                   size=(100,245)
-                                    )
+        #Static text label, before text box for url
+        url = wx.StaticText(panel, -1, "URL:",size=(60,25))
+        #text box for url, calls (enter) method on text event
+        self.url_field = wx.TextCtrl(panel,
+                                     size=(415,25),pos=(5,5),                                     
+                                     style=wx.TE_PROCESS_ENTER,
+                                     )
+        self.url_field.SetToolTipString("Enter url here");
+        self.url_field.Bind(wx.EVT_TEXT, self.enter)                                                                   
+        
+        #Static text label, before text box for dir location
+        location = wx.StaticText(panel, -1, "Save file in:")
+        #text box for showing dir location
+        self.dir = wx.TextCtrl(panel,size=(415,25),pos=(5,30))
+        self.dir.SetToolTipString("Selected location to save file");
 
-        self.count = wx.TextCtrl(bkg,size=(255,25),pos=(420,295))
-        self.regex = wx.TextCtrl(bkg,size=(255,25),pos=(420,310))
-        self.progress = wx.TextCtrl(bkg,size=(390,25),pos=(5,335))
+        #Static box For showing links
+        box = wx.StaticBox(self.panel, -1, "The links will be shown here")
+        self.bsizer = wx.StaticBoxSizer(box, wx.VERTICAL)
+
+        #Static box for showing count of links        
+        self.count = wx.StaticText(panel,-1,"No. of links found:",size=(255,15),pos=(420,295))
+        #Static text label, before regex text box
+        regex = wx.StaticText(panel, -1, "Enter regex:",pos=(400,310))
+        #text box for entering regex pattern
+        self.regex = wx.TextCtrl(panel,size=(255,25))
+        self.regex.SetToolTipString("Enter type string to filter content");
+        #Progress bar
+        self.progress = wx.TextCtrl(panel,size=(390,25),pos=(5,335))
 
         #--------------------------------------------------------------------------
-        #Adding CheckBoxes
+        #Defining CheckBoxes
 
-        cb1 = wx.CheckBox(bkg, -1, "jpeg",
+        cb1 = wx.CheckBox(panel, -1, "jpeg",
                           (5, 295), (75, 25))
-        cb2 = wx.CheckBox(bkg, -1, "png",
+        cb2 = wx.CheckBox(panel, -1, "png",
                           (5, 310), (75, 25))
-        cb3 = wx.CheckBox(bkg, -1, "gif",
+        cb3 = wx.CheckBox(panel, -1, "gif",
                           (5, 335), (75, 25))
-        cb4 = wx.CheckBox(bkg, -1, "mp4",
+        cb4 = wx.CheckBox(panel, -1, "mp4",
                           (35, 295), (75, 25))
-        cb5 = wx.CheckBox(bkg, -1, "3gp",
+        cb5 = wx.CheckBox(panel, -1, "3gp",
                           (35,310), (75, 25))
-        cb6 = wx.CheckBox(bkg, -1, "avi",
+        cb6 = wx.CheckBox(panel, -1, "avi",
                           (35, 335), (75, 25))
-        cb7 = wx.CheckBox(bkg, -1, "flv",
-                          (70, 295), (75, 25))
-        cb8 = wx.CheckBox(bkg, -1, "mp3",
-                          (70, 310), (75, 25))
+        cb7 = wx.CheckBox(panel, -1, "flv",
+                          (70, 295), (55, 25))
+        cb8 = wx.CheckBox(panel, -1, "mp3",
+                          (70, 310), (55, 25))
 
         #Binding events with checkboxes
         
@@ -95,95 +133,120 @@ class Mypanel(object):
         #--------------------------------------------------------------------------
 
         #WRAPPING UP THE BOXES
+        #----------------------
         #The text controls
-        vbox11 = wx.BoxSizer(wx.VERTICAL)
-        vbox11.Add(self.url,proportion=0,flag=wx.ALL|wx.EXPAND,border=5)
-        vbox11.Add(self.dir,proportion=0,flag=wx.ALL|wx.EXPAND,border=5)
-        vbox11.Add(self.contents,proportion=1,flag=wx.TE_MULTILINE
-                  |wx.EXPAND
+        #-----------------
+
+        #The url, url label containers                           Container#1
+        url_box = wx.BoxSizer()                                  
+        url_box.Add(url,proportion=0,flag=wx.TOP|wx.LEFT,border=10)
+        url_box.Add(self.url_field,proportion=1,flag=wx.EXPAND|wx.ALL,border=5)
+        url_box.Add(show_btn,proportion=0,border=5,flag=wx.ALL)
+
+        #The dir location, location label container              Container#2 
+        dir_box = wx.BoxSizer()
+        dir_box.Add(location,proportion=0,flag=wx.ALL,border=5)
+        dir_box.Add(self.dir,proportion=1,flag=wx.ALL|wx.EXPAND,border=5)
+        dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
+        #--------------------------------------------------------------------------
+
+        #container for main output box                           Container#3
+        Static_box = wx.BoxSizer()
+        Static_box.Add(self.bsizer,proportion=1,flag=wx.EXPAND
                   |wx.ALL,border=5
                   )
-        self.vbox11 = vbox11
-
-        #The checkBoxes        
-        vbox12 = wx.BoxSizer(wx.VERTICAL)
-        
-        vbox12.Add(cb1, proportion=0,flag=wx.EXPAND
-                      |wx.ALL,border=2)
-        vbox12.Add(cb2, proportion=0,flag=wx.EXPAND
-                      |wx.ALL,border=2)
-        vbox12.Add(cb3, proportion=0,flag=wx.EXPAND
-                      |wx.ALL,border=2)
-
-        vbox13 = wx.BoxSizer(wx.VERTICAL)
-        vbox13.Add(cb4, proportion=0,flag=wx.EXPAND
-                      |wx.ALL,border=2)
-        vbox13.Add(cb5, proportion=0,flag=wx.EXPAND
-                      |wx.ALL,border=2)
-        vbox13.Add(cb6, proportion=0,flag=wx.EXPAND
-                      |wx.ALL,border=2)
-
-        vbox14 = wx.BoxSizer(wx.VERTICAL)
-        vbox14.Add(cb7, proportion=0,flag=wx.EXPAND
-                      |wx.ALL,border=2)
-        vbox14.Add(cb8, proportion=0,flag=wx.EXPAND
-                      |wx.ALL,border=2)
-
+        Static_box.Add(reset_btn,proportion=0,border=5,flag=wx.ALL)
         #--------------------------------------------------------------------------
+
+        #--------------
+        #The checkBoxes
+        #--------------
+        #First set of boxes vertically
+        feature_box1 = wx.BoxSizer(wx.VERTICAL)
+        
+        feature_box1.Add(cb1, proportion=0,flag=wx.EXPAND     #jpeg
+                      |wx.LEFT|wx.BOTTOM,border=5)
+        feature_box1.Add(cb2, proportion=0,flag=wx.EXPAND     #png
+                      |wx.LEFT|wx.BOTTOM,border=5)
+        feature_box1.Add(cb3, proportion=0,flag=wx.EXPAND     #gif
+                      |wx.LEFT|wx.BOTTOM,border=5)
+
+        #Second set of boxes vertically
+        feature_box2 = wx.BoxSizer(wx.VERTICAL)
+        feature_box2.Add(cb4, proportion=0,flag=wx.EXPAND     #mp4
+                      |wx.ALL,border=2)
+        feature_box2.Add(cb5, proportion=0,flag=wx.EXPAND     #3gp
+                      |wx.ALL,border=2)
+        feature_box2.Add(cb6, proportion=0,flag=wx.EXPAND     #avi
+                      |wx.ALL,border=2)
+
+        #Third set of boxes vertically
+        feature_box3 = wx.BoxSizer(wx.VERTICAL)
+        feature_box3.Add(cb7, proportion=0,flag=wx.EXPAND     #flv
+                      |wx.ALL,border=2)
+        feature_box3.Add(cb8, proportion=0,flag=wx.EXPAND     #mp3
+                      |wx.ALL,border=2)
+        #--------------------------------------------------------------------------
+        
+        #-------------------
         #Extra feature boxes
-        vbox15 = wx.BoxSizer(wx.VERTICAL)
-        vbox15.Add(self.count,proportion=1,flag=wx.ALL|wx.EXPAND,border=3)
-        vbox15.Add(self.regex,proportion=1,flag=wx.ALL|wx.EXPAND,border=3)
-        vbox15.Add(fbtn,proportion=0,flag=wx.LEFT,border=178)
+        #-------------------
+        #container for regex text box and filter button
+        regex_box = wx.FlexGridSizer(cols=3, vgap=10, hgap=3)
+        regex_box.Add(regex,proportion=0,flag=wx.TOP,border=7)
+        regex_box.Add(self.regex,proportion=1,flag=wx.BOTTOM|wx.LEFT|wx.EXPAND,border=5)
+        regex_box.Add(filter_btn,proportion=0,flag=wx.ALL,border=5)
+
+        #container for (regex,filter) container and count text box
+        feature_box4 = wx.BoxSizer(wx.VERTICAL)
+        feature_box4.Add(self.count,proportion=1,flag=wx.TOP,border=5)
+        feature_box4.Add(regex_box,proportion=1,flag=wx.ALL)
 
         #--------------------------------------------------------------------------
-        #All vertical boxes in horizontal box
-        hbox1 = wx.BoxSizer()
-        hbox1.Add(vbox12,proportion=0,flag=wx.EXPAND)
-        hbox1.Add(vbox13,proportion=0,flag=wx.EXPAND)
-        hbox1.Add(vbox14,proportion=0,flag=wx.EXPAND)
-        hbox1.Add(vbox15,proportion=0)
+        #container for (checkbox, extra feature) containers     Container#4
+        feature_box = wx.BoxSizer()
+        feature_box.Add(feature_box1,proportion=0)
+        feature_box.Add(feature_box2,proportion=0)
+        feature_box.Add(feature_box3,proportion=0)
+        feature_box.Add(feature_box4,proportion=0,flag=wx.EXPAND)
 
-        #The two vertical boxes in one
-        vbox1 = wx.BoxSizer(wx.VERTICAL)
-        vbox1.Add(vbox11,proportion=1,flag=wx.EXPAND)
-        vbox1.Add(hbox1,proportion=0,flag=wx.EXPAND)
-        vbox1.Add(self.progress,proportion=0,flag=wx.ALL|wx.EXPAND,border=5)
-        
         #--------------------------------------------------------------------------
-        #Buttons
-        vbox21 = wx.BoxSizer(wx.VERTICAL)
-        vbox21.Add(download_btn,proportion=0,border=5,flag=wx.TOP)
-        vbox21.Add(browse_btn,proportion=0,border=10,flag=wx.TOP)
-        vbox21.Add(cancel_btn,proportion=0,border=10,flag=wx.TOP)
 
-        #Close button
-        vbox22 = wx.BoxSizer(wx.VERTICAL)
-        vbox22.Add(clsbtn,proportion=0,border=5,flag=wx.RIGHT|wx.TOP|wx.BOTTOM)
-
-        #The two vertical boxes in single one.
-        vbox2 = wx.BoxSizer(wx.VERTICAL)
-        vbox2.Add(vbox21,proportion=1,flag=wx.EXPAND)
-        vbox2.Add(vbox22,proportion=0)
+        #container for progres bar                              Container#5
+        prog_box = wx.BoxSizer()
+        prog_box.Add(self.progress,proportion=1,
+                     flag=wx.ALL|wx.EXPAND,border=5)
+        prog_box.Add(download_btn,proportion=0,border=5,
+                     flag=wx.RIGHT|wx.TOP|wx.BOTTOM)
 
         #--------------------------------------------------------------------------      
-        #Vertical boxes into horizontal hbox.  
-        hbox = wx.BoxSizer()
-        hbox.Add(vbox1,proportion = 1,flag = wx.EXPAND|wx.BOTTOM)
-        hbox.Add(vbox2,proportion = 0,flag = wx.EXPAND,border = 5)
-
-        bkg.SetSizer(hbox)
-
-        #an empty list for checkbox filter.
+        #container for introsizer and Containers #1,#2,#3,#4,#5
+        #-------------------------------------------
+        main_container = wx.BoxSizer(wx.VERTICAL)
+        main_container.Add(self.introsizer,proportion = 0,flag=wx.EXPAND)
+        main_container.Add(url_box,proportion = 0,flag=wx.EXPAND)
+        main_container.Add(dir_box,proportion = 0,flag=wx.EXPAND)
+        main_container.Add(Static_box,proportion = 1,
+                           flag=wx.EXPAND)
+        main_container.Add(feature_box,proportion = 0)
+        main_container.Add(prog_box,proportion=0,flag=wx.EXPAND)
+        
+        panel.SetSizer(main_container)
+        #--------------------------------------------------------------------------
+        
+        #an empty list for showing filtered links.
         self.filtered = []
-        #for keeping track of old regex filtered list
+        #for keeping track of old regex filtered list; used in (filter)
         self.old_filtered = []
+        #List for checked links to download;
+         #used in (enter),(filter),(EvtCheckBox)
+        self.toDownload = []
         
     #--------------------------------------------------------------------------
     def EvtCheckBox(self, event):
         check_box = event.GetEventObject()
-        regex = '.*.'+check_box.GetLabelText()                          #creating a regex pattern based on
-                                                                         #the label str of selected checkbox.
+        regex = '.*.'+check_box.GetLabelText()                       #creating a regex pattern based on
+                                                                      #the label str of selected checkbox.
             
         pattern = re.compile(regex)
         filtered = re.findall(regex, '\n'.join(self.urls))
@@ -201,19 +264,20 @@ class Mypanel(object):
                 self.check_list.Destroy()
 
             if self.filtered:
-                self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
-                                                  (488,245),self.filtered,
+                self.check_list = wx.CheckListBox(self.panel, -1, (5,120),
+                                                  (604,260),self.filtered,
                                                   style = wx.HSCROLL)
 
-                self.count.SetValue("No. of links found: "+str(len(self.filtered)))
+                self.count.SetLabelText("No. of links found: "+str(len(self.filtered)))
             else:
-                self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
-                                                  (488,245),self.urls,
+                self.check_list = wx.CheckListBox(self.panel, -1, (5,120),
+                                                  (604,260),self.urls,
                                                   style = wx.HSCROLL)
 
-                self.count.SetValue("No. of links found: "+str(len(self.urls)))
+                self.count.SetLabelText("No. of links found: "+str(len(self.urls)))
 
-            self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND      #Adding the list box to container
+            #Adding the list box to container
+            self.bsizer.Add(self.check_list,proportion=1,flag=wx.EXPAND       
                   |wx.ALL,border=5 
                   )
 
@@ -227,36 +291,101 @@ class Mypanel(object):
         The function to prepare a list of all urls found on home page,
         It works on text_enter_event of textctrl box called 'url'.
         '''
-        error, self.urls = get_urls.main(self.url.GetValue())
+
+        home_url = self.url_field.GetValue()
+        if home_url == "":
+            self.url_field.SetValue("Please enter url")
+            return
+        error, self.urls = get_urls.main(home_url)
         if self.urls:
-
-            #destroying the contents box, so as to put the checklist inplace.
-            if self.contents:
-                self.contents.Destroy()
-
+            try:
+                self.info.Dismiss()
+            except:
+                pass
             try:
                 self.check_list.Destroy()
                 self.filtered = []
             except:
                 pass
 
-            self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
-                                              (488,245),self.urls,
+            self.check_list = wx.CheckListBox(self.panel, -1, (5,120),
+                                              (604,260),self.urls,
                                               style = wx.HSCROLL)
-            self.count.SetValue("No. of links found: "+str(len(self.urls)))
+            self.count.SetLabelText("No. of links found: "+str(len(self.urls)))
             
-            self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND
+            self.bsizer.Add(self.check_list,proportion=1,flag=wx.EXPAND
                       |wx.ALL,border=5
                       )
 
             self.toDownload = []
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox)
             
-            #setting the count of links
+    #--------------------------------------------------------------------------
+    def filter(self,event):
+        '''
+        The function filters links found on the page.
+        It uses regex to filter and display a list of urls matching the pattern.
+        The pattern is specified in the box called regex.
+        '''
 
-        else:
-            self.contents.SetValue(error)
+        pattern = self.regex.GetValue()
+        if self.urls:
 
+            if pattern:
+                pattern = re.compile(pattern)
+                filtered = re.findall(pattern,'\n'.join(self.urls))
+                self.filtered.extend(filtered)
+                self.old_filtered = filtered
+
+            else:
+                for item in self.old_filtered:
+                    self.filtered.remove(item)
+
+            if self.check_list:
+                self.check_list.Destroy()                                      #Destroying old list
+
+            if self.filtered:    
+                self.check_list = wx.CheckListBox(self.panel, -1, (5,120),         #creating new filtered list
+                                                  (604,260),self.filtered,
+                                                  style = wx.HSCROLL)
+                self.count.SetLabelText("No. of links found: "+str(len(self.filtered)))
+            else:
+                self.check_list = wx.CheckListBox(self.panel, -1, (5,120),
+                                                  (604,260),self.urls,
+                                                  style = wx.HSCROLL)
+                self.count.SetLabelText("No. of links found: "+str(len(self.urls)))
+
+            self.bsizer.Add(self.check_list,proportion=1,flag=wx.EXPAND         #Adding the list box to container
+                  |wx.ALL,border=5 
+                  )
+
+            #list of selected links
+            self.toDownload = []
+            
+            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
+            self.check_list.SetSelection(0)
+
+    def EvtCheckListBox(self, event):
+        '''
+        Function to implement checking and unchecking of list items.
+        Also, according to checking and unchecking, adds and removes
+        items to/from download list.
+        '''
+        index = event.GetSelection()
+        label = self.check_list.GetString(index)
+        status = 'un'
+        string_at_index = self.check_list.GetString(index)
+        
+        if self.check_list.IsChecked(index):
+            self.toDownload.append(string_at_index)
+            status = ''
+            self.check_list.SetSelection(index)                             #so that (un)checking also selects (moves the highlight)
+            
+        if not self.check_list.IsChecked(index):
+            self.toDownload.remove(string_at_index)
+            self.check_list.SetSelection(0)
+
+        #print self.toDownload
 
     #--------------------------------------------------------------------------
     def download(self,event):
@@ -271,16 +400,17 @@ class Mypanel(object):
             error = downloader_script.main(urls_to_download,self.path)
             if error:
                 self.progress.SetValue(error)
-                
+    
         except AttributeError:
-            self.dir.SetValue("Please select a location")
+            self.dir.SetValue(os.curdir)
+            self.path = os.curdir
 
 ##        max = 50
 ##
 ##        self.progress = wx.ProgressDialog("Progress dialog example",
 ##                               "Downloading...",
 ##                               maximum = max,
-##                               parent=self.bkg,
+##                               parent=self.panel,
 ##                               style = 0
 ##                                | wx.PD_APP_MODAL
 ##                                | wx.PD_CAN_ABORT
@@ -330,96 +460,22 @@ class Mypanel(object):
 
         dlg.Destroy()
         
-        
     #--------------------------------------------------------------------------
-    def cancel(self,event):
+    def reset(self,event):
         '''
-        This is bound to cancel button, when pressed, it clears all text areas.
+        This is bound to reset button, when pressed, it clears all text areas.
         '''
-        self.url.SetValue(" ")
+        self.url_field.SetValue(" ")
         try:
             self.check_list.Destroy()
         except Exception:
             pass
         self.regex.SetValue(" ")
-        self.count.SetValue(" ")
-        self.contents = wx.TextCtrl(self.bkg,style = wx.TE_MULTILINE|wx.HSCROLL,
-                                   size=(100,245)
-                                    )
-        self.vbox11.Add(self.contents,proportion=1,flag=wx.TE_MULTILINE
-                       |wx.EXPAND
-                       |wx.ALL,border=5
-                       )
-        self.contents.SetValue(" ")
+        self.dir.SetValue(" ")
+        self.path = " "
+        self.count.SetLabelText(" ")
 
     #--------------------------------------------------------------------------
-    def filter(self,event):
-        '''
-        The function filters links found on the page.
-        It uses regex to filter and display a list of urls matching the pattern.
-        The pattern is specified in the box called regex.
-        '''
-
-        pattern = self.regex.GetValue()
-        if self.urls:
-
-            if pattern:
-                pattern = re.compile(pattern)
-                filtered = re.findall(pattern,'\n'.join(self.urls))
-                self.filtered.extend(filtered)
-                self.old_filtered = filtered
-
-            else:
-                for item in self.old_filtered:
-                    self.filtered.remove(item)
-
-            if self.check_list:
-                self.check_list.Destroy()                                      #Destroying old list
-
-            if self.filtered:    
-                self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),         #creating new filtered list
-                                                  (488,245),self.filtered,
-                                                  style = wx.HSCROLL)
-                self.count.SetValue("No. of links found: "+str(len(self.filtered)))
-            else:
-                self.check_list = wx.CheckListBox(self.bkg, -1, (5,75),
-                                                  (488,245),self.urls,
-                                                  style = wx.HSCROLL)
-                self.count.SetValue("No. of links found: "+str(len(self.urls)))
-
-            self.vbox11.Add(self.check_list,proportion=1,flag=wx.EXPAND         #Adding the list box to container
-                  |wx.ALL,border=5 
-                  )
-
-            #list of selected links
-            self.toDownload = []
-            
-            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
-            self.check_list.SetSelection(0)
-
-    def EvtCheckListBox(self, event):
-        '''
-        Function to implement checking and unchecking of list items.
-        Also, according to checking and unchecking, adds and removes
-        items to/from download list.
-        '''
-        index = event.GetSelection()
-        label = self.check_list.GetString(index)
-        status = 'un'
-        string_at_index = self.check_list.GetString(index)
-        
-        if self.check_list.IsChecked(index):
-            self.toDownload.append(string_at_index)
-            status = ''
-            self.check_list.SetSelection(index)                             #so that (un)checking also selects (moves the highlight)
-            
-        if not self.check_list.IsChecked(index):
-            self.toDownload.remove(string_at_index)
-            self.check_list.SetSelection(0)
-
-        #print self.toDownload
-            
-    #--------------------------------------------------------------------------        
     def close(self,event):
         '''
         Destroys the window object.   
