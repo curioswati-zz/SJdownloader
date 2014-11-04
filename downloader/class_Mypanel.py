@@ -41,7 +41,7 @@ class Mypanel(object):
         show_btn.SetToolTipString("Click to show found links")
 
         #calls browse method;
-        browse_btn = wx.Button(panel,label = "browse",size=(80,25))
+        browse_btn = wx.Button(panel,label = "Browse",size=(80,25))
         browse_btn.Bind(wx.EVT_BUTTON,self.browse)
         browse_btn.SetToolTipString("Select location")
 
