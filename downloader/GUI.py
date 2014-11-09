@@ -16,11 +16,13 @@ def main():
     app = wx.App()
 
     #window object
-    win = wx.Frame(None,title = "Downloader",size=(720,550))
+    win = wx.Frame(None,title = "Downloader",size=(700,650))
 
     #box object
     bkg = wx.Panel(win)
-
+    bkg.SetBackgroundColour((198,222,223,255))
+    bkg.SetForegroundColour((60,60,60,255))
+    
     #packing the box
     Mypanel(bkg,win)
 
