@@ -26,15 +26,27 @@ def extract_name(url):
             
 def main(urls, path):
 
-    #print "Downloading into "+path+" ..."
+    print "Downloading into "+path+" ..."
     for url in urls:
         name = extract_name(url)
-        #print name
         try:
             data = urllib.urlopen(url).read()
             save_file = open(path+"/"+name, 'wb')
             save_file.write(data)
             save_file.close()
+
+            print 'Progress bar'
+            progress_bar = PG.PyGauge(panel,-1,size=(100,25),style=wx.GA_HORIZONTAL)
+            container.Add(progress_bar)
+            print "Added pro_bar"
+            progress_bar.SetValue([20,80])
+            progress_bar.SetBarColor([wx.Colour(162,255,178),wx.Colour(159,176,255)])
+            progress_bar.SetBackgroundColour(wx.WHITE)
+            progress_bar.SetBorderColor(wx.BLACK)
+            progress_bar.SetBorderPadding(2)
+            progress_bar.SetDrawValue(draw=True, drawPercent=True, font=wx.SMALL_FONT, colour=wx.BLUE)
+
+            progress_bar.Update([30,0],2000)
         except:
             return "The connection could not establish."
             
