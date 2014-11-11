@@ -25,14 +25,10 @@ def extract_name(url):
     return name[-1::-1]
             
 def main(urls, path,panel,container):
-<<<<<<< HEAD
-
     #When called with direct url
     if (not(urls[0].startswith("http"))
         or ".html" not in urls[0]):
         return "Invalid url"
-=======
->>>>>>> 1aece375a90803d51bc321328c0429ea0b4287e4
 
     print "Downloading into "+path+" ..."
     for url in urls:
