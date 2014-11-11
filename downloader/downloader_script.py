@@ -24,7 +24,7 @@ def extract_name(url):
         
     return name[-1::-1]
             
-def main(urls, path):
+def main(urls, path,panel,container):
 
     print "Downloading into "+path+" ..."
     for url in urls:
