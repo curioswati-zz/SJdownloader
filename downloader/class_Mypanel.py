@@ -275,6 +275,8 @@ class Mypanel(object):
         self.main_container.Add(url_box,proportion = 0,flag=wx.EXPAND)
         self.main_container.Add(dir_box,proportion = 0,flag=wx.EXPAND)
         self.main_container.Add(self.hbox,proportion = 0,flag=wx.EXPAND)
+        self.main_container.Hide(self.hbox)
+        self.panel.Layout()
         self.main_container.Add(Static_box,proportion = 1,
                            flag=wx.EXPAND)
         self.main_container.Add(feature_box,proportion=0)
@@ -316,31 +318,31 @@ class Mypanel(object):
                 if self.filtered:
                     self.main_container.Show(self.hbox)
                     self.panel.Layout()
-                    self.box.SetLabelText("")
+                    self.box.SetLabel("")
                     self.check_list.SetItems(self.filtered)
-                    self.count.SetLabelText("No. of links found: "+str(len(self.filtered)))
+                    self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
                     
                 elif not(event.IsChecked()):
                     self.main_container.Show(self.hbox)
                     self.panel.Layout()
-                    self.box.SetLabelText("")
+                    self.box.SetLabel("")
                     self.check_list.SetItems(self.urls)
                     
-                    self.count.SetLabelText("No. of links found: "+str(len(self.urls)))
+                    self.count.SetLabel("No. of links found: "+str(len(self.urls)))
                     
             elif not(event.IsChecked()):
                 self.main_container.Show(self.hbox)
                 self.panel.Layout()
-                self.box.SetLabelText("")
+                self.box.SetLabel("")
                 self.check_list.SetItems(self.urls)
                     
-                self.count.SetLabelText("No. of links found: "+str(len(self.urls)))
+                self.count.SetLabel("No. of links found: "+str(len(self.urls)))
 
             else:
                 self.main_container.Hide(self.hbox)
                 self.panel.Layout()
                 self.check_list.SetItems(self.filtered)
-                self.box.SetLabelText("No links matched, try another filter; or to show all links, click 'show links' button")
+                self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
 
             self.toDownload = []            
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
@@ -402,7 +404,7 @@ class Mypanel(object):
             self.check_list = wx.CheckListBox(self.panel, -1, (5,234),
                                               (583,238),self.urls,
                                               style = wx.HSCROLL)
-            self.count.SetLabelText("No. of links found: "+str(len(self.urls)))
+            self.count.SetLabel("No. of links found: "+str(len(self.urls)))
             
             self.bsizer.Add(self.check_list,proportion=1,flag=wx.EXPAND
                       |wx.ALL,border=5
@@ -434,12 +436,12 @@ class Mypanel(object):
 
                 if self.filtered:    
                     self.check_list.SetItems(self.filtered)
-                    self.count.SetLabelText("No. of links found: "+str(len(self.filtered)))
+                    self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
                 else:
                     self.check_list = wx.CheckListBox(self.panel, -1, (5,234),
                                                       (583,238),self.urls,
                                                       style = wx.HSCROLL)
-                    self.count.SetLabelText("No. of links found: "+str(len(self.urls)))
+                    self.count.SetLabel("No. of links found: "+str(len(self.urls)))
 
                 self.bsizer.Add(self.check_list,proportion=1,flag=wx.EXPAND         #Adding the list box to container
                       |wx.ALL,border=5 
@@ -482,22 +484,21 @@ class Mypanel(object):
             if self.dir.GetValue() == "":                                  #if dir field is empty
                 curdir = os.curdir
                 self.dir.SetValue(curdir)
-                #dlg.SetPath(curdir)
                 self.path = curdir
             try:
                 self.toDownload.extend(self.check_list.GetCheckedStrings())
                 urls_to_download = self.toDownload
-                print self.toDownload
-            
+                
+                self.progress.SetValue("Downloading...")            
                 error = downloader_script.main(urls_to_download,self.path,
                                                self.panel,self.main_container)
     
             except AttributeError:
+                self.progress.SetValue("Downloading...")
                 error = downloader_script.main([self.url_field.GetValue()],self.path,
                                            self.panel,self.main_container)
             if error:
-                print error
-            #self.progress.SetValue(error)
+                self.progress.SetValue(error)
         else:
             self.url_field.SetValue("Please Enter url")
 
@@ -537,6 +538,6 @@ class Mypanel(object):
         self.regex.SetValue(" ")
         self.dir.SetValue(" ")
         self.path = " "
-        self.count.SetLabelText(" ")
+        self.count.SetLabel(" ")
 
     #--------------------------------------------------------------------------
