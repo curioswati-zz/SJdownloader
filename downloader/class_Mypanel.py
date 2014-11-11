@@ -27,6 +27,11 @@ from wx.lib.agw import aquabutton as AB
 import re,os
 from class_FlatMenu import Menu
 
+#modifying path for logo
+def opj(path):
+     return apply(os.path.join, tuple(path.split('/')))
+#------------------------------------------------------
+
 class Mypanel(object):
     def __init__(self,panel,win):
         self.win = win                                                      #The window object
@@ -36,7 +41,7 @@ class Mypanel(object):
         self.introsizer = wx.StaticBoxSizer(box)
 
         #LOGO
-        png = wx.Image(opj('icons/Logo.png'),
+        png = wx.Image(opj('../Icons/Logo.png'),
                        wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         logo = wx.StaticBitmap(panel, -1, png,(10,30))
 
@@ -98,12 +103,12 @@ class Mypanel(object):
         #Static text area:
 
         #Label, before text box for url
-        url = wx.StaticText(panel, -1, "URL:",size=(60,25))   
+        url = wx.StaticText(panel, -1, "URL:",size=(65,25))   
         #Label, before text box for dir location
         location = wx.StaticText(panel, -1, "Save file in:")
-        #Showing count of links        
-        self.count = wx.StaticText(panel,-1,"No. of links found:",
-                                   size=(255,15),pos=(420,295))
+        #Count of links
+        self.count = wx.StaticText(self.panel,-1,"No. of links found:",
+                                       size=(255,15),pos=(420,295))
         #Label, before regex text box
         regex = wx.StaticText(panel, -1, "Enter regex:",pos=(400,310))
 
@@ -122,15 +127,15 @@ class Mypanel(object):
         self.dir.SetToolTipString("Selected location to save file");
 
         #Static box For showing links
-        box = wx.StaticBox(self.panel, -1, "The links will be shown here")
+        self.box = wx.StaticBox(self.panel, -1, "The links will be shown here")
         box.SetBackgroundColour((198,232,223,0))
-        self.bsizer = wx.StaticBoxSizer(box, wx.VERTICAL)
+        self.bsizer = wx.StaticBoxSizer(self.box, wx.VERTICAL)
 
         #text box for entering regex pattern
         self.regex = wx.TextCtrl(panel,size=(255,25))
         self.regex.SetToolTipString("Enter type string to filter content");
         #Progress bar
-        #self.progress = wx.TextCtrl(panel,size=(390,25),pos=(5,335))
+        self.progress = wx.TextCtrl(panel,size=(390,25),pos=(5,335))
 
         #--------------------------------------------------------------------------
         #Defining CheckBoxes
@@ -151,7 +156,9 @@ class Mypanel(object):
                           (70, 295), (55, 20))
         cb8 = wx.CheckBox(panel, -1, "mp3",
                           (70, 310), (55, 20))
-
+        selectAll = wx.CheckBox(self.panel, -1, "select all",
+                              (70, 310), (85, 20))
+        
         #Binding events with checkboxes
         
         cb1.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
@@ -185,12 +192,12 @@ class Mypanel(object):
         dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
         #--------------------------------------------------------------------------
         #For select all and count box
-        hbox = wx.FlexGridSizer(cols=2, vgap=10, hgap=350)
-        hbox.Add(selectAll,proportion=0,flag=wx.TOP|wx.LEFT|
-                 wx.RIGHT,border=5)
-        hbox.Add(self.count,proportion=1,flag=wx.TOP|wx.LEFT|
-                 wx.RIGHT,border=5) 
-
+        self.hbox = wx.FlexGridSizer(cols=2, vgap=10, hgap=350)
+        self.hbox.Add(selectAll,proportion=0,flag=wx.TOP|wx.LEFT|
+                      wx.RIGHT,border=5)
+        self.hbox.Add(self.count,proportion=1,flag=wx.TOP|wx.LEFT|
+                      wx.RIGHT,border=5)
+        
         #container for main output box                           Container#3
         Static_box = wx.BoxSizer()
         Static_box.Add(self.bsizer,proportion=1,flag=wx.EXPAND
@@ -263,17 +270,17 @@ class Mypanel(object):
         #--------------------------------------------------------------------------      
         #container for introsizer and Containers #1,#2,#3,#4,#5
         #-------------------------------------------
-        main_container = wx.BoxSizer(wx.VERTICAL)
-        main_container.Add(self.introsizer,proportion = 0)
-        main_container.Add(url_box,proportion = 0)
-        main_container.Add(dir_box,proportion = 0)
-        self.main_container.Add(hbox,proportion = 0)
-        main_container.Add(Static_box,proportion = 1,
+        self.main_container = wx.BoxSizer(wx.VERTICAL)
+        self.main_container.Add(self.introsizer,proportion = 0)
+        self.main_container.Add(url_box,proportion = 0,flag=wx.EXPAND)
+        self.main_container.Add(dir_box,proportion = 0,flag=wx.EXPAND)
+        self.main_container.Add(self.hbox,proportion = 0,flag=wx.EXPAND)
+        self.main_container.Add(Static_box,proportion = 1,
                            flag=wx.EXPAND)
-        main_container.Add(feature_box,proportion=0)
-        main_container.Add(prog_box,proportion=0)
-        
-        panel.SetSizer(main_container)
+        self.main_container.Add(feature_box,proportion=0)
+        self.main_container.Add(prog_box,proportion=0)
+      
+        panel.SetSizer(self.main_container)
         #--------------------------------------------------------------------------
         
         #an empty list for showing filtered links.
@@ -283,6 +290,7 @@ class Mypanel(object):
         #List for checked links to download;
          #used in (enter),(filter),(EvtCheckBox)
         self.toDownload = []
+        menu = Menu(self.win)
         
     #--------------------------------------------------------------------------
     def EvtCheckBox(self, event):
@@ -304,27 +312,35 @@ class Mypanel(object):
                     self.filtered.remove(item)
 
             if filtered:
-                
-                if self.check_list:
-                    self.check_list.Destroy()
 
                 if self.filtered:
-                    self.check_list = wx.CheckListBox(self.panel, -1, (5,234),
-                                                      (583,238),self.filtered,
-                                                      style = wx.HSCROLL)
-
+                    self.main_container.Show(self.hbox)
+                    self.panel.Layout()
+                    self.box.SetLabelText("")
+                    self.check_list.SetItems(self.filtered)
                     self.count.SetLabelText("No. of links found: "+str(len(self.filtered)))
-                else:
-                    self.check_list = wx.CheckListBox(self.panel, -1, (5,234),
-                                                      (583,238),self.urls,
-                                                      style = wx.HSCROLL)
-
+                    
+                elif not(event.IsChecked()):
+                    self.main_container.Show(self.hbox)
+                    self.panel.Layout()
+                    self.box.SetLabelText("")
+                    self.check_list.SetItems(self.urls)
+                    
                     self.count.SetLabelText("No. of links found: "+str(len(self.urls)))
+                    
+            elif not(event.IsChecked()):
+                self.main_container.Show(self.hbox)
+                self.panel.Layout()
+                self.box.SetLabelText("")
+                self.check_list.SetItems(self.urls)
+                    
+                self.count.SetLabelText("No. of links found: "+str(len(self.urls)))
 
-                #Adding the list box to container
-                self.bsizer.Add(self.check_list,proportion=1,flag=wx.EXPAND       
-                      |wx.ALL,border=5 
-                      )
+            else:
+                self.main_container.Hide(self.hbox)
+                self.panel.Layout()
+                self.check_list.SetItems(self.filtered)
+                self.box.SetLabelText("No links matched, try another filter; or to show all links, click 'show links' button")
 
             self.toDownload = []            
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
@@ -362,13 +378,21 @@ class Mypanel(object):
         The function to prepare a list of all urls found on home page,
         It works on text_enter_event of textctrl box called 'url'.
         '''
-
+        
+        #Fetching urls
         home_url = self.url_field.GetValue()
         if home_url == "":
             self.url_field.SetValue("Please enter url")
             return
         error, self.urls = get_urls.main(home_url)
+
+        #if urls fetched
         if self.urls:
+            
+            self.main_container.Show(self.hbox)
+            self.panel.Layout()
+            #--------------------------------------------------------------
+            #Creatinf check list box
             try:
                 self.check_list.Destroy()
                 self.filtered = []
@@ -408,13 +432,8 @@ class Mypanel(object):
                     for item in self.old_filtered:
                         self.filtered.remove(item)
 
-                if self.check_list:
-                    self.check_list.Destroy()                                      #Destroying old list
-
                 if self.filtered:    
-                    self.check_list = wx.CheckListBox(self.panel, -1, (5,234),         #creating new filtered list
-                                                      (583,238),self.filtered,
-                                                      style = wx.HSCROLL)
+                    self.check_list.SetItems(self.filtered)
                     self.count.SetLabelText("No. of links found: "+str(len(self.filtered)))
                 else:
                     self.check_list = wx.CheckListBox(self.panel, -1, (5,234),
