@@ -316,33 +316,31 @@ class Mypanel(object):
             if filtered:
 
                 if self.filtered:
-                    self.main_container.Show(self.hbox)
-                    self.panel.Layout()
                     self.box.SetLabel("")
                     self.check_list.SetItems(self.filtered)
+                    self.main_container.Show(self.hbox)
+                    self.panel.Layout()
                     self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
                     
                 elif not(event.IsChecked()):
-                    self.main_container.Show(self.hbox)
-                    self.panel.Layout()
                     self.box.SetLabel("")
                     self.check_list.SetItems(self.urls)
-                    
+                    self.main_container.Show(self.hbox)
+                    self.panel.Layout()
                     self.count.SetLabel("No. of links found: "+str(len(self.urls)))
                     
             elif not(event.IsChecked()):
-                self.main_container.Show(self.hbox)
-                self.panel.Layout()
                 self.box.SetLabel("")
                 self.check_list.SetItems(self.urls)
-                    
+                self.main_container.Show(self.hbox)
+                self.panel.Layout()                    
                 self.count.SetLabel("No. of links found: "+str(len(self.urls)))
 
             else:
-                self.main_container.Hide(self.hbox)
-                self.panel.Layout()
                 self.check_list.SetItems(self.filtered)
                 self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
+                self.main_container.Hide(self.hbox)
+                self.panel.Layout()
 
             self.toDownload = []            
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
