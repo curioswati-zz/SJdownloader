@@ -26,9 +26,10 @@ def extract_name(url):
             
 def main(urls, path,panel,container):
     #When called with direct url
-    if (not(urls[0].startswith("http"))
+    print urls
+    if (not(urls[0].startswith("u'http"))
         or ".html" not in urls[0]):
-        return "Invalid url"
+            return "Invalid url"
 
     print "Downloading into "+path+" ..."
     for url in urls:
