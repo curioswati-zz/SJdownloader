@@ -97,7 +97,7 @@ class Menu():
 #-------------------------------------------------------------------------        
 
 class open_pref():
-    def __init__(self, win, panel):
+    def __init__(self):
         app = wx.App()
         self.win = wx.Frame(None, title='Preferences',size=(500,350),
                             pos = (300,200))
@@ -108,8 +108,6 @@ class open_pref():
         #---------------------------------------------------------------
         #Creating widgets for window
         #option_box
-        self.win = win
-        self.panel = panel
         self.box = wx.StaticBox(self.panel, -1,size=(410,350),
                                 style=wx.TE_MULTILINE)
 
@@ -149,7 +147,7 @@ class open_pref():
         self.main_container.Add(button_cont,proportion=0,
                                 flag=wx.ALL,border=5)
 
-        win.Show()
+        self.win.Show()
         app.MainLoop()
             
     #-------------------------------------------------------------------    
