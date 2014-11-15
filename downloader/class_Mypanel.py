@@ -64,6 +64,8 @@ class Mypanel(object):
         show_btn.Bind(wx.EVT_BUTTON,self.enter)
 
         #calls browse method;
+        #browse_btn = wx.Bitmap(opj('../Icons/folder.png'),
+                               #wx.BITMAP_TYPE_PNG)
         browse_btn = AB.AquaButton(panel, -1, None, "Browse",size=(80,30))
         browse_btn.SetBackgroundColour((198,222,223,255))
         browse_btn.SetForegroundColour("Black")
