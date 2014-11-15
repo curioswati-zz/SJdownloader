@@ -97,34 +97,73 @@ class Menu():
 class open_pref():
     def __init__(self):
         app = wx.App()
-        self.win = wx.Frame(None, title='Preferences',size=(500,350))
+        self.win = wx.Frame(None, title='Preferences',size=(500,350),
+                            pos = (300,200))
         self.panel = wx.Panel(self.win)
         self.panel.SetBackgroundColour((198,222,223,255))
         self.panel.SetForegroundColour((60,60,60,255))
-
+        
+        #---------------------------------------------------------------
         #Creating widgets for window
-        #sub_containers
-        self.box = wx.StaticBox(self.panel, -1,size=(400,300))
-        self.options = wx.BoxSizer()
-        self.options.Add(self.box,proportion=1,flag=wx.EXPAND)
+        #option_box
+        self.box = wx.StaticBox(self.panel, -1,size=(410,350),
+                               style=wx.TE_MULTILINE)
+        
+        #Buttons
+        savebtn = AB.AquaButton(self.panel, -1, None,
+                                "Save",size=(80,30),pos = (415,280))
+        savebtn.SetBackgroundColour((198,222,223,255))
+        savebtn.SetForegroundColour("Black")
+        savebtn.SetToolTipString("Save changes")
+        savebtn.Bind(wx.EVT_BUTTON, self.save)
+        
+        cancelbtn = AB.AquaButton(self.panel, -1, None,
+                                  "Cancel",size=(80,30),pos = (415,315))
+        cancelbtn.SetBackgroundColour((198,222,223,255))
+        cancelbtn.SetForegroundColour("Black")
+        cancelbtn.SetToolTipString("Click to show found links")
+        cancelbtn.Bind(wx.EVT_BUTTON, self.cancel)
+                                  
+        #---------------------------------------------------------------
+        #Wrapping the boxes
 
         #Button container
-        #self.button_cont = wx.BoxSizer(wx.VERTICAL)
-        savebtn = AB.AquaButton(self.panel, -1, None,
-                                "Save",size=(80,30))
-        #cancelbtn = AB.AquaButton(self.panel, -1, None,
-         #                         "Cancel",size=(80,30))
-        #self.button_cont.Add(savebtn,proportion=0,flag=wx.TOP,border=150)
-        #self.button_cont.Add(cancelbtn,proportion=0,flag=wx.ALL,border=5)
+        button_cont = wx.BoxSizer(wx.VERTICAL)
+        button_cont.Add(savebtn,proportion=0,flag=wx.ALL,border=2)
+        button_cont.Add(cancelbtn,proportion=0,flag=wx.ALL,border=2)
+        
+        #option container
+        self.options = wx.BoxSizer()
+        self.options.Add(self.box,proportion=1,flag=wx.EXPAND)
 
         #Main_container
         self.main_container = wx.BoxSizer()
         self.main_container.Add(self.options,proportion=1,
                                 flag=wx.ALL,border=5)
-        self.main_container.Add(savebtn,proportion=0,
+        self.main_container.Add(button_cont,proportion=0,
                                 flag=wx.ALL,border=5)
+                                
+        #---------------------------------------------------------------
         self.win.Show()
         app.MainLoop()
+        
+    #-------------------------------------------------------------------    
+    def save(self, event):
+        '''
+        The function is bind with the save button.
+        It saves all the changes in preferences.
+        '''
+
+        self.win.Destroy()
+        
+    #-------------------------------------------------------------------    
+    def cancel(self, event):
+        '''
+        The function is bind with the save button.
+        It saves all the changes in preferences.
+        '''
+
+        self.win.Destroy()
         
     
 
