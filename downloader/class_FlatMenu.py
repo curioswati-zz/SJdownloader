@@ -19,7 +19,7 @@ It defines:
 import wx
 import os, sys
 from wx.lib.agw import aquabutton as AB
-#from class_FM import FM_MyRenderer
+import class_preferences
 
 #Linking to icons path.
 #----------------------------------------------------------
@@ -98,121 +98,24 @@ class Menu():
         
 #-------------------------------------------------------------------------        
 
-class open_pref():
-    def __init__(self):
-        app = wx.App()
-        self.win = wx.Frame(None, title='Preferences',size=(500,350),
-                            pos = (300,200))
-        self.panel = wx.Panel(self.win)
-        self.panel.SetBackgroundColour((198,222,223,255))
-        self.panel.SetForegroundColour((60,60,60,255))
-        
-        #---------------------------------------------------------------
-        #Creating widgets for window
-        #option_box
-        self.box = wx.StaticBox(self.panel, -1,size=(410,350),
-                                style=wx.TE_MULTILINE)
+def open_pref():
+    '''
+    main function for preferences window
+    '''
+    app = wx.App()
 
-        #---------------------------------------------------------------
-        
-        #Buttons
-        savebtn = AB.AquaButton(self.panel, -1, None,
-                                "Save",size=(80,30),pos = (415,250))
-        savebtn.SetBackgroundColour((198,222,223,255))
-        savebtn.SetForegroundColour("Black")
-        savebtn.SetToolTipString("Save changes")
-        savebtn.Bind(wx.EVT_BUTTON, self.save)
-        
-        cancelbtn = AB.AquaButton(self.panel, -1, None,
-                                  "Cancel",size=(80,30),pos = (415,280))
-        cancelbtn.SetBackgroundColour((198,222,223,255))
-        cancelbtn.SetForegroundColour("Black")
-        cancelbtn.SetToolTipString("Click to show found links")
-        cancelbtn.Bind(wx.EVT_BUTTON, self.cancel)
-        
-        #options
-        #default dir location
-        self.dir = wx.TextCtrl(self.panel,size=(300,25))
-        self.dir.SetToolTipString("Selected default location");
-        
-        browse_btn = wx.BitmapButton(self.panel, -1, wx.Bitmap('../Icons/folder.png'))
-        browse_btn.SetBackgroundColour((198,222,223,255))
-        browse_btn.SetForegroundColour("Black")
-        browse_btn.SetToolTipString("Select location")
-        browse_btn.Bind(wx.EVT_BUTTON,self.browse)
-        
-        #---------------------------------------------------------------
-        #static label
-        location = wx.StaticText(self.panel, -1, "Choose default directory")
-        filters  = wx.StaticText(self.panel, -1, "Choose default filters")                                  
-        #---------------------------------------------------------------
-        #Wrapping the boxes
-        
-        #for dir controls
-        dir_box = wx.BoxSizer()
-        dir_box.Add(location,proportion=0,flag=wx.ALL,border=5)
-        dir_box.Add(self.dir,proportion=1,flag=wx.ALL|wx.EXPAND,border=5)
-        dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
-        #--------------------------------------------------------------
+    #window object
+    window = wx.Frame(None,title = "Preferences",size=(500,300))
 
-        #Button container
-        button_cont = wx.BoxSizer(wx.VERTICAL)
-        button_cont.Add(savebtn,proportion=0,flag=wx.ALL,border=2)
-        button_cont.Add(cancelbtn,proportion=0,flag=wx.ALL,border=2)
-        
-        #option container
-        self.options = wx.BoxSizer()
-        self.options.Add(dir_box,proportion=1,flag=wx.EXPAND)
-        self.options.Add(self.box,proportion=1,flag=wx.EXPAND|wx.ALL)
-
-        #Main_container
-        self.main_container = wx.BoxSizer()
-        self.main_container.Add(self.options,proportion=1,
-                                flag=wx.ALL,border=5)
-        self.main_container.Add(button_cont,proportion=0,
-                                flag=wx.ALL,border=5)
-
-        self.win.Show()
-        app.MainLoop()
-
-    #------------------------------------------------------------------- 
-    def browse():
-        '''
-        The function is bind with the browse button.
-        It opens a directory location, and set it as default
-        '''
-        
-        dir_= self.dir.GetValue()
-        dlg = wx.DirDialog(self.win, "Choose a directory:",
-                          style=wx.DD_DEFAULT_STYLE
-                           | wx.DD_DIR_MUST_EXIST
-                           | wx.DD_CHANGE_DIR
-                           )
-
-        dlg.SetPath(dir_)
-        if dlg.ShowModal() == wx.ID_OK:
-            default_dir = dlg.GetPath()
-
-        dlg.Destroy()
-            
-    #-------------------------------------------------------------------    
-    def save(self, event):
-        '''
-        The function is bind with the save button.
-        It saves all the changes in preferences.
-        '''
-
-        self.win.Destroy()
-        
-    #-------------------------------------------------------------------    
-    def cancel(self, event):
-        '''
-        The function is bind with the save button.
-        It saves all the changes in preferences.
-        '''
-
-        self.win.Destroy()
-        
+    #box object
+    bkg = wx.Panel(window)
     
+    #packing the box
+    class_preferences.open_pref(bkg,window)
 
-    
+    #show the window
+    window.Show()
+
+    #execute the loop for maintaining the window
+    app.MainLoop()
+#--------------------------------------------------------------------------
