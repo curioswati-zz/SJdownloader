@@ -90,11 +90,13 @@ class Menu():
 
     #---------------------------------------------------------------------
     def Pref(self, event):
-        win = open_pref()
+        open_pref()
 
     #---------------------------------------------------------------------
     def Exit(self, event):
         self.win.Destroy()
+        
+#-------------------------------------------------------------------------        
 
 class open_pref():
     def __init__(self):
@@ -107,17 +109,22 @@ class open_pref():
         
         #---------------------------------------------------------------
         #Creating widgets for window
+        #option_box
+        self.box = wx.StaticBox(self.panel, -1,size=(410,350),
+                                style=wx.TE_MULTILINE)
+
+        #---------------------------------------------------------------
         
         #Buttons
         savebtn = AB.AquaButton(self.panel, -1, None,
-                                "Save",size=(80,30),pos = (415,280))
+                                "Save",size=(80,30),pos = (415,250))
         savebtn.SetBackgroundColour((198,222,223,255))
         savebtn.SetForegroundColour("Black")
         savebtn.SetToolTipString("Save changes")
         savebtn.Bind(wx.EVT_BUTTON, self.save)
         
         cancelbtn = AB.AquaButton(self.panel, -1, None,
-                                  "Cancel",size=(80,30),pos = (415,315))
+                                  "Cancel",size=(80,30),pos = (415,280))
         cancelbtn.SetBackgroundColour((198,222,223,255))
         cancelbtn.SetForegroundColour("Black")
         cancelbtn.SetToolTipString("Click to show found links")
@@ -156,6 +163,7 @@ class open_pref():
         #option container
         self.options = wx.BoxSizer()
         self.options.Add(dir_box,proportion=1,flag=wx.EXPAND)
+        self.options.Add(self.box,proportion=1,flag=wx.EXPAND|wx.ALL)
 
         #Main_container
         self.main_container = wx.BoxSizer()
@@ -163,11 +171,10 @@ class open_pref():
                                 flag=wx.ALL,border=5)
         self.main_container.Add(button_cont,proportion=0,
                                 flag=wx.ALL,border=5)
-                                
-        #---------------------------------------------------------------
+
         self.win.Show()
         app.MainLoop()
-        
+
     #------------------------------------------------------------------- 
     def browse():
         '''
@@ -187,7 +194,8 @@ class open_pref():
             default_dir = dlg.GetPath()
 
         dlg.Destroy()
-    #-------------------------------------------------------------------
+            
+    #-------------------------------------------------------------------    
     def save(self, event):
         '''
         The function is bind with the save button.
