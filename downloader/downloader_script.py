@@ -24,12 +24,24 @@ def extract_name(url):
         
     return name[-1::-1]
             
-def main(urls, path,panel,container):
+def main(urls, path,progress_bar):
     #When called with direct url
+    stop = False
     print urls
-    if (not(urls[0].startswith("u'http"))
-        or ".html" not in urls[0]):
-            return "Invalid url"
+    if (not(urls[0].startswith("http"))
+        and ".html" not in urls[0]):
+        return "Invalid url"
+
+    total_size = 0
+    for url in urls:
+        connection = urllib.urlopen(url)
+        meta = connection.info()
+        try:
+            size = meta.getheaders("content-length")[0]
+            total_size += int(size)
+        except IndexError:
+            size = len(connection.read())
+            total_size += size
 
     print "Downloading into "+path+" ..."
     for url in urls:
@@ -40,10 +52,9 @@ def main(urls, path,panel,container):
             save_file.write(data)
             save_file.close()
 
-            print 'Progress bar'
-            progress_bar = PG.PyGauge(panel,-1,size=(100,25),style=wx.GA_HORIZONTAL)
-            container.Add(progress_bar)
-            print "Added pro_bar"
+            download_size = len(data)
+            percent = download_size / float(total_size)
+
             progress_bar.SetValue([20,80])
             progress_bar.SetBarColor([wx.Colour(162,255,178),wx.Colour(159,176,255)])
             progress_bar.SetBackgroundColour(wx.WHITE)
@@ -51,8 +62,12 @@ def main(urls, path,panel,container):
             progress_bar.SetBorderPadding(2)
             progress_bar.SetDrawValue(draw=True, drawPercent=True, font=wx.SMALL_FONT, colour=wx.BLUE)
 
-            progress_bar.Update([30,0],2000)
-        except:
+            progress_bar.Update([percent,0],2000)
+
+            if stop:
+                break
+        except Exception as e:
+            return e
             return "The connection could not establish."
             
 if __name__ == "__main__":
