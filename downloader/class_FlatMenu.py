@@ -33,7 +33,9 @@ sys.path.append(os.path.split(dirName)[0])
 #----------------------------------------------------------
 
 class Menu():
-
+    
+    default_dir = '.'
+    
     def __init__(self,win):
         self.win = win
 
@@ -105,9 +107,6 @@ class open_pref():
         
         #---------------------------------------------------------------
         #Creating widgets for window
-        #option_box
-        self.box = wx.StaticBox(self.panel, -1,size=(410,350),
-                               style=wx.TE_MULTILINE)
         
         #Buttons
         savebtn = AB.AquaButton(self.panel, -1, None,
@@ -123,9 +122,31 @@ class open_pref():
         cancelbtn.SetForegroundColour("Black")
         cancelbtn.SetToolTipString("Click to show found links")
         cancelbtn.Bind(wx.EVT_BUTTON, self.cancel)
-                                  
+        
+        #options
+        #default dir location
+        self.dir = wx.TextCtrl(self.panel,size=(300,25))
+        self.dir.SetToolTipString("Selected default location");
+        
+        browse_btn = wx.BitmapButton(self.panel, -1, wx.Bitmap('../Icons/folder.png'))
+        browse_btn.SetBackgroundColour((198,222,223,255))
+        browse_btn.SetForegroundColour("Black")
+        browse_btn.SetToolTipString("Select location")
+        browse_btn.Bind(wx.EVT_BUTTON,self.browse)
+        
+        #---------------------------------------------------------------
+        #static label
+        location = wx.StaticText(self.panel, -1, "Choose default directory")
+        filters  = wx.StaticText(self.panel, -1, "Choose default filters")                                  
         #---------------------------------------------------------------
         #Wrapping the boxes
+        
+        #for dir controls
+        dir_box = wx.BoxSizer()
+        dir_box.Add(location,proportion=0,flag=wx.ALL,border=5)
+        dir_box.Add(self.dir,proportion=1,flag=wx.ALL|wx.EXPAND,border=5)
+        dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
+        #--------------------------------------------------------------
 
         #Button container
         button_cont = wx.BoxSizer(wx.VERTICAL)
@@ -134,7 +155,7 @@ class open_pref():
         
         #option container
         self.options = wx.BoxSizer()
-        self.options.Add(self.box,proportion=1,flag=wx.EXPAND)
+        self.options.Add(dir_box,proportion=1,flag=wx.EXPAND)
 
         #Main_container
         self.main_container = wx.BoxSizer()
@@ -147,7 +168,26 @@ class open_pref():
         self.win.Show()
         app.MainLoop()
         
-    #-------------------------------------------------------------------    
+    #------------------------------------------------------------------- 
+    def browse():
+        '''
+        The function is bind with the browse button.
+        It opens a directory location, and set it as default
+        '''
+        
+        dir_= self.dir.GetValue()
+        dlg = wx.DirDialog(self.win, "Choose a directory:",
+                          style=wx.DD_DEFAULT_STYLE
+                           | wx.DD_DIR_MUST_EXIST
+                           | wx.DD_CHANGE_DIR
+                           )
+
+        dlg.SetPath(dir_)
+        if dlg.ShowModal() == wx.ID_OK:
+            default_dir = dlg.GetPath()
+
+        dlg.Destroy()
+    #-------------------------------------------------------------------
     def save(self, event):
         '''
         The function is bind with the save button.
