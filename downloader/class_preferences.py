@@ -42,7 +42,7 @@ class open_pref(object):
         cancelbtn.SetToolTipString("Click to show found links")
         cancelbtn.Bind(wx.EVT_BUTTON, self.cancel)
 
-        browse_btn = wx.BitmapButton(self.panel, -1, wx.Bitmap('Icons/folder.png'))
+        browse_btn = wx.BitmapButton(self.panel, -1, wx.Bitmap('../Icons/folder.png'))
         browse_btn.SetBackgroundColour((198,222,223,255))
         browse_btn.SetForegroundColour("Black")
         browse_btn.SetToolTipString("Select location")

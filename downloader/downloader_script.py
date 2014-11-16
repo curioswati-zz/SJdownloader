@@ -66,7 +66,7 @@ def main(urls, path,progress_bar):
 
             if stop:
                 break
-        except Exception as e:
+        except IOError as e:
             return e
             return "The connection could not establish."
             

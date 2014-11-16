@@ -85,11 +85,11 @@ class Mypanel(object):
         reset_btn.Bind(wx.EVT_BUTTON,self.reset)
 
         #calls download metod
-        download_btn = AB.AquaButton(panel, -1, None, "Start",size=(80,30))
-        download_btn.SetBackgroundColour((198,222,223,255))
-        download_btn.SetForegroundColour("Black")
-        download_btn.SetToolTipString("Start download")
-        download_btn.Bind(wx.EVT_BUTTON,self.download)
+        self.download_btn = AB.AquaButton(panel, -1, None, "Start",size=(80,30))
+        self.download_btn.SetBackgroundColour((198,222,223,255))
+        self.download_btn.SetForegroundColour("Black")
+        self.download_btn.SetToolTipString("Start download")
+        self.download_btn.Bind(wx.EVT_BUTTON,self.download)
         
         close_btn = AB.AquaButton(panel, -1, None, "Close",size=(80,30))
         close_btn.SetBackgroundColour((198,222,223,255))
@@ -295,7 +295,7 @@ class Mypanel(object):
         prog_box.Add(progress, proportion=0, flag=wx.ALL,border=10)
         prog_box.Add(self.progress,proportion=1,
                      flag=wx.ALL,border=10)
-        prog_box.Add(download_btn,proportion=0,border=5,
+        prog_box.Add(self.download_btn,proportion=0,border=5,
                      flag=wx.RIGHT|wx.TOP|wx.BOTTOM)
         prog_box.Add(cancel_btn, proportion=0, border=5,
                       flag=wx.ALL)
@@ -334,8 +334,8 @@ class Mypanel(object):
         check_box = event.GetEventObject()
         regex = '.*\.'+check_box.GetLabelText()                       #creating a regex pattern based on
                                                                       #the label str of selected checkbox.
-        if regex == '.*.jpeg':
-            regex = '.*.jpe?g'
+        if regex == '.*\.jpeg':
+            regex = '.*\.jpe?g'
 
         try:            
             pattern = re.compile(regex)
@@ -415,7 +415,7 @@ class Mypanel(object):
         '''
         
         #Fetching urls
-        home_url = self.url_field.GetValue()
+        home_url = self.url_field.GetValue().strip()
         if home_url == "":
             self.url_field.SetValue("Please enter url")
             return
@@ -434,6 +434,7 @@ class Mypanel(object):
             self.cb6.Enable(True)
             self.cb7.Enable(True)
             self.cb8.Enable(True)
+
             self.filter_btn.Enable()
             self.regex.SetEditable(True)
 
@@ -459,6 +460,8 @@ class Mypanel(object):
 
             self.toDownload = []
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox)
+        else:
+            print error
             
     #--------------------------------------------------------------------------
     def filter(self,event):
@@ -471,6 +474,7 @@ class Mypanel(object):
         pattern = self.regex.GetValue()
         try:
              if self.urls:
+                 filtered = None
                  if pattern:
                      pattern = re.compile(pattern)
                      filtered = re.findall(pattern,'\n'.join(self.urls))
@@ -480,6 +484,9 @@ class Mypanel(object):
                  else:
                      for item in self.old_filtered:
                          self.filtered.remove(item)
+                         
+                 if not filtered:
+                     self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
 
                  if self.filtered:
                      self.check_list.SetItems(self.filtered)
@@ -495,7 +502,7 @@ class Mypanel(object):
                  
                  self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
                  self.check_list.SetSelection(0)
-    except Exception as e:
+        except Exception as e:
             print e
         
     def EvtCheckListBox(self, event):
@@ -525,13 +532,14 @@ class Mypanel(object):
 
         if not(self.url_field.GetValue() == ""):                           #If url field is not empty
             if self.dir.GetValue() == "":                                  #if dir field is empty
-                file_default_dir = open('default_dir.txt','r')
-                default_dir = str(file_default_dir.read())
-                file_default_dir.close()
+                
+                #file_default_dir = open('default_dir.txt','r')
+                #default_dir = str(file_default_dir.read())
+                #file_default_dir.close()
 
-                print default_dir
-                self.dir.SetValue(default_dir)
-                self.path = default_dir
+                #print default_dir
+                self.dir.SetValue('.')
+                self.path = '.'
             try:
                 self.toDownload.extend(self.check_list.GetCheckedStrings())
                 urls_to_download = self.toDownload
@@ -540,7 +548,7 @@ class Mypanel(object):
                                                self.progress)
     
             except AttributeError:
-                error = downloader_script.main([self.url_field.GetValue()],self.path,
+                error = downloader_script.main([self.url_field.GetValue().strip()],self.path,
                                                self.progress)
             if error:
                 print error
@@ -599,7 +607,8 @@ class Mypanel(object):
         self.cb6.Enable(False)
         self.cb7.Enable(False)
         self.cb8.Enable(False)
-        self.filter_btn.Disable()
+        
+        self.filter_btn.Disable()        
         self.regex.SetEditable(False)
         
         self.panel.Layout()
@@ -607,6 +616,7 @@ class Mypanel(object):
     #--------------------------------------------------------------------------
     def cancel(self, event):
         downloader_script.stop = True
+        self.win.Destroy()
     
     def close(self, event):
         self.win.Destroy()
