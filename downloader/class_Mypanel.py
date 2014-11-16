@@ -21,12 +21,14 @@ It defines:
     -close
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 """Required modules"""
-import wx
-import get_urls,downloader_script
-from wx.lib.agw import aquabutton as AB
 import re,os
-from class_FlatMenu import Menu
+import wx
+from wx.lib.agw import aquabutton as AB
 from wx.lib.agw import pygauge as PG
+
+import get_urls,downloader_script
+from class_FlatMenu import Menu
+from class_preferences import open_pref
 
 #modifying path for logo
 def opj(path):
@@ -38,7 +40,7 @@ class Mypanel(object):
         self.win = win                                                      #The window object
         self.panel = panel                                                  #The panel object
 
-        box = wx.StaticBox(self.panel, -1,size=(2000,100))
+        box = wx.StaticBox(self.panel, -1,size=(2000,80))
         self.introsizer = wx.StaticBoxSizer(box)
 
         #LOGO
@@ -68,10 +70,8 @@ class Mypanel(object):
         show_btn.Bind(wx.EVT_BUTTON,self.enter)
 
         #calls browse method;
-        browse_btn = wx.BitmapButton(self.panel, -1, wx.Bitmap('../Icons/folder.png'))
-        #browse_btn = wx.Bitmap(opj('../Icons/folder.png'),
-                               #wx.BITMAP_TYPE_PNG)
-        browse_btn = AB.AquaButton(panel, -1, None, "Browse",size=(80,30))
+        browse_btn = wx.BitmapButton(self.panel, -1,
+                                     wx.Bitmap('../Icons/folder.png'))
         browse_btn.SetBackgroundColour((198,222,223,255))
         browse_btn.SetForegroundColour("Black")
         browse_btn.SetToolTipString("Select location")
@@ -123,9 +123,9 @@ class Mypanel(object):
         #Static text area:
 
         #Label, before text box for url
-        url = wx.StaticText(panel, -1, "URL:",size=(80,25))   
+        url = wx.StaticText(panel, -1, "URL:",size=(70,25))   
         #Label, before text box for dir location
-        location = wx.StaticText(panel, -1, "Save file in:")
+        location = wx.StaticText(panel, -1, "Save file in:",size=(70,25))
         #Count of links
         self.count = wx.StaticText(self.panel,-1,"No. of links found:",
                                        size=(255,15),pos=(420,295))
@@ -150,7 +150,6 @@ class Mypanel(object):
 
         #Static box For showing links
         self.box = wx.StaticBox(self.panel, -1, "The links will be shown here")
-        box.SetBackgroundColour((198,232,223,0))
         self.bsizer = wx.StaticBoxSizer(self.box, wx.VERTICAL)
 
         #text box for entering regex pattern
@@ -180,7 +179,7 @@ class Mypanel(object):
         self.cb8 = wx.CheckBox(panel, -1, "mp3",
                           (70, 310), (55, 20))
         selectAll = wx.CheckBox(self.panel, -1, "select all",
-                              (70, 310), (85, 20))
+                              (70, 310), (85, 15))
         
         #Binding events with checkboxes
         
@@ -211,14 +210,14 @@ class Mypanel(object):
 
         #The url, url label containers                           Container#1
         url_box = wx.BoxSizer()                                  
-        url_box.Add(url,proportion=0,flag=wx.TOP|wx.LEFT,border=5)
+        url_box.Add(url,proportion=0,flag=wx.TOP|wx.RIGHT,border=7)
         url_box.Add(self.url_field,proportion=1,flag=wx.EXPAND|
                     wx.ALL,border=5)
         url_box.Add(show_btn,proportion=0,border=5,flag=wx.ALL)
 
         #The dir location, location label container              Container#2 
         dir_box = wx.BoxSizer()
-        dir_box.Add(location,proportion=0,flag=wx.ALL,border=5)
+        dir_box.Add(location,proportion=0,flag=wx.TOP|wx.RIGHT,border=5)
         dir_box.Add(self.dir,proportion=1,flag=wx.ALL|wx.EXPAND,border=5)
         dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
         #--------------------------------------------------------------------------
@@ -310,10 +309,10 @@ class Mypanel(object):
         sub_container.Add(url_box,proportion=1)
         sub_container.Add(dir_box,proportion=1)
         self.main_container.Add(self.introsizer,proportion = 0)
-        self.main_container.Add(self.hbox,proportion = 0,flag=wx.EXPAND)
+        self.main_container.Add(self.hbox,proportion=0,flag=wx.EXPAND)
         self.main_container.Hide(self.hbox)
         self.panel.Layout()
-        self.main_container.Add(Static_box,proportion = 1,
+        self.main_container.Add(Static_box,proportion=1,
                            flag=wx.EXPAND)
         self.main_container.Add(feature_box,proportion=0)
         self.main_container.Add(prog_box,proportion=0)
@@ -333,7 +332,7 @@ class Mypanel(object):
     #--------------------------------------------------------------------------
     def EvtCheckBox(self, event):
         check_box = event.GetEventObject()
-        regex = '.*.'+check_box.GetLabelText()                       #creating a regex pattern based on
+        regex = '.*\.'+check_box.GetLabelText()                       #creating a regex pattern based on
                                                                       #the label str of selected checkbox.
         if regex == '.*.jpeg':
             regex = '.*.jpe?g'
@@ -471,37 +470,33 @@ class Mypanel(object):
 
         pattern = self.regex.GetValue()
         try:
-            if self.urls:
-                if pattern:
-                    pattern = re.compile(pattern)
-                    filtered = re.findall(pattern,'\n'.join(self.urls))
-                    self.filtered.extend(filtered)
-                    self.old_filtered = filtered
+             if self.urls:
+                 if pattern:
+                     pattern = re.compile(pattern)
+                     filtered = re.findall(pattern,'\n'.join(self.urls))
+                     self.filtered.extend(filtered)
+                     self.old_filtered = filtered
 
-                else:
-                    for item in self.old_filtered:
-                        self.filtered.remove(item)
+                 else:
+                     for item in self.old_filtered:
+                         self.filtered.remove(item)
 
-                if self.filtered:    
-                    self.check_list.SetItems(self.filtered)
-                    self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
-                else:
-                    self.check_list.SetItems(self.urls)
-                    self.count.SetLabel("No. of links found: "+str(len(self.urls)))
+                 if self.filtered:
+                     self.check_list.SetItems(self.filtered)
+                     self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
+                 else:
+                     self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
+                     self.check_list.SetItems("")
+                     self.main_container.Hide(self.hbox)
+                     self.panel.Layout()
 
-                self.bsizer.Add(self.check_list,proportion=1,flag=wx.EXPAND         #Adding the list box to container
-                      |wx.ALL,border=5 
-                      )
-                      
-                self.panel.Layout()
-
-                #list of selected links
-                self.toDownload = []
-                
-                self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
-                self.check_list.SetSelection(0)
-        except:
-            pass
+                 #list of selected links
+                 self.toDownload = []
+                 
+                 self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
+                 self.check_list.SetSelection(0)
+    except Exception as e:
+            print e
         
     def EvtCheckListBox(self, event):
         '''
@@ -530,12 +525,13 @@ class Mypanel(object):
 
         if not(self.url_field.GetValue() == ""):                           #If url field is not empty
             if self.dir.GetValue() == "":                                  #if dir field is empty
-                default_dir = Menu.default_dir
+                file_default_dir = open('default_dir.txt','r')
+                default_dir = str(file_default_dir.read())
+                file_default_dir.close()
+
+                print default_dir
                 self.dir.SetValue(default_dir)
                 self.path = default_dir
-                #curdir = os.curdir
-                #self.dir.SetValue(curdir)
-                #self.path = curdir
             try:
                 self.toDownload.extend(self.check_list.GetCheckedStrings())
                 urls_to_download = self.toDownload
@@ -545,10 +541,11 @@ class Mypanel(object):
     
             except AttributeError:
                 error = downloader_script.main([self.url_field.GetValue()],self.path,
-                                           self.progress)
+                                               self.progress)
             if error:
-                #print error
-                dlg = wx.MessageDialog(self, 'Connection failed', 'Oops!', wx.OK|wx.ICON_INFORMATION)
+                print error
+                dlg = wx.MessageDialog(self.panel,"Connection failed",
+                                       'Oops!', wx.OK|wx.ICON_INFORMATION)
                 dlg.ShowModal()
                 dlg.Destroy()
             
@@ -609,7 +606,7 @@ class Mypanel(object):
 
     #--------------------------------------------------------------------------
     def cancel(self, event):
-        pass
+        downloader_script.stop = True
     
     def close(self, event):
         self.win.Destroy()
