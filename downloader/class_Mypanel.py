@@ -178,6 +178,8 @@ class Mypanel(object):
                           (70, 295), (55, 20))
         self.cb8 = wx.CheckBox(panel, -1, "mp3",
                           (70, 310), (55, 20))
+        self.cb9 = wx.CheckBox(panel, -1, "jpg",
+                          (70, 310), (55, 20))
         selectAll = wx.CheckBox(self.panel, -1, "select all",
                               (70, 310), (85, 15))
         
@@ -199,6 +201,8 @@ class Mypanel(object):
         self.cb7.Enable(False)
         self.cb8.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
         self.cb8.Enable(False)
+        self.cb9.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
+        self.cb9.Enable(False)
         selectAll.Bind(wx.EVT_CHECKBOX, self.select_all)
 
         #--------------------------------------------------------------------------
@@ -263,6 +267,8 @@ class Mypanel(object):
         feature_box3.Add(self.cb7, proportion=0,flag=wx.EXPAND     #flv
                       |wx.ALL,border=2)
         feature_box3.Add(self.cb8, proportion=0,flag=wx.EXPAND     #mp3
+                      |wx.ALL,border=2)
+        feature_box3.Add(self.cb9, proportion=0,flag=wx.EXPAND     #jpg
                       |wx.ALL,border=2)
         #--------------------------------------------------------------------------
         
@@ -334,9 +340,6 @@ class Mypanel(object):
         check_box = event.GetEventObject()
         regex = '.*\.'+check_box.GetLabelText()                       #creating a regex pattern based on
                                                                       #the label str of selected checkbox.
-        if regex == '.*\.jpeg':
-            regex = '.*\.jpe?g'
-
         try:            
             pattern = re.compile(regex)
             filtered = re.findall(regex, '\n'.join(self.urls))
@@ -434,6 +437,7 @@ class Mypanel(object):
             self.cb6.Enable(True)
             self.cb7.Enable(True)
             self.cb8.Enable(True)
+            self.cb9.Enable(True)
 
             self.filter_btn.Enable()
             self.regex.SetEditable(True)
@@ -606,6 +610,7 @@ class Mypanel(object):
         self.cb5.Enable(False)
         self.cb6.Enable(False)
         self.cb7.Enable(False)
+        self.cb8.Enable(False)
         self.cb8.Enable(False)
         
         self.filter_btn.Disable()        
