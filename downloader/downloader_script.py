@@ -11,6 +11,8 @@ It defines:
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''Required modules'''
 import urllib
+import wx
+from wx.lib.agw import pygauge as PG
 
 def extract_name(url):
     """
@@ -33,6 +35,7 @@ def main(urls, path,progress_bar):
         return "Invalid url"
 
     total_size = 0
+
     for url in urls:
         connection = urllib.urlopen(url)
         meta = connection.info()
@@ -43,6 +46,19 @@ def main(urls, path,progress_bar):
             size = len(connection.read())
             total_size += size
 
+    percent = total_size / len(urls)
+    total_size /= float(1024)
+    print str(total_size) + "Mb selected for download"
+    #progress bar attributes
+    progress_bar.SetValue([0,total_size])
+    progress_bar.SetBarColor([wx.Colour(162,255,178),wx.Colour(159,176,255)])
+    progress_bar.SetBackgroundColour(wx.WHITE)
+    progress_bar.SetBorderColor(wx.BLACK)
+    progress_bar.SetBorderPadding(2)
+    progress_bar.SetDrawValue(draw=True, drawPercent=True, font=wx.SMALL_FONT, colour=wx.BLUE)
+    progress_bar.Update([percent,0],2000)
+
+    
     print "Downloading into "+path+" ..."
     for url in urls:
         name = extract_name(url)
@@ -51,19 +67,10 @@ def main(urls, path,progress_bar):
             save_file = open(path+"/"+name, 'wb')
             save_file.write(data)
             save_file.close()
+            print name
 
-            download_size = len(data)
-            percent = download_size / float(total_size)
-
-            progress_bar.SetValue([20,80])
-            progress_bar.SetBarColor([wx.Colour(162,255,178),wx.Colour(159,176,255)])
-            progress_bar.SetBackgroundColour(wx.WHITE)
-            progress_bar.SetBorderColor(wx.BLACK)
-            progress_bar.SetBorderPadding(2)
-            progress_bar.SetDrawValue(draw=True, drawPercent=True, font=wx.SMALL_FONT, colour=wx.BLUE)
-
-            progress_bar.Update([percent,0],2000)
-
+#            download_size = len(data)
+#            percent = download_size / float(total_size)           
             if stop:
                 break
         except IOError as e:
