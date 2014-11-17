@@ -28,6 +28,7 @@ def extract_name(url):
             
 def main(urls, path,progress_bar):
     #When called with direct url
+    
     stop = False
     print urls
     if (not(urls[0].startswith("http"))
@@ -47,16 +48,16 @@ def main(urls, path,progress_bar):
             total_size += size
 
     percent = total_size / len(urls)
-    total_size /= float(1024)
+    total_size /= float(1024**2)
     print str(total_size) + "Mb selected for download"
     #progress bar attributes
-    progress_bar.SetValue([0,total_size])
-    progress_bar.SetBarColor([wx.Colour(162,255,178),wx.Colour(159,176,255)])
-    progress_bar.SetBackgroundColour(wx.WHITE)
-    progress_bar.SetBorderColor(wx.BLACK)
-    progress_bar.SetBorderPadding(2)
-    progress_bar.SetDrawValue(draw=True, drawPercent=True, font=wx.SMALL_FONT, colour=wx.BLUE)
-    progress_bar.Update([percent,0],2000)
+#    progress_bar.SetValue([0,total_size])
+#    progress_bar.SetBarColor([wx.Colour(162,255,178),wx.Colour(159,176,255)])
+#    progress_bar.SetBackgroundColour(wx.WHITE)
+#    progress_bar.SetBorderColor(wx.BLACK)
+#    progress_bar.SetBorderPadding(2)
+#    progress_bar.SetDrawValue(draw=True, drawPercent=True, font=wx.SMALL_FONT, colour=wx.BLUE)
+#    progress_bar.Update([percent,0],2000)
 
     
     print "Downloading into "+path+" ..."

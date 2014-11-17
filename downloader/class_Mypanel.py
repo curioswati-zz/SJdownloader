@@ -125,7 +125,7 @@ class Mypanel(object):
         #Label, before text box for url
         url = wx.StaticText(panel, -1, "URL:",size=(70,25))   
         #Label, before text box for dir location
-        location = wx.StaticText(panel, -1, "Save file in:",size=(70,25))
+        location = wx.StaticText(panel, -1, "Save file in:",size=(80,25))
         #Count of links
         self.count = wx.StaticText(self.panel,-1,"No. of links found:",
                                        size=(255,15),pos=(420,295))
