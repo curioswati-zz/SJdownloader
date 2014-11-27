@@ -8,131 +8,247 @@ It imports:
     -wx
 It defines:
     -__init__
+    -createMenu
+    -General
+    -Filters
+    -Populate
+    -SetStringItem
     -browse
     -save
     -close
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 """Required Modules"""
 import wx
+import os,sys
 from wx.lib.agw import aquabutton as AB
+import  wx.lib.mixins.listctrl  as  listmix
+import change_config
 
+def opj(path):
+     return apply(os.path.join, tuple(path.split('/')))
+    
+#Constants
+#----------------------------------------------------------------------
+TBFLAGS = ( wx.TB_HORIZONTAL
+            | wx.NO_BORDER
+            | wx.TB_FLAT
+            | wx.TB_TEXT
+            | wx.TB_HORZ_LAYOUT
+            )
+tID = wx.NewId()
+GENERAL_ID = wx.NewId()
+FILTER_ID = wx.NewId()
+
+#fetched from congif file
+with open('C:\Users\Swati_J\Documents\GitHub\Downloader\downloader\config.txt') as dirfile:
+    data = dirfile.readlines()
+    DD = data[0].replace("\n","")
+    filters = data[1]
+
+#-------------------------------------------------------------------------
 class open_pref(object):
-        
-    def __init__(self,win,panel):
+
+    def __init__(self,win, panel):
+
         self.win = win
         self.panel = panel
-        self.DD = '.'
+        self.mainPanel = wx.Panel(panel)
 
-        self.panel.SetBackgroundColour((198,222,223,255))
-        self.panel.SetForegroundColour((60,60,60,255))
-        #---------------------------------------------------------------
+        #------------------------------------------------------------------
         #Creating widgets for window
+        #------------------------------------------------------------------
         #Buttons
-        savebtn = AB.AquaButton(self.panel, -1, None,
-                                "Save",size=(60,30))
-        savebtn.SetBackgroundColour((198,222,223,255))
-        savebtn.SetForegroundColour("Black")
-        savebtn.SetToolTipString("Save changes")
-        savebtn.Bind(wx.EVT_BUTTON, self.save)
+        OKbtn = AB.AquaButton(self.mainPanel, -1, None,
+                                "OK",size=(60,30))
+        OKbtn.SetBackgroundColour((198,222,223,255))
+        OKbtn.SetForegroundColour("Black")
+        OKbtn.SetToolTipString("Save changes")
+        OKbtn.Bind(wx.EVT_BUTTON, self.save)
         
-        cancelbtn = AB.AquaButton(self.panel, -1, None,
+        cancelbtn = AB.AquaButton(self.mainPanel, -1, None,
                                   "Cancel",size=(60,30))
         cancelbtn.SetBackgroundColour((198,222,223,255))
         cancelbtn.SetForegroundColour("Black")
-        cancelbtn.SetToolTipString("Click to show found links")
+        cancelbtn.SetToolTipString("Click to cancel changes")
         cancelbtn.Bind(wx.EVT_BUTTON, self.cancel)
 
-        browse_btn = wx.BitmapButton(self.panel, -1, wx.Bitmap('../Icons/folder.png'))
+        browse_btn = wx.BitmapButton(self.mainPanel, -1, wx.Bitmap('../Icons/folder.png'),
+                                     size=(32,25))
         browse_btn.SetBackgroundColour((198,222,223,255))
         browse_btn.SetForegroundColour("Black")
         browse_btn.SetToolTipString("Select location")
         browse_btn.Bind(wx.EVT_BUTTON,self.browse)
         
-        #--------------------------------------------------------------  
-        #static label
-        location = wx.StaticText(self.panel, -1, "Choose default directory")
-        filterLabel  = wx.StaticText(self.panel, -1, "Choose default filters",
-                                 size=(200,25))
-        
-        #default dir location
-        self.dir = wx.TextCtrl(self.panel,size=(200,25))
+        #------------------------------------------------------------------
+        #Text ctrl for showing selected location
+        self.dir = wx.TextCtrl(self.mainPanel,size=(400,25))
         self.dir.SetToolTipString("Selected default location");
         
-        #Filters list
-        self.filter_list = ['.*.jpg','.*.png',
-                       '/\.(?:z(?:ip|[0-9]{2})|r(?:ar|[0-9]{2})|jar|bz2|gz|tar|rpm|7z(?:ip)?|lzma|xz)$/i',
-                       '/\.(?:mp3|wav|og(?:g|a)|flac|midi?|rm|aac|wma|mka|ape)$/i',
-                       '/\.(?:exe|msi|dmg|bin|xpi|iso)$/i',
-                       '/\.(?:pdf|xlsx?|docx?|odf|odt|rtf)$/i',
-                       '/\.(?:jp(?:e?g|e|2)|gif|png|tiff?|bmp|ico)$/i',
-                       '/\.(?:mpeg|ra?m|avi|mp(?:g|e|4)|mov|divx|asf|qt|wmv|m\dv|rv|vob|asx|ogm|ogv|webm)$/i']
-        self.filter_list_box = wx.CheckListBox(self.panel,-1,(10,60),
-                                           (380,200),self.filter_list,style=wx.HSCROLL)
-
-        #checkbox for applying all
-        self.applyAll = wx.CheckBox(self.panel, -1, "apply all",
-                                    (70, 310), (85, 20))
-        self.applyAll.Bind(wx.EVT_CHECKBOX,self.apply_all)
         #------------------------------------------------------------------
-        #Wrapping the boxes
+        #Filters list
+        self.filter_list = {1:('Images(jpg,jpeg,gif,...)','.*\.(?:jp(?:e?g|e|2)|gif|png|tiff?|bmp|ico)$'),
+                            2:('Archives(zip,rar,...)','.*\.(?:z(?:ip|[0-9]{2})|r(?:ar|[0-9]{2})|jar|bz2|gz|tar|rpm|7z(?:ip)?|lzma|xz)$'),
+                            3:('Audio(mp3,wav,...)','.*\.(?:mp3|wav|og(?:g|a)|flac|midi?|rm|aac|wma|mka|ape)$'),
+                            4:('Software(exe,xpi,...)','.*\.(?:exe|msi|dmg|bin|xpi|iso)$'),
+                            5:('Videos(mpeg,avi,...)','.*\.(?:mpeg|ra?m|avi|mp(?:g|e|4)|mov|divx|asf|qt|wmv|m\dv|rv|vob|asx|ogm|ogv|webm)$'),
+                            6:('Documents(pdf,odf,...)','.*\.(?:pdf|xlsx?|docx?|odf|odt|rtf)$')
+                            }
+        self.filter_list_box = TestListCtrl(self.mainPanel, tID,
+                                           (5,45),(472,240),
+                                           style=wx.LC_REPORT
+                                           | wx.BORDER_NONE
+                                           | wx.LC_SORT_ASCENDING
+                                           )
         
-        #for dir controls
+        self.Populate()
+        self.win.Bind(wx.EVT_LIST_ITEM_SELECTED,
+                      self.filter_list_box.OnItemSelected,
+                      self.filter_list_box)
+        
+        #------------------------------------------------------------------
+        #Containers
+        #------------------------------------------------------------------
+        #for directory box
         dir_box = wx.BoxSizer()
-        dir_box.Add(location,proportion=0,flag=wx.ALL,border=5)
         dir_box.Add(self.dir,proportion=1,flag=wx.ALL|wx.EXPAND,border=5)
         dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
 
-        #--------------------------------------------------------------------
-        #Label box
-        labels = wx.BoxSizer()
-        labels.Add(filterLabel,proportion=1)
-        labels.Add(self.applyAll,proportion=1)
+        #Static box for container
+        box = wx.StaticBox(self.mainPanel,-1,"Choose default directory",
+                           size=(500,25))
+        self.dir_sizer = wx.StaticBoxSizer(box)
+        self.dir_sizer.Add(dir_box,1,wx.EXPAND)
 
-        #--------------------------------------------------------------------
-        #For filter controls
-        filter_box = wx.BoxSizer()
-        filter_box.Add(self.filter_list_box,proportion=1,flag=wx.EXPAND)
 
         #Button container
-        button_cont = wx.BoxSizer(wx.VERTICAL)
-        button_cont.Add(savebtn,proportion=0,flag=wx.TOP,border=190)
-        button_cont.Add(cancelbtn,proportion=0,flag=wx.ALL,border=2)
+        button_cont = wx.BoxSizer()
+        button_cont.Add(OKbtn,proportion=0,flag=wx.LEFT,border=350)
+        button_cont.Add(cancelbtn,proportion=0,flag=wx.ALL)
+
+        #------------------------------------------------------------------        
+        #Wrapping the boxes
+        container = wx.StaticBox(self.mainPanel, -1)
+        self.subSizer = wx.StaticBoxSizer(container,wx.VERTICAL)
+
+        self.subSizer.Add(self.dir_sizer,0,wx.EXPAND)
+        self.subSizer.Add(self.filter_list_box,1,wx.EXPAND)
+
+        #Wrraping the panel and its widgets
+        panelSizer = wx.BoxSizer(wx.VERTICAL)
+        panelSizer.Add(self.subSizer,1,wx.EXPAND|wx.ALL,border=5)
+        panelSizer.Add(button_cont,0,wx.EXPAND)
+        self.mainPanel.SetSizer(panelSizer)
         
-        #option container
-        self.options = wx.BoxSizer(wx.VERTICAL)
-        self.options.Add(dir_box,proportion=0)
-        self.options.Add(labels,proportion=0,flag=wx.ALL,border=5)
-        self.options.Add(filter_box, proportion=1)
+        self.createMenu(win)
 
-        #Main_container
-        self.main_container = wx.BoxSizer()
-        self.main_container.Add(self.options,proportion=1,flag=wx.EXPAND)
-        self.main_container.Add(button_cont,proportion=0,
-                                flag=wx.ALL|wx.EXPAND,border=5)
-
-        self.panel.SetSizer(self.main_container)
+        #wrap menu and panel to window
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.mainSizer.Add(self.toolBar,0,wx.EXPAND)
+        self.mainSizer.Add(self.mainPanel,1,wx.EXPAND)
+        self.panel.SetSizer(self.mainSizer)
+        
         self.panel.Layout()
+        self.General()
+        self.win.CenterOnScreen()
 
     #-------------------------------------------------------------------
-    def apply_all(self, event):
-        if event.IsChecked():
-            try:
-                indices = range(len(self.filter_list))
-                self.filter_list_box.SetChecked(indices)
-            except Exception as e:
-                     print e
+    def createMenu(self,win):
+
+        self.toolBar = wx.ToolBar(self.panel, style=TBFLAGS)
+        tsize = (30,30)
+                
+        #Toolbar icons
+        #---------------------------------------------------------------------
+        general_bmp = wx.Bitmap(opj("../Icons/pref.png"), wx.BITMAP_TYPE_PNG)
+        filter_bmp = wx.Bitmap(opj("../Icons/new.png"), wx.BITMAP_TYPE_PNG)
+
+        self.toolBar.SetToolBitmapSize(tsize)
+        self.toolBar.AddLabelTool(GENERAL_ID, "General", general_bmp, shortHelp="General")
+        self.win.Bind(wx.EVT_TOOL, self.General, id=GENERAL_ID)
+
+        self.toolBar.AddLabelTool(FILTER_ID, "Filters", filter_bmp, shortHelp="Filters")
+        self.win.Bind(wx.EVT_TOOL, self.Filters, id=FILTER_ID)
+
+        #---------------------------------------------------------------------
+        self.toolBar.Realize()    
+
+    #-------------------------------------------------------------------
+    def General(self, *event):
+        '''
+        Function called when clicked general tool.
+        '''
+
+        try:
+            self.subSizer.Hide(self.dir_sizer)
+            self.subSizer.Hide(self.filter_list_box)
+        except Exception as e:
+            print e
+
+        self.subSizer.Show(self.dir_sizer)
+        self.panel.Layout()
+        
+    #-------------------------------------------------------------------
+    def Filters(self, event):
+        '''
+        Function called when Filters tool clicked.
+        '''
+        try:
+            self.subSizer.Hide(self.dir_sizer)
+            self.subSizer.Hide(self.filter_list_box)
+        except Exception as e:
+            print e
+            
+        self.subSizer.Show(self.filter_list_box)
+        
+        self.panel.Layout()
+        
+    #-------------------------------------------------------------------
+    def Populate(self):
+        '''
+        Helper to Filters method.
+        '''
+        # for normal, simple columns, you can add them like this:
+        self.filter_list_box.InsertColumn(0, "Caption")
+        self.filter_list_box.InsertColumn(1, "Extension")
+        
+        items = self.filter_list.items()
+        for key, data in items:
+            index = self.filter_list_box.InsertStringItem(sys.maxint, data[0])
+            self.filter_list_box.SetStringItem(index, 0, data[0])
+            self.filter_list_box.SetStringItem(index, 1, data[1])
+            self.filter_list_box.SetItemData(index, key)
+
+        self.filter_list_box.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+        self.filter_list_box.SetColumnWidth(1, wx.LIST_AUTOSIZE)
+
+        self.filter_list_box.currentItem = 0
+        
+    #-------------------------------------------------------------------
+    def SetStringItem(self, index, col, data):
+        '''
+        Helper to Filters method.
+        '''
+        if col in range(2):
+            wx.ListCtrl.SetStringItem(self, index, col, data)
+            wx.ListCtrl.SetStringItem(self, index, 2+col, str(len(data)))
         else:
             try:
-                for index in xrange(len(self.filter_list)):
-                    self.filter_list_box.Check(index,False)
-            except Exception as e:
-                print e
+                datalen = int(data)
+            except:
+                return
+
+            wx.ListCtrl.SetStringItem(self, index, col, data)
+
+            data = self.GetItem(index, col-2).GetText()
+            wx.ListCtrl.SetStringItem(self, index, col-2, data[0:datalen])
+            
     #-------------------------------------------------------------------
     def browse(self, event):
         '''
         The function is bind with the browse button.
         It opens a directory location, and set it as default
         '''
+        global DD
         dir_= self.dir.GetValue()
         dlg = wx.DirDialog(self.win, "Choose a directory:",
                           style=wx.DD_DEFAULT_STYLE
@@ -142,8 +258,8 @@ class open_pref(object):
 
         dlg.SetPath(dir_)
         if dlg.ShowModal() == wx.ID_OK:
-            self.DD = dlg.GetPath()
-            self.dir.SetValue(self.DD)
+            DD = dlg.GetPath()
+            self.dir.SetValue(DD)
 
         dlg.Destroy()
             
@@ -153,12 +269,7 @@ class open_pref(object):
         The function is bind with the save button.
         It saves all the changes in preferences.
         '''
-        dir_file = open('default_dir.txt','w')
-        print self.DD
-        dir_file.write(self.DD)
-        dir_file.close()
-
-        self.panel.Close()
+        change_config.main(DD,filters)
         self.win.Destroy()
     #-------------------------------------------------------------------    
     def cancel(self, event):
@@ -166,6 +277,31 @@ class open_pref(object):
         The function is bind with the save button.
         It saves all the changes in preferences.
         '''
-        
-        self.panel.Close()
-    
+        self.win.Destroy()
+
+    #------------------------------------------------------------------
+
+#Left for enabling editing the filter list
+class TestListCtrl(wx.ListCtrl,
+                   listmix.ListCtrlAutoWidthMixin,
+                   listmix.TextEditMixin):
+    '''
+    Class for implementing List Ctrl for filters.
+    '''
+
+    def __init__(self, parent, ID, pos=wx.DefaultPosition,
+                 size=wx.DefaultSize, style=0):
+        wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
+
+        listmix.ListCtrlAutoWidthMixin.__init__(self)
+        listmix.TextEditMixin.__init__(self)
+
+    #-------------------------------------------------------------------
+    def OnItemSelected(self, event):
+        #so that it refers to the global constant
+        global filters
+        #index of the selected item
+        cur_item = event.m_itemIndex
+        #the item
+        item = self.GetItem(cur_item, 1)
+        filters = item.GetText()       
