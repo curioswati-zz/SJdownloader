@@ -4,7 +4,7 @@ def opj(path):
 #------------------------------------------------------
     
 def main(dir_,filters):
-     dir_file = open('C:\Users\Swati_J\Documents\GitHub\Downloader\downloader\config.txt','w')
+     dir_file = open('/home/dc-19/Documents/GitHub/Downloader/downloader/config.txt','w')
      dir_file.write(dir_)
      dir_file.write("\n"+filters)
      dir_file.close()
