@@ -39,8 +39,6 @@ class Menu():
     def __init__(self,win):
         self.win = win
 
-        #Creating a new window frame        
-        win = wx.Frame(self.win)
         #The menubar
         menubar = wx.MenuBar()
 
@@ -105,17 +103,20 @@ def open_pref():
     app = wx.App()
 
     #window object
-    window = wx.Frame(None,title = "Preferences",size=(500,300))
+    window = wx.Frame(None,title = "Preferences",size=(500,400))
 
     #box object
     bkg = wx.Panel(window)
-    
+    bkg.SetBackgroundColour((198,222,223,255))
+    bkg.SetForegroundColour((60,60,60,255))
+
     #packing the box
-    class_preferences.open_pref(bkg,window)
+    class_preferences.open_pref(window,bkg)
 
     #show the window
     window.Show()
 
     #execute the loop for maintaining the window
     app.MainLoop()
+
 #--------------------------------------------------------------------------
