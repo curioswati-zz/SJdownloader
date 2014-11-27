@@ -50,11 +50,11 @@ class Mypanel(object):
 
         #Description
         sub_container = wx.BoxSizer(wx.VERTICAL)
-        description = wx.TextCtrl(self.panel, -1,"\t\t\t\tSJDownloader",size=(580,70),
+        description = wx.TextCtrl(self.panel, -1,"\t\t\t\t\tSJDownloader",size=(580,70),
                                   style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_NO_VSCROLL|
                                   wx.TE_READONLY)
         font = wx.Font(20, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
-        description.SetStyle(1,16,wx.TextAttr("WHITE",wx.NullColour,font))
+        description.SetStyle(1,17,wx.TextAttr("BLACK",wx.NullColour,font))
         description.AppendText("\nA free internet downloader, Now download It all,\
 just enter the url and click start!For more click Show Links!")
         font = wx.Font(10, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
@@ -508,7 +508,7 @@ just enter the url and click start!For more click Show Links!")
             self.check_list = wx.CheckListBox(self.panel, -1, (5,180),
                                               (583,240),self.urls,
                                               style = wx.HSCROLL)
-            self.count.SetLabel("No. of links found: "+str(len(self.countLink)))
+            self.count.SetLabel("No. of links found: "+str(self.countLink))
             self.box.SetLabel("")
             
             self.bsizer.Add(self.check_list,proportion=1,flag=wx.EXPAND
@@ -598,7 +598,7 @@ just enter the url and click start!For more click Show Links!")
 
         if not(self.url_field.GetValue() == ""):                           #If url field is not empty
             if self.dir.GetValue() == "":                                  #if dir field is empty
-                dir_file = open('C:\Users\Swati_J\Documents\GitHub\Downloader\downloader\config.txt','r')
+                dir_file = open('/home/dc-19/Documents/GitHub/Downloader/downloader/config.txt','r')
                 default_dir = dir_file.readlines()[0]
                 dir_file.close()
                 self.dir.SetValue(default_dir)
