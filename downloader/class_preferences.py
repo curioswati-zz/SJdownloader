@@ -40,7 +40,7 @@ GENERAL_ID = wx.NewId()
 FILTER_ID = wx.NewId()
 
 #fetched from congif file
-with open('C:\Users\Swati_J\Documents\GitHub\Downloader\downloader\config.txt') as dirfile:
+with open('/home/dc-19/Documents/GitHub/Downloader/downloader/config.txt') as dirfile:
     data = dirfile.readlines()
     DD = data[0].replace("\n","")
     filters = data[1]
