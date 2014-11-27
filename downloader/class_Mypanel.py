@@ -27,7 +27,7 @@ from wx.lib.agw import aquabutton as AB
 from wx.lib.agw import pygauge as PG
 
 import get_urls,downloader_script
-from class_FlatMenu import Menu
+from class_Menu import Menu
 from class_preferences import open_pref
 
 #modifying path for logo
@@ -50,12 +50,17 @@ class Mypanel(object):
 
         #Description
         sub_container = wx.BoxSizer(wx.VERTICAL)
-        description = wx.TextCtrl(self.panel, -1,size=(580,50))
-        description.SetEditable(False)
-        description.SetValue("A free internet downloader, Now download It all,just enter the url and click start!")
-        
-        description.SetBackgroundColour((198,222,223,255))
-        sub_container.Add(description,proportion=0)
+        description = wx.TextCtrl(self.panel, -1,"\t\t\t\tSJDownloader",size=(580,70),
+                                  style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_NO_VSCROLL|
+                                  wx.TE_READONLY)
+        font = wx.Font(20, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
+        description.SetStyle(1,16,wx.TextAttr("WHITE",wx.NullColour,font))
+        description.AppendText("\nA free internet downloader, Now download It all,\
+just enter the url and click start!For more click Show Links!")
+        font = wx.Font(10, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
+        description.SetStyle(17,126,wx.TextAttr("BLACK",wx.NullColour,font))
+        description.SetBackgroundColour((0,162,232,255))
+        sub_container.Add(description,0)
         
         self.introsizer.Add(logo,proportion=0)
         self.introsizer.Add(sub_container,proportion=1,flag=wx.EXPAND)
@@ -182,6 +187,9 @@ class Mypanel(object):
                           (70, 310), (55, 20))
         selectAll = wx.CheckBox(self.panel, -1, "select all",
                               (70, 310), (85, 15))
+        self.selectDefault = wx.CheckBox(self.panel, -1, "select default filter",
+                              (70, 310), (400, 20))
+        self.selectDefault.Enable(False)
         
         #Binding events with checkboxes
         
@@ -204,6 +212,7 @@ class Mypanel(object):
         self.cb9.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
         self.cb9.Enable(False)
         selectAll.Bind(wx.EVT_CHECKBOX, self.select_all)
+        self.selectDefault.Bind(wx.EVT_CHECKBOX, self.select_default)
 
         #--------------------------------------------------------------------------
 
@@ -285,6 +294,7 @@ class Mypanel(object):
         feature_box4 = wx.BoxSizer(wx.VERTICAL)
         #feature_box4.Add(self.count,proportion=1,flag=wx.TOP,border=5)
         feature_box4.Add(regex_box,proportion=1,flag=wx.ALL)
+        feature_box4.Add(self.selectDefault,proportion=1,flag=wx.TOP,border=5)
 
         #--------------------------------------------------------------------------
         #container for (checkbox, extra feature) containers     Container#4
@@ -312,8 +322,8 @@ class Mypanel(object):
         #container for introsizer and Containers #1,#2,#3,#4,#5
         #-------------------------------------------
         self.main_container = wx.BoxSizer(wx.VERTICAL)
-        sub_container.Add(url_box,proportion=1)
-        sub_container.Add(dir_box,proportion=1)
+        sub_container.Add(url_box,proportion=0,flag=wx.EXPAND)
+        sub_container.Add(dir_box,proportion=0,flag=wx.EXPAND)
         self.main_container.Add(self.introsizer,proportion = 0)
         self.main_container.Add(self.hbox,proportion=0,flag=wx.EXPAND)
         self.main_container.Hide(self.hbox)
@@ -330,8 +340,11 @@ class Mypanel(object):
         self.filtered = []
         #for keeping track of old regex filtered list; used in (filter)
         self.old_filtered = []
+        #to keep urls that were filtered manually, if default was unchecked
+        self.preserve_filter = []
         #List for checked links to download;
          #used in (enter),(filter),(EvtCheckBox)
+        self.countLink = 0
         self.toDownload = []
         menu = Menu(self.win)
         
@@ -339,40 +352,36 @@ class Mypanel(object):
     def EvtCheckBox(self, event):
         check_box = event.GetEventObject()
         regex = '.*\.'+check_box.GetLabelText()                       #creating a regex pattern based on
-                                                                      #the label str of selected checkbox.
-        try:            
-            pattern = re.compile(regex)
-            filtered = re.findall(regex, '\n'.join(self.urls))
-
+                                                                       #the label str of selected checkbox.
+        try:
+            filtered = re.findall(regex, '\n'.join(self.urls),re.I|re.M)
             if event.IsChecked():
                 self.filtered.extend(filtered)
-
+                
             if not event.IsChecked():
                 for item in filtered:
                     self.filtered.remove(item)
-
+                    
             if filtered:
-
                 if self.filtered:
                     self.box.SetLabel("")
                     self.check_list.SetItems(self.filtered)
                     self.main_container.Show(self.hbox)
                     self.panel.Layout()
                     self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
-                    
+
                 elif not(event.IsChecked()):
                     self.box.SetLabel("")
                     self.check_list.SetItems(self.urls)
                     self.main_container.Show(self.hbox)
                     self.panel.Layout()
-                    self.count.SetLabel("No. of links found: "+str(len(self.urls)))
-                    
+                    self.count.SetLabel("No. of links found: "+str(self.countLink))
             elif not(event.IsChecked()):
                 self.box.SetLabel("")
                 self.check_list.SetItems(self.urls)
                 self.main_container.Show(self.hbox)
-                self.panel.Layout()                    
-                self.count.SetLabel("No. of links found: "+str(len(self.urls)))
+                self.panel.Layout()
+                self.count.SetLabel("No. of links found: "+str(self.countLink))
 
             else:
                 self.check_list.SetItems(self.filtered)
@@ -380,12 +389,11 @@ class Mypanel(object):
                 self.main_container.Hide(self.hbox)
                 self.panel.Layout()
 
-            self.toDownload = []            
-            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
+            self.toDownload = []
+            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox)
             self.check_list.SetSelection(0)
         except:
             pass
-            
     #--------------------------------------------------------------------------
     def select_all(self, event):
         if event.IsChecked():
@@ -411,6 +419,51 @@ class Mypanel(object):
                 pass
 
     #--------------------------------------------------------------------------
+    def select_default(self, event):
+        if event.IsChecked():
+            print 'disable all other filters'
+            self.filter_btn.Disable()
+            self.cb1.Enable(False)
+            self.cb2.Enable(False)
+            self.cb3.Enable(False)
+            self.cb4.Enable(False)
+            self.cb5.Enable(False)
+            self.cb6.Enable(False)
+            self.cb7.Enable(False)
+            self.cb8.Enable(False)
+            self.cb8.Enable(False)
+            self.regex.SetEditable(False)
+
+            self.filter()
+
+            self.panel.Layout()
+        else:
+            #enable all other filters
+            self.filter_btn.Enable()
+            self.cb1.Enable(True)
+            self.cb2.Enable(True)
+            self.cb3.Enable(True)
+            self.cb4.Enable(True)
+            self.cb5.Enable(True)
+            self.cb6.Enable(True)
+            self.cb7.Enable(True)
+            self.cb8.Enable(True)
+            self.cb8.Enable(True)
+            self.regex.SetEditable(True)
+
+            self.panel.Layout()
+            
+            self.box.SetLabel("")
+            if self.preserve_filter:
+                self.filtered = self.preserve_filter
+                self.check_list.SetItems(self.filtered)
+                self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
+            else:
+                self.check_list.SetItems(self.urls)
+                self.count.SetLabel("No. of links found: "+str(self.countLink))
+            self.panel.Layout()
+            
+    #--------------------------------------------------------------------------
     def enter(self, event):
         '''
         The function to prepare a list of all urls found on home page,
@@ -423,6 +476,7 @@ class Mypanel(object):
             self.url_field.SetValue("Please enter url")
             return
         error, self.urls = get_urls.main(home_url)
+        self.countLink = len(self.urls)
 
         #if urls fetched
         if self.urls:
@@ -438,6 +492,7 @@ class Mypanel(object):
             self.cb7.Enable(True)
             self.cb8.Enable(True)
             self.cb9.Enable(True)
+            self.selectDefault.Enable(True)
 
             self.filter_btn.Enable()
             self.regex.SetEditable(True)
@@ -453,7 +508,7 @@ class Mypanel(object):
             self.check_list = wx.CheckListBox(self.panel, -1, (5,180),
                                               (583,240),self.urls,
                                               style = wx.HSCROLL)
-            self.count.SetLabel("No. of links found: "+str(len(self.urls)))
+            self.count.SetLabel("No. of links found: "+str(len(self.countLink)))
             self.box.SetLabel("")
             
             self.bsizer.Add(self.check_list,proportion=1,flag=wx.EXPAND
@@ -475,31 +530,38 @@ class Mypanel(object):
         The pattern is specified in the box called regex.
         '''
 
-        pattern = self.regex.GetValue()
+        #if default filter applied
+        if self.selectDefault.IsChecked():
+            self.preserve_filter = self.filtered
+            self.filtered = []
+            patternFile = open('C:\Users\Swati_J\Documents\GitHub\Downloader\downloader\config.txt','r')
+            pattern = patternFile.readlines()[1]
+        else:
+            pattern = self.regex.GetValue()
+            
         try:
              if self.urls:
                  filtered = None
                  if pattern:
-                     pattern = re.compile(pattern)
-                     filtered = re.findall(pattern,'\n'.join(self.urls))
+                     filtered = re.findall(pattern,'\n'.join(self.urls),re.I|re.M)
                      self.filtered.extend(filtered)
-                     self.old_filtered = filtered
+                     if not self.selectDefault.IsChecked():
+                         self.old_filtered = filtered
 
-                 else:
+                 elif self.old_filtered:
                      for item in self.old_filtered:
                          self.filtered.remove(item)
-                         
-                 if not filtered:
-                     self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
+                     self.old_filtered = []
 
+                 if pattern and not filtered:
+                     self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
+                         
                  if self.filtered:
                      self.check_list.SetItems(self.filtered)
                      self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
                  else:
-                     self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
-                     self.check_list.SetItems("")
-                     self.main_container.Hide(self.hbox)
-                     self.panel.Layout()
+                     self.check_list.SetItems(self.urls)
+                     self.count.SetLabel("No. of links found: "+str(self.countLink))
 
                  #list of selected links
                  self.toDownload = []
@@ -536,21 +598,16 @@ class Mypanel(object):
 
         if not(self.url_field.GetValue() == ""):                           #If url field is not empty
             if self.dir.GetValue() == "":                                  #if dir field is empty
-                
-                #file_default_dir = open('default_dir.txt','r')
-                #default_dir = str(file_default_dir.read())
-                #file_default_dir.close()
-
-                #print default_dir
-                self.dir.SetValue('.')
-                self.path = '.'
+                dir_file = open('C:\Users\Swati_J\Documents\GitHub\Downloader\downloader\config.txt','r')
+                default_dir = dir_file.readlines()[0]
+                dir_file.close()
+                self.dir.SetValue(default_dir)
+                self.path = default_dir.replace("\n","")
             try:
                 self.toDownload.extend(self.check_list.GetCheckedStrings())
                 urls_to_download = self.toDownload
-                
                 error = downloader_script.main(urls_to_download,self.path,
                                                self.progress)
-    
             except AttributeError:
                 error = downloader_script.main([self.url_field.GetValue().strip()],self.path,
                                                self.progress)
@@ -559,11 +616,9 @@ class Mypanel(object):
                 dlg = wx.MessageDialog(self.panel,"Connection failed",
                                        'Oops!', wx.OK|wx.ICON_INFORMATION)
                 dlg.ShowModal()
-                dlg.Destroy()
-            
+                dlg.Destroy()    
         else:
             self.url_field.SetValue("Please Enter url")
-
     #--------------------------------------------------------------------------
     def browse(self,event):
         '''
@@ -596,9 +651,9 @@ class Mypanel(object):
             self.check_list.Destroy()
         except Exception:
             pass
-        self.regex.SetValue(" ")
-        self.dir.SetValue(" ")
-        self.path = " "
+        self.regex.SetValue("")
+        self.dir.SetValue("")
+        self.path = ""
         self.box.SetLabel("The links will be shown here")
         self.main_container.Hide(self.hbox)
         
@@ -612,6 +667,7 @@ class Mypanel(object):
         self.cb7.Enable(False)
         self.cb8.Enable(False)
         self.cb8.Enable(False)
+        self.selectDefault.Enable(False)
         
         self.filter_btn.Disable()        
         self.regex.SetEditable(False)
