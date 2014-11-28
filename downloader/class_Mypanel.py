@@ -12,6 +12,8 @@ It imports:
 It defines:
     -__init__
     -EvtCheckBox
+    -select_all
+    -select_default
     -enter
     -download
     -browse
@@ -28,12 +30,8 @@ from wx.lib.agw import pygauge as PG
 
 import get_urls,downloader_script
 from class_Menu import Menu
+from join_path import opj
 from class_preferences import open_pref
-
-#modifying path for logo
-def opj(path):
-     return apply(os.path.join, tuple(path.split('/')))
-#------------------------------------------------------
 
 class Mypanel(object):
     def __init__(self,panel,win):
@@ -42,19 +40,19 @@ class Mypanel(object):
 
         box = wx.StaticBox(self.panel, -1,size=(2000,80))
         self.introsizer = wx.StaticBoxSizer(box)
-
+        
         #LOGO
         png = wx.Image(opj('../Icons/Logo.png'),
                        wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         logo = wx.StaticBitmap(panel, -1, png,(10,30))
-
+        
         #Description
         sub_container = wx.BoxSizer(wx.VERTICAL)
-        description = wx.TextCtrl(self.panel, -1,"\t\t\t\t\tSJDownloader",size=(580,70),
+        description = wx.TextCtrl(self.panel, -1,"\t\t\t\tSJDownloader",size=(580,70),
                                   style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_NO_VSCROLL|
                                   wx.TE_READONLY)
         font = wx.Font(20, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
-        description.SetStyle(1,17,wx.TextAttr("BLACK",wx.NullColour,font))
+        description.SetStyle(1,16,wx.TextAttr("WHITE",wx.NullColour,font))
         description.AppendText("\nA free internet downloader, Now download It all,\
 just enter the url and click start!For more click Show Links!")
         font = wx.Font(10, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
@@ -128,9 +126,10 @@ just enter the url and click start!For more click Show Links!")
         #Static text area:
 
         #Label, before text box for url
-        url = wx.StaticText(panel, -1, "URL:",size=(70,25))   
+        url = wx.StaticText(panel, -1, "URL:",size=(70,25))
+     
         #Label, before text box for dir location
-        location = wx.StaticText(panel, -1, "Save file in:",size=(80,25))
+        location = wx.StaticText(panel, -1, "Save file in:",size=(70,25))
         #Count of links
         self.count = wx.StaticText(self.panel,-1,"No. of links found:",
                                        size=(255,15),pos=(420,295))
@@ -213,7 +212,7 @@ just enter the url and click start!For more click Show Links!")
         self.cb9.Enable(False)
         selectAll.Bind(wx.EVT_CHECKBOX, self.select_all)
         self.selectDefault.Bind(wx.EVT_CHECKBOX, self.select_default)
-
+        
         #--------------------------------------------------------------------------
 
         #WRAPPING UP THE BOXES
@@ -231,7 +230,7 @@ just enter the url and click start!For more click Show Links!")
         #The dir location, location label container              Container#2 
         dir_box = wx.BoxSizer()
         dir_box.Add(location,proportion=0,flag=wx.TOP|wx.RIGHT,border=5)
-        dir_box.Add(self.dir,proportion=1,flag=wx.ALL|wx.EXPAND,border=5)
+        dir_box.Add(self.dir,proportion=1,flag=wx.EXPAND|wx.ALL,border=5)
         dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
         #--------------------------------------------------------------------------
         #For select all and count box
@@ -292,10 +291,9 @@ just enter the url and click start!For more click Show Links!")
 
         #container for (regex,filter) container and count text box
         feature_box4 = wx.BoxSizer(wx.VERTICAL)
-        #feature_box4.Add(self.count,proportion=1,flag=wx.TOP,border=5)
-        feature_box4.Add(regex_box,proportion=1,flag=wx.ALL)
+        feature_box4.Add(regex_box,proportion=0,flag=wx.ALL)
         feature_box4.Add(self.selectDefault,proportion=1,flag=wx.TOP,border=5)
-
+        
         #--------------------------------------------------------------------------
         #container for (checkbox, extra feature) containers     Container#4
         feature_box = wx.BoxSizer()
@@ -344,43 +342,46 @@ just enter the url and click start!For more click Show Links!")
         self.preserve_filter = []
         #List for checked links to download;
          #used in (enter),(filter),(EvtCheckBox)
-        self.countLink = 0
         self.toDownload = []
+        self.countLink = 0
         menu = Menu(self.win)
         
     #--------------------------------------------------------------------------
     def EvtCheckBox(self, event):
         check_box = event.GetEventObject()
         regex = '.*\.'+check_box.GetLabelText()                       #creating a regex pattern based on
-                                                                       #the label str of selected checkbox.
-        try:
+                                                                                                     #the label str of selected checkbox.
+        try:            
             filtered = re.findall(regex, '\n'.join(self.urls),re.I|re.M)
+
             if event.IsChecked():
                 self.filtered.extend(filtered)
-                
+
             if not event.IsChecked():
                 for item in filtered:
                     self.filtered.remove(item)
-                    
+
             if filtered:
+
                 if self.filtered:
                     self.box.SetLabel("")
                     self.check_list.SetItems(self.filtered)
                     self.main_container.Show(self.hbox)
                     self.panel.Layout()
                     self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
-
+                    
                 elif not(event.IsChecked()):
                     self.box.SetLabel("")
                     self.check_list.SetItems(self.urls)
                     self.main_container.Show(self.hbox)
                     self.panel.Layout()
                     self.count.SetLabel("No. of links found: "+str(self.countLink))
+                    
             elif not(event.IsChecked()):
                 self.box.SetLabel("")
                 self.check_list.SetItems(self.urls)
                 self.main_container.Show(self.hbox)
-                self.panel.Layout()
+                self.panel.Layout()                    
                 self.count.SetLabel("No. of links found: "+str(self.countLink))
 
             else:
@@ -389,11 +390,12 @@ just enter the url and click start!For more click Show Links!")
                 self.main_container.Hide(self.hbox)
                 self.panel.Layout()
 
-            self.toDownload = []
-            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox)
+            self.toDownload = []            
+            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
             self.check_list.SetSelection(0)
         except:
             pass
+            
     #--------------------------------------------------------------------------
     def select_all(self, event):
         if event.IsChecked():
@@ -417,7 +419,7 @@ just enter the url and click start!For more click Show Links!")
                     self.check_list.Check(index,False)
             except:
                 pass
-
+            
     #--------------------------------------------------------------------------
     def select_default(self, event):
         if event.IsChecked():
@@ -461,8 +463,9 @@ just enter the url and click start!For more click Show Links!")
             else:
                 self.check_list.SetItems(self.urls)
                 self.count.SetLabel("No. of links found: "+str(self.countLink))
-            self.panel.Layout()
+            self.panel.Layout()                    
             
+                       
     #--------------------------------------------------------------------------
     def enter(self, event):
         '''
@@ -523,13 +526,12 @@ just enter the url and click start!For more click Show Links!")
             print error
             
     #--------------------------------------------------------------------------
-    def filter(self,event):
+    def filter(self,*event):
         '''
         The function filters links found on the page.
         It uses regex to filter and display a list of urls matching the pattern.
         The pattern is specified in the box called regex.
         '''
-
         #if default filter applied
         if self.selectDefault.IsChecked():
             self.preserve_filter = self.filtered
@@ -543,6 +545,7 @@ just enter the url and click start!For more click Show Links!")
              if self.urls:
                  filtered = None
                  if pattern:
+                     #pattern = re.compile(pattern)
                      filtered = re.findall(pattern,'\n'.join(self.urls),re.I|re.M)
                      self.filtered.extend(filtered)
                      if not self.selectDefault.IsChecked():
@@ -552,10 +555,10 @@ just enter the url and click start!For more click Show Links!")
                      for item in self.old_filtered:
                          self.filtered.remove(item)
                      self.old_filtered = []
-
+                         
                  if pattern and not filtered:
                      self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
-                         
+
                  if self.filtered:
                      self.check_list.SetItems(self.filtered)
                      self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
@@ -598,16 +601,21 @@ just enter the url and click start!For more click Show Links!")
 
         if not(self.url_field.GetValue() == ""):                           #If url field is not empty
             if self.dir.GetValue() == "":                                  #if dir field is empty
-                dir_file = open('/home/dc-19/Documents/GitHub/Downloader/downloader/config.txt','r')
+                
+                dir_file = open(opj('config.txt'),'r')
                 default_dir = dir_file.readlines()[0]
                 dir_file.close()
+
                 self.dir.SetValue(default_dir)
                 self.path = default_dir.replace("\n","")
+                
             try:
                 self.toDownload.extend(self.check_list.GetCheckedStrings())
                 urls_to_download = self.toDownload
+                
                 error = downloader_script.main(urls_to_download,self.path,
                                                self.progress)
+    
             except AttributeError:
                 error = downloader_script.main([self.url_field.GetValue().strip()],self.path,
                                                self.progress)
@@ -616,9 +624,11 @@ just enter the url and click start!For more click Show Links!")
                 dlg = wx.MessageDialog(self.panel,"Connection failed",
                                        'Oops!', wx.OK|wx.ICON_INFORMATION)
                 dlg.ShowModal()
-                dlg.Destroy()    
+                dlg.Destroy()
+            
         else:
             self.url_field.SetValue("Please Enter url")
+
     #--------------------------------------------------------------------------
     def browse(self,event):
         '''
@@ -651,9 +661,9 @@ just enter the url and click start!For more click Show Links!")
             self.check_list.Destroy()
         except Exception:
             pass
-        self.regex.SetValue("")
+        self.regex.SetValue(" ")
         self.dir.SetValue("")
-        self.path = ""
+        self.path = " "
         self.box.SetLabel("The links will be shown here")
         self.main_container.Hide(self.hbox)
         
