@@ -23,9 +23,7 @@ import os,sys
 from wx.lib.agw import aquabutton as AB
 import  wx.lib.mixins.listctrl  as  listmix
 import change_config
-
-def opj(path):
-     return apply(os.path.join, tuple(path.split('/')))
+from join_path import opj
     
 #Constants
 #----------------------------------------------------------------------
@@ -40,7 +38,7 @@ GENERAL_ID = wx.NewId()
 FILTER_ID = wx.NewId()
 
 #fetched from congif file
-with open('/home/dc-19/Documents/GitHub/Downloader/downloader/config.txt') as dirfile:
+with open(opj('config.txt')) as dirfile:
     data = dirfile.readlines()
     DD = data[0].replace("\n","")
     filters = data[1]
@@ -72,7 +70,7 @@ class open_pref(object):
         cancelbtn.SetToolTipString("Click to cancel changes")
         cancelbtn.Bind(wx.EVT_BUTTON, self.cancel)
 
-        browse_btn = wx.BitmapButton(self.mainPanel, -1, wx.Bitmap('../Icons/folder.png'),
+        browse_btn = wx.BitmapButton(self.mainPanel, -1, wx.Bitmap(opj('../Icons/folder.png')),
                                      size=(32,25))
         browse_btn.SetBackgroundColour((198,222,223,255))
         browse_btn.SetForegroundColour("Black")
