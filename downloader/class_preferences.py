@@ -27,6 +27,7 @@ from join_path import opj
     
 #Constants
 #----------------------------------------------------------------------
+#toolbar flags
 TBFLAGS = ( wx.TB_HORIZONTAL
             | wx.NO_BORDER
             | wx.TB_FLAT
@@ -34,6 +35,7 @@ TBFLAGS = ( wx.TB_HORIZONTAL
             | wx.TB_HORZ_LAYOUT
             )
 tID = wx.NewId()
+#general tool's id
 GENERAL_ID = wx.NewId()
 FILTER_ID = wx.NewId()
 
