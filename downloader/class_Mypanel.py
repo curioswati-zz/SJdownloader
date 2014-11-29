@@ -33,6 +33,13 @@ from class_Menu import Menu
 from join_path import opj
 from class_preferences import open_pref
 
+#Global constants
+#-----------------------------------------------------------------
+dir_file = open(opj('config.txt'),'r')
+default_dir = dir_file.readlines()[0]
+print default_dir
+dir_file.close() 
+
 class Mypanel(object):
     def __init__(self,panel,win):
         self.win = win                                                      #The window object
@@ -150,6 +157,9 @@ just enter the url and click start!For more click Show Links!")
         
         #text box for showing dir location
         self.dir = wx.TextCtrl(panel,size=(400,25),pos=(5,30))
+        #set directory value
+        self.dir.SetValue(default_dir)
+
         self.dir.SetToolTipString("Selected location to save file");
 
         #Static box For showing links
@@ -472,12 +482,14 @@ just enter the url and click start!For more click Show Links!")
         The function to prepare a list of all urls found on home page,
         It works on text_enter_event of textctrl box called 'url'.
         '''
+        global default_dir
         
         #Fetching urls
         home_url = self.url_field.GetValue().strip()
         if home_url == "":
             self.url_field.SetValue("Please enter url")
             return
+        self.box.SetLabel("Fetching...")
         error, self.urls = get_urls.main(home_url)
         self.countLink = len(self.urls)
 
@@ -536,7 +548,7 @@ just enter the url and click start!For more click Show Links!")
         if self.selectDefault.IsChecked():
             self.preserve_filter = self.filtered
             self.filtered = []
-            patternFile = open('C:\Users\Swati_J\Documents\GitHub\Downloader\downloader\config.txt','r')
+            patternFile = open(opj('config.txt'),'r')
             pattern = patternFile.readlines()[1]
         else:
             pattern = self.regex.GetValue()
@@ -598,16 +610,14 @@ just enter the url and click start!For more click Show Links!")
         downloader_script.
         Uses 'browse' filedialogs current path to save files.
         '''
+        global default_dir
 
         if not(self.url_field.GetValue() == ""):                           #If url field is not empty
-            if self.dir.GetValue() == "":                                  #if dir field is empty
-                
-                dir_file = open(opj('config.txt'),'r')
-                default_dir = dir_file.readlines()[0]
-                dir_file.close()
+            if self.dir.GetValue() == "":                                  #if dir field is empty       
 
                 self.dir.SetValue(default_dir)
                 self.path = default_dir.replace("\n","")
+            self.path = default_dir.replace("\n","")
                 
             try:
                 self.toDownload.extend(self.check_list.GetCheckedStrings())
