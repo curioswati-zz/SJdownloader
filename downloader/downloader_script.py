@@ -72,7 +72,7 @@ class TestThread(Thread):
                 save_file.write(data)
                 dl_size = len(data)
                 save_file.close()
-                wx.CallAfter(pub.sendMessage,"update",msg=dl_size)
+                wx.CallAfter(pub.sendMessage,"Update",msg=dl_size)
             except IOError as e:
                 return e
                 return "The connection could not establish."
@@ -93,11 +93,11 @@ class Progress(wx.Gauge):
         progress_bar.SetRange(total_size)
 
         #updating bar
-        pub.subscribe(self.updateProgress, "update")
+        pub.subscribe(self.updateProgress, "Update")
 
     def updateProgress(self, msg):
         print "update:",msg
-        progress_bar.SetValue(msg)
+        progress_bar.Update(msg,100)
 
 def main(urls, path,progress_bar):
     '''
@@ -132,7 +132,7 @@ def main(urls, path,progress_bar):
     print str(print_size) + "Mb selected for download"
     #-----------------------------------------------------------------------------------------------
     #update the progress bar
-    Progress(progress_bar,total_size)
+    #Progress(progress_bar,total_size)
     #Start thread
     TestThread(urls, path,stop,True)
                 

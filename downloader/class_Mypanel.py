@@ -37,8 +37,7 @@ from class_preferences import open_pref
 #-----------------------------------------------------------------
 #reading default value of location from config file
 dir_file = open(opj('config.txt'),'r')
-default_dir = dir_file.readlines()[0][7:]
-default_dir = default_dir.replace('\n','')
+default_dir = dir_file.readlines()[0][7:-1]
 dir_file.close() 
 
 class Mypanel(object):
@@ -53,12 +52,25 @@ class Mypanel(object):
         #upper container for logo, description, url and dir
         box = wx.StaticBox(self.panel, -1,size=(500,50))
         self.introsizer = wx.StaticBoxSizer(box)
-                
+
+        #---------------------------------------------------------------
+        #Images                
         #LOGO
         png = wx.Image(opj('../Icons/Logo.png'),
                        wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         logo = wx.StaticBitmap(panel, -1, png)
         
+        #folder
+        png = wx.Image(opj('../Icons/folder.png'),
+                       wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        folder_icon = wx.StaticBitmap(panel, -1, png,size=(25,30))
+        
+        loading_icon = wx.Image(opj('../Icons/lightbox-ico-loading2.gif'),
+                                wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        #container for loading_icon
+        self.loading_icon = wx.StaticBitmap(panel,-1,loading_icon,size=(40,40))
+        
+        #---------------------------------------------------------------        
         #Description
         sub_container = wx.BoxSizer(wx.VERTICAL)
         description = wx.TextCtrl(self.panel, -1,"\t\t\t\tSJdownloader",size=(460,70),
@@ -86,9 +98,6 @@ just enter the url and click start!For more click Show Links!")
         show_btn.Bind(wx.EVT_BUTTON,self.enter)
 
         #calls browse method;
-        png = wx.Image(opj('../Icons/folder.png'),
-                       wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-        folder_icon = wx.StaticBitmap(panel, -1, png,size=(25,30))
         browse_btn = AB.AquaButton(panel, -1, None, "Browse",size=(70,25))
         browse_btn.SetBackgroundColour((98,208,255,255))
         browse_btn.SetForegroundColour("Black")
@@ -173,7 +182,9 @@ just enter the url and click start!For more click Show Links!")
         #Static box For showing links
         self.box = wx.StaticBox(self.panel, -1, "The links will be shown here")
         self.bsizer = wx.StaticBoxSizer(self.box, wx.VERTICAL)
-
+        #adding loading_icon
+        self.bsizer.Add(self.loading_icon)
+        
         #text box for entering regex pattern
         self.regex = wx.TextCtrl(panel,size=(190,25))
         self.regex.SetToolTipString("Enter type string to filter content");
@@ -254,7 +265,7 @@ just enter the url and click start!For more click Show Links!")
         dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.LEFT|wx.TOP)
         #--------------------------------------------------------------------------
         #For select all and count box
-        self.hbox = wx.FlexGridSizer(cols=2, vgap=10, hgap=350)
+        self.hbox = wx.FlexGridSizer(cols=2, vgap=10, hgap=250)
         self.hbox.Add(selectAll,proportion=0,flag=wx.TOP|wx.LEFT|
                       wx.RIGHT,border=3)
         self.hbox.Add(self.count,proportion=1,flag=wx.TOP|wx.LEFT|
@@ -456,7 +467,7 @@ just enter the url and click start!For more click Show Links!")
             self.cb6.Enable(False)
             self.cb7.Enable(False)
             self.cb8.Enable(False)
-            self.cb8.Enable(False)
+            self.cb9.Enable(False)
             self.regex.SetEditable(False)
 
             self.filter()
@@ -473,7 +484,7 @@ just enter the url and click start!For more click Show Links!")
             self.cb6.Enable(True)
             self.cb7.Enable(True)
             self.cb8.Enable(True)
-            self.cb8.Enable(True)
+            self.cb9.Enable(True)
             self.regex.SetEditable(True)
 
             self.panel.Layout()
@@ -503,6 +514,7 @@ just enter the url and click start!For more click Show Links!")
             self.url_field.SetValue("Please enter url")
             return
         self.box.SetLabel("Fetching...")
+        self.loading_icon.Show()
         error, self.urls = get_urls.main(home_url)
 
         #if urls fetched
@@ -562,7 +574,7 @@ just enter the url and click start!For more click Show Links!")
             self.preserve_filter = self.filtered
             self.filtered = []
             patternFile = open(opj('config.txt'),'r')
-            pattern = patternFile.readlines()[1][9:]
+            pattern = patternFile.readlines()[1][9:-1]
         else:
             pattern = self.regex.GetValue()
             
@@ -570,7 +582,6 @@ just enter the url and click start!For more click Show Links!")
              if self.urls:
                  filtered = None
                  if pattern:
-                     #pattern = re.compile(pattern)
                      filtered = re.findall(pattern,'\n'.join(self.urls),re.I|re.M)
                      self.filtered.extend(filtered)
                      if not self.selectDefault.IsChecked():
@@ -631,6 +642,7 @@ just enter the url and click start!For more click Show Links!")
                 self.dir.SetValue(default_dir)
                 self.path = default_dir.replace("\n","")
             self.path = default_dir.replace("\n","")
+            self.box.SetLabel("Fetching.....")
                 
             try:
                 self.toDownload.extend(self.check_list.GetCheckedStrings())
