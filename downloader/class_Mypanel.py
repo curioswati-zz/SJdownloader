@@ -36,7 +36,7 @@ from class_preferences import open_pref
 #Global constants
 #-----------------------------------------------------------------
 dir_file = open(opj('config.txt'),'r')
-default_dir = dir_file.readlines()[0]
+default_dir = dir_file.readlines()[0][7:]
 print default_dir
 dir_file.close() 
 
@@ -44,18 +44,20 @@ class Mypanel(object):
     def __init__(self,panel,win):
         self.win = win                                                      #The window object
         self.panel = panel                                                  #The panel object
+        self.win.SetIcon(wx.Icon(opj('../Icons/Logo.png'),
+                       wx.BITMAP_TYPE_PNG))
 
-        box = wx.StaticBox(self.panel, -1,size=(2000,80))
+        box = wx.StaticBox(self.panel, -1,size=(500,50))
         self.introsizer = wx.StaticBoxSizer(box)
         
         #LOGO
         png = wx.Image(opj('../Icons/Logo.png'),
                        wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-        logo = wx.StaticBitmap(panel, -1, png,(10,30))
+        logo = wx.StaticBitmap(panel, -1, png)
         
         #Description
         sub_container = wx.BoxSizer(wx.VERTICAL)
-        description = wx.TextCtrl(self.panel, -1,"\t\t\t\tSJDownloader",size=(580,70),
+        description = wx.TextCtrl(self.panel, -1,"\t\t\t\tSJdownloader",size=(570,70),
                                   style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_NO_VSCROLL|
                                   wx.TE_READONLY)
         font = wx.Font(20, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
@@ -68,54 +70,56 @@ just enter the url and click start!For more click Show Links!")
         sub_container.Add(description,0)
         
         self.introsizer.Add(logo,proportion=0)
-        self.introsizer.Add(sub_container,proportion=1,flag=wx.EXPAND)
+        self.introsizer.Add(sub_container,proportion=0,flag=wx.EXPAND)
         #--------------------------------------------------------------------------
         #creating buttons, and binding events with them, that occurs on click.
 
         #calls (enter) method
-        show_btn = AB.AquaButton(panel, -1, None, "Show Links",size=(80,30))
-        show_btn.SetBackgroundColour((198,222,223,255))
+        show_btn = AB.AquaButton(panel, -1, None, "Links",size=(70,25))
+        show_btn.SetBackgroundColour((98,208,255,255))
         show_btn.SetForegroundColour("Black")
         show_btn.SetToolTipString("Click to show found links")
         show_btn.Bind(wx.EVT_BUTTON,self.enter)
 
         #calls browse method;
-        browse_btn = wx.BitmapButton(self.panel, -1,
-                                     wx.Bitmap('../Icons/folder.png'))
-        browse_btn.SetBackgroundColour((198,222,223,255))
+        png = wx.Image(opj('../Icons/folder.png'),
+                       wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        folder_icon = wx.StaticBitmap(panel, -1, png,size=(25,30))
+        browse_btn = AB.AquaButton(panel, -1, None, "Browse",size=(70,25))
+        browse_btn.SetBackgroundColour((98,208,255,255))
         browse_btn.SetForegroundColour("Black")
         browse_btn.SetToolTipString("Select location")
         browse_btn.Bind(wx.EVT_BUTTON,self.browse)
         
         #calls reset method
-        reset_btn = AB.AquaButton(panel, -1, None, "Reset",size=(80,30))
-        reset_btn.SetBackgroundColour((198,222,223,255))
+        reset_btn = AB.AquaButton(panel, -1, None, "Reset",size=(70,30))
+        reset_btn.SetBackgroundColour((98,208,255,255))
         reset_btn.SetForegroundColour("Black")
         reset_btn.SetToolTipString("Reset downloader")
         reset_btn.Bind(wx.EVT_BUTTON,self.reset)
 
         #calls download metod
-        self.download_btn = AB.AquaButton(panel, -1, None, "Start",size=(80,30))
-        self.download_btn.SetBackgroundColour((198,222,223,255))
+        self.download_btn = AB.AquaButton(panel, -1, None, "Start",size=(70,30))
+        self.download_btn.SetBackgroundColour((98,208,255,255))
         self.download_btn.SetForegroundColour("Black")
         self.download_btn.SetToolTipString("Start download")
         self.download_btn.Bind(wx.EVT_BUTTON,self.download)
         
-        close_btn = AB.AquaButton(panel, -1, None, "Close",size=(80,30))
-        close_btn.SetBackgroundColour((198,222,223,255))
+        close_btn = AB.AquaButton(panel, -1, None, "Close",size=(70,30))
+        close_btn.SetBackgroundColour((98,208,255,255))
         close_btn.SetForegroundColour("Black")
         close_btn.SetToolTipString("Close")
         close_btn.Bind(wx.EVT_BUTTON,self.close)
         
-        cancel_btn = AB.AquaButton(panel, -1, None, "Cancel",size=(80,30))
-        cancel_btn.SetBackgroundColour((198,222,223,255))
+        cancel_btn = AB.AquaButton(panel, -1, None, "Cancel",size=(70,30))
+        cancel_btn.SetBackgroundColour((98,208,255,255))
         cancel_btn.SetForegroundColour("Black")
         cancel_btn.SetToolTipString("Cancel download")
         cancel_btn.Bind(wx.EVT_BUTTON,self.cancel)
 
         #calls filter method
-        self.filter_btn = AB.AquaButton(panel, -1, None, "Filter",size=(60,30))
-        self.filter_btn.SetBackgroundColour((198,222,223,255))
+        self.filter_btn = AB.AquaButton(panel, -1, None, "Filter",size=(70,30))
+        self.filter_btn.SetBackgroundColour((98,208,255,255))
         self.filter_btn.SetForegroundColour("Black")
         self.filter_btn.SetToolTipString("Filter links")
         self.filter_btn.Bind(wx.EVT_BUTTON,self.filter)
@@ -133,10 +137,10 @@ just enter the url and click start!For more click Show Links!")
         #Static text area:
 
         #Label, before text box for url
-        url = wx.StaticText(panel, -1, "URL:",size=(70,25))
+        url = wx.StaticText(panel, -1, "URL:",size=(70,15))
      
         #Label, before text box for dir location
-        location = wx.StaticText(panel, -1, "Save file in:",size=(70,25))
+        location = wx.StaticText(panel, -1, "Save file in:",size=(70,15))
         #Count of links
         self.count = wx.StaticText(self.panel,-1,"No. of links found:",
                                        size=(255,15),pos=(420,295))
@@ -149,14 +153,14 @@ just enter the url and click start!For more click Show Links!")
  
         #text box for url, calls (enter) method on text event
         self.url_field = wx.TextCtrl(panel,
-                                     size=(400,20),pos=(5,5),                                     
+                                     size=(350,15),pos=(5,5),                                     
                                      style=wx.TE_PROCESS_ENTER,
                                      )
         self.url_field.SetToolTipString("Enter url here");
         #self.url_field.Bind(wx.EVT_TEXT, self.enter)                                                                   
         
         #text box for showing dir location
-        self.dir = wx.TextCtrl(panel,size=(400,25),pos=(5,30))
+        self.dir = wx.TextCtrl(panel,size=(350,15),pos=(5,30))
         #set directory value
         self.dir.SetValue(default_dir)
 
@@ -167,7 +171,7 @@ just enter the url and click start!For more click Show Links!")
         self.bsizer = wx.StaticBoxSizer(self.box, wx.VERTICAL)
 
         #text box for entering regex pattern
-        self.regex = wx.TextCtrl(panel,size=(255,25))
+        self.regex = wx.TextCtrl(panel,size=(200,25))
         self.regex.SetToolTipString("Enter type string to filter content");
         self.regex.SetEditable(False)
         #Progress bar
@@ -177,26 +181,26 @@ just enter the url and click start!For more click Show Links!")
         #Defining CheckBoxes
 
         self.cb1 = wx.CheckBox(panel, -1, "jpeg",
-                          (5, 295), (75, 20))
+                          (5, 295), (75, 15))
         self.cb2 = wx.CheckBox(panel, -1, "png",
-                          (5, 310), (75, 20))
+                          (5, 310), (75, 15))
         self.cb3 = wx.CheckBox(panel, -1, "gif",
-                          (5, 335), (75, 20))
+                          (5, 335), (75, 15))
         self.cb4 = wx.CheckBox(panel, -1, "mp4",
-                          (35, 295), (75, 20))
+                          (35, 295), (75, 15))
         self.cb5 = wx.CheckBox(panel, -1, "3gp",
-                          (35,310), (75, 20))
+                          (35,310), (75, 15))
         self.cb6 = wx.CheckBox(panel, -1, "avi",
-                          (35, 335), (75, 20))
+                          (35, 335), (75, 15))
         self.cb7 = wx.CheckBox(panel, -1, "flv",
-                          (70, 295), (55, 20))
+                          (70, 295), (55, 15))
         self.cb8 = wx.CheckBox(panel, -1, "mp3",
-                          (70, 310), (55, 20))
+                          (70, 310), (55, 15))
         self.cb9 = wx.CheckBox(panel, -1, "jpg",
-                          (70, 310), (55, 20))
+                          (70, 310), (55, 15))
         selectAll = wx.CheckBox(self.panel, -1, "select all",
                               (70, 310), (85, 15))
-        self.selectDefault = wx.CheckBox(self.panel, -1, "select default filter",
+        self.selectDefault = wx.CheckBox(self.panel, -1, "Apply default filter",
                               (70, 310), (400, 20))
         self.selectDefault.Enable(False)
         
@@ -234,14 +238,15 @@ just enter the url and click start!For more click Show Links!")
         url_box = wx.BoxSizer()                                  
         url_box.Add(url,proportion=0,flag=wx.TOP|wx.RIGHT,border=7)
         url_box.Add(self.url_field,proportion=1,flag=wx.EXPAND|
-                    wx.ALL,border=5)
-        url_box.Add(show_btn,proportion=0,border=5,flag=wx.ALL)
+                    wx.ALL,border=2)
+        url_box.Add(show_btn,proportion=0,border=5,flag=wx.LEFT|wx.TOP)
 
         #The dir location, location label container              Container#2 
         dir_box = wx.BoxSizer()
         dir_box.Add(location,proportion=0,flag=wx.TOP|wx.RIGHT,border=5)
-        dir_box.Add(self.dir,proportion=1,flag=wx.EXPAND|wx.ALL,border=5)
-        dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
+        dir_box.Add(self.dir,proportion=1,flag=wx.ALL|wx.EXPAND,border=2)
+        dir_box.Add(folder_icon,proportion=0,border=2,flag=wx.TOP|wx.RIGHT)
+        dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.LEFT|wx.TOP)
         #--------------------------------------------------------------------------
         #For select all and count box
         self.hbox = wx.FlexGridSizer(cols=2, vgap=10, hgap=350)
@@ -255,7 +260,7 @@ just enter the url and click start!For more click Show Links!")
         Static_box.Add(self.bsizer,proportion=1,flag=wx.EXPAND
                   |wx.ALL,border=5
                   )
-        Static_box.Add(reset_btn,proportion=0,border=5,flag=wx.ALL)
+        Static_box.Add(reset_btn,proportion=0,border=5,flag=wx.RIGHT|wx.TOP)
         #--------------------------------------------------------------------------
 
         #--------------
@@ -296,13 +301,15 @@ just enter the url and click start!For more click Show Links!")
         #container for regex text box and filter button
         regex_box = wx.FlexGridSizer(cols=3, vgap=10, hgap=3)
         regex_box.Add(regex,proportion=0,flag=wx.TOP,border=7)
-        regex_box.Add(self.regex,proportion=1,flag=wx.BOTTOM|wx.LEFT|wx.EXPAND,border=5)
-        regex_box.Add(self.filter_btn,proportion=0,flag=wx.ALL,border=5)
+        regex_box.Add(self.regex,proportion=1,flag=wx.BOTTOM|wx.LEFT
+                      |wx.EXPAND|wx.RIGHT,border=5)
+        regex_box.Add(self.filter_btn,proportion=0,
+                      flag=wx.TOP|wx.RIGHT|wx.BOTTOM,border=3)
 
         #container for (regex,filter) container and count text box
         feature_box4 = wx.BoxSizer(wx.VERTICAL)
         feature_box4.Add(regex_box,proportion=0,flag=wx.ALL)
-        feature_box4.Add(self.selectDefault,proportion=1,flag=wx.TOP,border=5)
+        feature_box4.Add(self.selectDefault,proportion=1,flag=wx.TOP,border=2)
         
         #--------------------------------------------------------------------------
         #container for (checkbox, extra feature) containers     Container#4
@@ -332,7 +339,7 @@ just enter the url and click start!For more click Show Links!")
         self.main_container = wx.BoxSizer(wx.VERTICAL)
         sub_container.Add(url_box,proportion=0,flag=wx.EXPAND)
         sub_container.Add(dir_box,proportion=0,flag=wx.EXPAND)
-        self.main_container.Add(self.introsizer,proportion = 0)
+        self.main_container.Add(self.introsizer,proportion = 0,flag=wx.EXPAND)
         self.main_container.Add(self.hbox,proportion=0,flag=wx.EXPAND)
         self.main_container.Hide(self.hbox)
         self.panel.Layout()
@@ -342,6 +349,7 @@ just enter the url and click start!For more click Show Links!")
         self.main_container.Add(prog_box,proportion=0)
       
         panel.SetSizer(self.main_container)
+        self.win.CenterOnScreen()
         #--------------------------------------------------------------------------
         
         #an empty list for showing filtered links.
@@ -403,8 +411,8 @@ just enter the url and click start!For more click Show Links!")
             self.toDownload = []            
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
             self.check_list.SetSelection(0)
-        except:
-            pass
+        except Exception as e:
+            print e
             
     #--------------------------------------------------------------------------
     def select_all(self, event):
@@ -521,7 +529,7 @@ just enter the url and click start!For more click Show Links!")
                 pass
 
             self.check_list = wx.CheckListBox(self.panel, -1, (5,180),
-                                              (583,240),self.urls,
+                                              (500,240),self.urls,
                                               style = wx.HSCROLL)
             self.count.SetLabel("No. of links found: "+str(self.countLink))
             self.box.SetLabel("")
@@ -549,7 +557,7 @@ just enter the url and click start!For more click Show Links!")
             self.preserve_filter = self.filtered
             self.filtered = []
             patternFile = open(opj('config.txt'),'r')
-            pattern = patternFile.readlines()[1]
+            pattern = patternFile.readlines()[1][9:]
         else:
             pattern = self.regex.GetValue()
             
@@ -625,13 +633,15 @@ just enter the url and click start!For more click Show Links!")
                 
                 error = downloader_script.main(urls_to_download,self.path,
                                                self.progress)
+                self.progress.SetValue(100)
     
             except AttributeError:
                 error = downloader_script.main([self.url_field.GetValue().strip()],self.path,
                                                self.progress)
+                self.progress.SetValue(100)
             if error:
                 print error
-                dlg = wx.MessageDialog(self.panel,"Connection failed",
+                dlg = wx.MessageDialog(self.panel,str(error),
                                        'Oops!', wx.OK|wx.ICON_INFORMATION)
                 dlg.ShowModal()
                 dlg.Destroy()
