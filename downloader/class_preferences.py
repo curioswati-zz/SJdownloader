@@ -27,7 +27,7 @@ from join_path import opj
     
 #Constants
 #----------------------------------------------------------------------
-#toolbar flags
+#flags for toolbar
 TBFLAGS = ( wx.TB_HORIZONTAL
             | wx.NO_BORDER
             | wx.TB_FLAT
@@ -35,9 +35,11 @@ TBFLAGS = ( wx.TB_HORIZONTAL
             | wx.TB_HORZ_LAYOUT
             )
 tID = wx.NewId()
-#general tool's id
+#id's for toolbar tools
 GENERAL_ID = wx.NewId()
 FILTER_ID = wx.NewId()
+HISTORY_ID = wx.NewId()
+history_options = ['Always save history','Never save history']
 
 #fetched from congif file
 with open(opj('config.txt')) as dirfile:
@@ -83,6 +85,13 @@ class open_pref(object):
         #Text ctrl for showing selected location
         self.dir = wx.TextCtrl(self.mainPanel,size=(400,25))
         self.dir.SetToolTipString("Selected default location");
+
+        #combobox for saving history
+        history_label = wx.StaticText(self.mainPanel,-1,"Downloader will:",
+                                       size=(90,15))
+        self.history = wx.ComboBox(self.mainPanel, -1, history_options[0],
+                                   choices=history_options,style=wx.CB_DROPDOWN
+                                   |wx.CB_READONLY)
         
         #------------------------------------------------------------------
         #Filters list
@@ -113,12 +122,22 @@ class open_pref(object):
         dir_box.Add(self.dir,proportion=1,flag=wx.ALL|wx.EXPAND,border=5)
         dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
 
-        #Static box for container
+        #for history box
+        history_box = wx.BoxSizer()
+        history_box.Add(history_label,proportion=0,flag=wx.ALL|wx.EXPAND,border=10)
+        history_box.Add(self.history,proportion=1,border=5,flag=wx.ALL)
+
+        #Static box for dir_container
         box = wx.StaticBox(self.mainPanel,-1,"Choose default directory",
                            size=(500,25))
         self.dir_sizer = wx.StaticBoxSizer(box)
         self.dir_sizer.Add(dir_box,1,wx.EXPAND)
 
+        #static box for history container
+        box = wx.StaticBox(self.mainPanel,-1,"History preferences",
+                           size=(500,25))
+        self.history_sizer = wx.StaticBoxSizer(box)
+        self.history_sizer.Add(history_box,1,wx.EXPAND)
 
         #Button container
         button_cont = wx.BoxSizer()
@@ -132,6 +151,7 @@ class open_pref(object):
 
         self.subSizer.Add(self.dir_sizer,0,wx.EXPAND)
         self.subSizer.Add(self.filter_list_box,1,wx.EXPAND)
+        self.subSizer.Add(self.history_sizer,0,wx.EXPAND)
 
         #Wrraping the panel and its widgets
         panelSizer = wx.BoxSizer(wx.VERTICAL)
@@ -161,13 +181,17 @@ class open_pref(object):
         #---------------------------------------------------------------------
         general_bmp = wx.Bitmap(opj("../Icons/pref.png"), wx.BITMAP_TYPE_PNG)
         filter_bmp = wx.Bitmap(opj("../Icons/new.png"), wx.BITMAP_TYPE_PNG)
+        history_bmp = wx.Bitmap(opj("../Icons/package.png"), wx.BITMAP_TYPE_PNG)
 
         self.toolBar.SetToolBitmapSize(tsize)
-        self.toolBar.AddLabelTool(GENERAL_ID, "General", general_bmp, shortHelp="General")
+        self.toolBar.AddLabelTool(GENERAL_ID, "&General", general_bmp, shortHelp="General")
         self.win.Bind(wx.EVT_TOOL, self.General, id=GENERAL_ID)
 
-        self.toolBar.AddLabelTool(FILTER_ID, "Filters", filter_bmp, shortHelp="Filters")
+        self.toolBar.AddLabelTool(FILTER_ID, "&Filters", filter_bmp, shortHelp="Filters")
         self.win.Bind(wx.EVT_TOOL, self.Filters, id=FILTER_ID)
+
+        self.toolBar.AddLabelTool(HISTORY_ID, "&History", history_bmp, shortHelp="History")
+        self.win.Bind(wx.EVT_TOOL, self.History, id=HISTORY_ID)
 
         #---------------------------------------------------------------------
         self.toolBar.Realize()    
@@ -202,6 +226,10 @@ class open_pref(object):
         
         self.panel.Layout()
         
+    #-------------------------------------------------------------------
+    def History(self, event):
+        pass
+
     #-------------------------------------------------------------------
     def Populate(self):
         '''
