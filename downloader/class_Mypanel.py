@@ -213,7 +213,7 @@ just enter the url and click start!For more click Show Links!")
                           (70, 310), (55, 20))
         self.cb9 = wx.CheckBox(panel, -1, "jpg",
                           (70, 310), (55, 20))
-        selectAll = wx.CheckBox(self.panel, -1, "select all",
+        self.selectAll = wx.CheckBox(self.panel, -1, "select all",
                               (70, 310), (85, 15))
         self.selectDefault = wx.CheckBox(self.panel, -1, "Apply default filter",
                               (70, 310), (400, 20))
@@ -239,7 +239,7 @@ just enter the url and click start!For more click Show Links!")
         self.cb8.Enable(False)
         self.cb9.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
         self.cb9.Enable(False)
-        selectAll.Bind(wx.EVT_CHECKBOX, self.select_all)
+        self.selectAll.Bind(wx.EVT_CHECKBOX, self.select_all)
         self.selectDefault.Bind(wx.EVT_CHECKBOX, self.select_default)
         
         #--------------------------------------------------------------------------
@@ -266,7 +266,7 @@ just enter the url and click start!For more click Show Links!")
         #--------------------------------------------------------------------------
         #For select all and count box
         self.hbox = wx.FlexGridSizer(cols=2, vgap=10, hgap=250)
-        self.hbox.Add(selectAll,proportion=0,flag=wx.TOP|wx.LEFT|
+        self.hbox.Add(self.selectAll,proportion=0,flag=wx.TOP|wx.LEFT|
                       wx.RIGHT,border=3)
         self.hbox.Add(self.count,proportion=1,flag=wx.TOP|wx.LEFT|
                       wx.RIGHT,border=3)
@@ -372,11 +372,14 @@ just enter the url and click start!For more click Show Links!")
         self.filtered = []
         #for keeping track of old regex filtered list; used in (filter)
         self.old_filtered = []
+        #to take note of checkboxes checked or unchecked
+        self.checked_boxes = []
+        #for select_all method, to keep track of checked items
+        self.checked_items = []
         #to keep urls that were filtered manually, if default was unchecked
         self.preserve_filter = []
         #List for checked links to download;
          #used in (enter),(filter),(EvtCheckBox)
-        self.toDownload = []
         self.countLink = 0
         menu = Menu(self.win)
         
@@ -389,67 +392,72 @@ just enter the url and click start!For more click Show Links!")
             filtered = re.findall(regex, '\n'.join(self.urls),re.I|re.M)
 
             if event.IsChecked():
-                self.filtered.extend(filtered)
+                self.checked_boxes.append(check_box.GetLabelText())
 
-            if not event.IsChecked():
+                if filtered:
+                    self.filtered.extend(filtered)
+                    self.box.SetLabel("")
+                    self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
+                    self.main_container.Show(self.hbox)
+                    self.panel.Layout()
+                else:
+                    self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
+                    if not self.filtered:
+                        self.main_container.Hide(self.hbox)
+                        self.panel.Layout()
+                    
+                self.check_list.SetItems(self.filtered)
+                if self.selectAll.IsChecked():
+                    self.select_all()
+                    
+            else:
+                self.checked_boxes.remove(check_box.GetLabelText())
+                self.box.SetLabel("")
                 for item in filtered:
                     self.filtered.remove(item)
 
-            if filtered:
-
-                if self.filtered:
-                    self.box.SetLabel("")
-                    self.check_list.SetItems(self.filtered)
-                    self.main_container.Show(self.hbox)
-                    self.panel.Layout()
-                    self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
-                    
-                elif not(event.IsChecked()):
-                    self.box.SetLabel("")
-                    self.check_list.SetItems(self.urls)
-                    self.main_container.Show(self.hbox)
-                    self.panel.Layout()
-                    self.count.SetLabel("No. of links found: "+str(self.countLink))
-                    
-            elif not(event.IsChecked()):
-                self.box.SetLabel("")
-                self.check_list.SetItems(self.urls)
-                self.main_container.Show(self.hbox)
-                self.panel.Layout()                    
-                self.count.SetLabel("No. of links found: "+str(self.countLink))
-
-            else:
                 self.check_list.SetItems(self.filtered)
-                self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
-                self.main_container.Hide(self.hbox)
-                self.panel.Layout()
+                self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
 
-            self.toDownload = []            
+                if not self.checked_boxes:
+                    self.main_container.Show(self.hbox)
+                    self.panel.Layout()
+                    self.check_list.SetItems(self.urls)
+                    self.count.SetLabel("No. of links found: "+str(self.countLink))
+                        
+                elif not self.filtered:
+                    self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")           
+                    self.main_container.Hide(self.hbox)
+                    self.panel.Layout()
+
+                if self.selectAll.IsChecked():
+                    self.select_all()
+                                    
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
-            self.check_list.SetSelection(0)
+            #self.check_list.SetSelection(0)
         except Exception as e:
             print e
             
     #--------------------------------------------------------------------------
-    def select_all(self, event):
-        if event.IsChecked():
+    def select_all(self, *event):
+        if self.selectAll.IsChecked():
             if self.filtered:
                  try:
-                    self.toDownload = self.filtered
-                    indices = range(len(self.toDownload))
+                    self.checked_items = self.filtered
+                    indices = range(len(self.filtered))
                     self.check_list.SetChecked(indices)
                  except Exception as e:
                      print e
             else:
                 try:
-                    self.toDownload = self.urls
-                    indices = range(len(self.toDownload))
+                    self.checked_items = self.urls
+                    indices = range(len(self.urls))
                     self.check_list.SetChecked(indices)
                 except Exception as e:
                     print e
         else:
             try:
-                for index in xrange(len(self.toDownload)):
+                for index in xrange(len(self.checked_items)):
                     self.check_list.Check(index,False)
             except:
                 pass
@@ -556,8 +564,6 @@ just enter the url and click start!For more click Show Links!")
                       )
                       
             self.panel.Layout()
-
-            self.toDownload = []
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox)
         else:
             print error
@@ -601,10 +607,7 @@ just enter the url and click start!For more click Show Links!")
                  else:
                      self.check_list.SetItems(self.urls)
                      self.count.SetLabel("No. of links found: "+str(self.countLink))
-
-                 #list of selected links
-                 self.toDownload = []
-                 
+               
                  self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
                  self.check_list.SetSelection(0)
         except Exception as e:
@@ -623,8 +626,7 @@ just enter the url and click start!For more click Show Links!")
         
         if self.check_list.IsChecked(index):
             status = ''
-            self.check_list.SetSelection(index)                             #so that (un)checking also selects (moves the highlight)
-        #print self.toDownload
+            self.check_list.SetSelection(index)                             #so that (un)checking also selects (moves the highl
 
     #--------------------------------------------------------------------------
     def download(self,event):
@@ -645,9 +647,7 @@ just enter the url and click start!For more click Show Links!")
             self.box.SetLabel("Fetching.....")
                 
             try:
-                self.toDownload.extend(self.check_list.GetCheckedStrings())
-                urls_to_download = self.toDownload
-                
+                urls_to_download = self.check_list.GetCheckedStrings()              
                 error = downloader_script.main(urls_to_download,self.path,
                                                self.progress)
                 self.progress.SetValue(100)
@@ -699,7 +699,6 @@ just enter the url and click start!For more click Show Links!")
         except Exception:
             pass
         self.regex.SetValue(" ")
-        self.dir.SetValue("")
         self.path = " "
         self.box.SetLabel("The links will be shown here")
         self.main_container.Hide(self.hbox)
@@ -714,6 +713,16 @@ just enter the url and click start!For more click Show Links!")
         self.cb7.Enable(False)
         self.cb8.Enable(False)
         self.cb8.Enable(False)
+        self.cb1.SetValue(False)
+        self.cb2.SetValue(False)
+        self.cb3.SetValue(False)
+        self.cb4.SetValue(False)
+        self.cb5.SetValue(False)
+        self.cb6.SetValue(False)
+        self.cb7.SetValue(False)
+        self.cb8.SetValue(False)
+        self.cb9.SetValue(False)
+        self.selectAll.SetValue(False)
         self.selectDefault.Enable(False)
         
         self.filter_btn.Disable()        
