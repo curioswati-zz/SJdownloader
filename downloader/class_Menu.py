@@ -20,6 +20,7 @@ import wx
 import os, sys
 from wx.lib.agw import aquabutton as AB
 import class_preferences
+import class_Mypanel
 
 #Linking to icons path.
 #----------------------------------------------------------
@@ -38,7 +39,6 @@ class Menu():
     
     def __init__(self,win):
         self.win = win
-
         #The menubar
         menubar = wx.MenuBar()
 
@@ -64,7 +64,12 @@ class Menu():
         self.win.Bind(wx.EVT_MENU, self.Pref, pref)
     #---------------------------------------------------------------------
     def New(self, event):
-        print "FileMenu"
+        #window object
+        win = wx.Frame(None,title = "Downloader",
+                       size=(575,420))
+        panel = wx.Panel(win)
+        class_Mypanel.Mypanel(panel,win)
+        win.Show()
 
     #---------------------------------------------------------------------
     def Save(self, event):
@@ -100,8 +105,6 @@ def open_pref():
     '''
     main function for preferences window
     '''
-    app = wx.App()
-
     #window object
     window = wx.Frame(None,title = "Preferences",size=(500,400))
 
@@ -115,8 +118,7 @@ def open_pref():
 
     #show the window
     window.Show()
-
-    #execute the loop for maintaining the window
-    app.MainLoop()
-
+    #if window:
+     #   win.Disable()
+   
 #--------------------------------------------------------------------------
