@@ -20,11 +20,13 @@ It defines:
 """Required Modules"""
 import wx
 import os,sys
+
 from wx.lib.agw import aquabutton as AB
 import  wx.lib.mixins.listctrl  as  listmix
+
 import change_config
 from join_path import opj
-    
+
 #Constants
 #----------------------------------------------------------------------
 #flags for toolbar
@@ -41,21 +43,39 @@ FILTER_ID = wx.NewId()
 HISTORY_ID = wx.NewId()
 history_options = ['Always save history','Never save history']
 
-#fetched from congif file
-with open(opj('config.txt')) as dirfile:
-    data = dirfile.readlines()
-    DD = data[0].replace("\n","")
-    filters = data[1]
+#fetched from config file
+with open(opj('config.txt')) as config_file:
+    data = config_file.read()
+    #default_dir
+    dir_point = data.find('PATH')
+    end_point = data.find('\n',dir_point+1)
+    DD = data[dir_point+7:end_point]
+    print DD
+    #filter
+    filter_point = data.find('FILTER')
+    end_point = data.find('\n',filter_point+1)
+    filters = data[filter_point+9:end_point]
+    print filters
+    #history_option
+    opt_point = data.find('OPTION')
+    end_point = data.find('\n',opt_point+1)
+    option_selected = data[opt_point+9:end_point]
+    print option_selected
+    #history list
+    to_history = data[data.find('HISTORY')+11:-1]
+    print to_history
 
 #-------------------------------------------------------------------------
 class open_pref(object):
 
     def __init__(self,win, panel):
-
+        #selected option for history to show on first appearence of window
+        global option_selected
+        
         self.win = win
         self.panel = panel
         self.mainPanel = wx.Panel(panel)
-
+        self.win.MakeModal()
         #------------------------------------------------------------------
         #Creating widgets for window
         #------------------------------------------------------------------
@@ -89,7 +109,7 @@ class open_pref(object):
         #combobox for saving history
         history_label = wx.StaticText(self.mainPanel,-1,"Downloader will:",
                                        size=(90,15))
-        self.history = wx.ComboBox(self.mainPanel, -1, history_options[0],
+        self.history = wx.ComboBox(self.mainPanel, -1,option_selected,
                                    choices=history_options,style=wx.CB_DROPDOWN
                                    |wx.CB_READONLY)
         
@@ -109,11 +129,23 @@ class open_pref(object):
                                            | wx.LC_SORT_ASCENDING
                                            )
         
-        self.Populate()
+        self.Populate(self.filter_list,self.filter_list_box)
         self.win.Bind(wx.EVT_LIST_ITEM_SELECTED,
                       self.filter_list_box.OnItemSelected,
                       self.filter_list_box)
         
+        #------------------------------------------------------------------
+        #Filters list
+##        if to_history:
+##            self.history_list = {i+1:(entry[0],entry[1]) for i,entry in enumerate(to_history)}
+##            self.history_list_box = TestListCtrl(self.mainPanel, tID,
+##                                               (5,45),(472,240),
+##                                               style=wx.LC_REPORT
+##                                               | wx.BORDER_NONE
+##                                               | wx.LC_SORT_ASCENDING
+##                                               )
+##            
+##            self.Populate(self.history_list,self.history_list_box)        
         #------------------------------------------------------------------
         #Containers
         #------------------------------------------------------------------
@@ -170,6 +202,7 @@ class open_pref(object):
         self.panel.Layout()
         self.General()
         self.win.CenterOnScreen()
+        self.win.Bind(wx.EVT_CLOSE,self.cancel)
 
     #-------------------------------------------------------------------
     def createMenu(self,win):
@@ -204,11 +237,13 @@ class open_pref(object):
 
         try:
             self.subSizer.Hide(self.dir_sizer)
+            self.subSizer.Hide(self.history_sizer)
             self.subSizer.Hide(self.filter_list_box)
         except Exception as e:
             print e
 
         self.subSizer.Show(self.dir_sizer)
+        self.subSizer.Show(self.history_sizer)
         self.panel.Layout()
         
     #-------------------------------------------------------------------
@@ -218,6 +253,7 @@ class open_pref(object):
         '''
         try:
             self.subSizer.Hide(self.dir_sizer)
+            self.subSizer.Hide(self.history_sizer)
             self.subSizer.Hide(self.filter_list_box)
         except Exception as e:
             print e
@@ -228,28 +264,28 @@ class open_pref(object):
         
     #-------------------------------------------------------------------
     def History(self, event):
-        pass
+        print to_history
 
     #-------------------------------------------------------------------
-    def Populate(self):
+    def Populate(self,list_,box):
         '''
         Helper to Filters method.
         '''
         # for normal, simple columns, you can add them like this:
-        self.filter_list_box.InsertColumn(0, "Caption")
-        self.filter_list_box.InsertColumn(1, "Extension")
+        box.InsertColumn(0, "Caption")
+        box.InsertColumn(1, "Extension")
         
-        items = self.filter_list.items()
+        items = list_.items()
         for key, data in items:
-            index = self.filter_list_box.InsertStringItem(sys.maxint, data[0])
-            self.filter_list_box.SetStringItem(index, 0, data[0])
-            self.filter_list_box.SetStringItem(index, 1, data[1])
-            self.filter_list_box.SetItemData(index, key)
+            index = box.InsertStringItem(sys.maxint, data[0])
+            box.SetStringItem(index, 0, data[0])
+            box.SetStringItem(index, 1, data[1])
+            box.SetItemData(index, key)
 
-        self.filter_list_box.SetColumnWidth(0, wx.LIST_AUTOSIZE)
-        self.filter_list_box.SetColumnWidth(1, wx.LIST_AUTOSIZE)
+        box.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+        box.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 
-        self.filter_list_box.currentItem = 0
+        box.currentItem = 0
         
     #-------------------------------------------------------------------
     def SetStringItem(self, index, col, data):
@@ -297,7 +333,16 @@ class open_pref(object):
         The function is bind with the save button.
         It saves all the changes in preferences.
         '''
-        change_config.main(DD,filters)
+        global option_selected, to_history
+        #index of selection
+        select_index = self.history.GetSelection()
+        #setting current selection
+        self.history.SetSelection(select_index)
+        #selected option string
+        option_selected = history_options[select_index]
+        #changing configuration
+        change_config.main(DD,filters,option_selected,to_history)
+        self.win.MakeModal(False)
         self.win.Destroy()
     #-------------------------------------------------------------------    
     def cancel(self, event):
@@ -305,6 +350,8 @@ class open_pref(object):
         The function is bind with the save button.
         It saves all the changes in preferences.
         '''
+#        global history_options
+        self.win.MakeModal(False)
         self.win.Destroy()
 
     #------------------------------------------------------------------
