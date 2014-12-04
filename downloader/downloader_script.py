@@ -6,8 +6,12 @@ It imports:
   -urllib
   
 It defines:
-  -main
-  -extract_name
+  -Thread
+    -__init__
+    -run
+  -Progress
+    -__init__
+    -updateProgress
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''Required modules'''
 import urllib
@@ -18,19 +22,6 @@ from threading import Thread
 #from wx.lib.pubsub import setuparg1
 from wx.lib.pubsub import pub
 from wx.lib.agw import pygauge as PG
-
-#written for cutting the name of file from url, replaced by os.path.basename in `TestThread`
-##def extract_name(url):
-##    """
-##    Extracts the name of the content item from provided url.
-##    """
-##    name = ""                         
-##    for ch in url[-1::-1]: 
-##        if ch == "/":                                                 #extracting from last field separated by "/"
-##            break
-##        name+=ch
-##        
-##    return name[-1::-1]
 
 class TestThread(Thread):
     '''
@@ -77,6 +68,7 @@ class TestThread(Thread):
                 return e
                 return "The connection could not establish."
 
+#--------------------------------------------------------------------------------------------------
 class Progress(wx.Gauge):
     '''
     Progress class to implement the updation of progress bar with
@@ -95,10 +87,12 @@ class Progress(wx.Gauge):
         #updating bar
         pub.subscribe(self.updateProgress, "Update")
 
+    #-----------------------------------------------------------------------------
     def updateProgress(self, msg):
         print "update:",msg
         progress_bar.Update(msg,100)
 
+#--------------------------------------------------------------------------------------------------
 def main(urls, path,progress_bar):
     '''
     Main module to call the TestThread for downloading and
@@ -110,7 +104,7 @@ def main(urls, path,progress_bar):
     if (not(urls[0].startswith("http"))
         and ".html" not in urls[0]):
         return "Invalid url"
-    #-----------------------------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
     #Fetching file size before download
     try:
         total_size = 0
@@ -125,17 +119,18 @@ def main(urls, path,progress_bar):
                 total_size += size
     except IOError:
         return "The connection could not establish"
-    #-----------------------------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
     #replaced by dl_size in `Thread`
     #update_value = total_size / len(urls)
     print_size = total_size/float(1024**2)
     print str(print_size) + "Mb selected for download"
-    #-----------------------------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
     #update the progress bar
     #Progress(progress_bar,total_size)
     #Start thread
     TestThread(urls, path,stop,True)
                 
+#--------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     main(url,dir_)
 
