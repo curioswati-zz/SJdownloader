@@ -19,8 +19,10 @@ It defines:
     -browse
     -reset
     -filter
-    -EvtCheckListBox
     -close
+    -enable_checkes
+    -EvtCheckListBox
+    -make_pattern
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 """Required modules"""
 import re,os
@@ -31,11 +33,11 @@ from wx.lib.agw import pygauge as PG
 
 import get_urls,downloader_script
 from class_Menu import Menu
-from join_path import opj
+from utils import opj
 import class_preferences
+import change_config
 
-#Global constants
-#-----------------------------------------------------------------
+#---------------------------Global constants---------------------------------
 #reading configurations from config file
 with open(opj('config.txt')) as config_file:
     data = config_file.read()
@@ -47,11 +49,31 @@ with open(opj('config.txt')) as config_file:
     filter_point = data.find('FILTER')
     end_point = data.find('\n',filter_point+1)
     filters = data[filter_point+9:end_point]
+    #for writing to only history, used in `enter` method
+    history_point = data.find('HISTORY')
 
+#---------------------------------------------------------------------------
+def write_history(url):
+    '''
+    writing history configurations to config file
+    '''
+    global history_point
+
+    if (class_preferences.option_selected == 
+        class_preferences.history_options[0]):
+        class_preferences.to_history = class_preferences.to_history[:-1] + "("+url+","+time.ctime()+")\n]"
+        
+    with open(opj('config.txt'),'r+') as config_file:
+        config_file.seek(history_point+1)
+        config_file.write('\nHISTORY = '+class_preferences.to_history)
+
+    print class_preferences.to_history
+
+#---------------------------------------------------------------------------
 class Mypanel(object):
     def __init__(self,panel,win):
-        self.win = win                                                      #The window object
-        self.panel = panel                                                  #The panel object
+        self.win = win                                              #The window object
+        self.panel = panel                                          #The panel object
         self.panel.SetBackgroundColour((198,222,223,255))
         self.panel.SetForegroundColour((60,60,60,255))
         
@@ -63,8 +85,7 @@ class Mypanel(object):
         box = wx.StaticBox(self.panel, -1,size=(500,50))
         self.introsizer = wx.StaticBoxSizer(box)
 
-        #---------------------------------------------------------------
-        #Images                
+        #---------------------------------Images---------------------------------------------
         #LOGO
         png = wx.Image(opj('../Icons/Logo.png'),
                        wx.BITMAP_TYPE_PNG).ConvertToBitmap()
@@ -80,8 +101,7 @@ class Mypanel(object):
         #container for loading_icon
         #self.loading_icon = wx.StaticBitmap(panel,-1,loading_icon,size=(40,40))
         
-        #---------------------------------------------------------------        
-        #Description
+        #------------------------------Description-------------------------------------------      
         sub_container = wx.BoxSizer(wx.VERTICAL)
         description = wx.TextCtrl(self.panel, -1,"\t\t\tSJdownloader\n",size=(460,72),
                                   style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_NO_VSCROLL|
@@ -99,9 +119,8 @@ just enter the url and click start! For more click Show Links!")
         
         self.introsizer.Add(logo,proportion=0)
         self.introsizer.Add(sub_container,proportion=1,flag=wx.EXPAND)
-        #--------------------------------------------------------------------------
-        #creating buttons, and binding events with them, that occurs on click.
 
+        #--------------------------Buttons and events----------------------------------------      
         #calls (enter) method
         show_btn = AB.AquaButton(panel, -1, None, "Links",size=(70,22))
         show_btn.SetBackgroundColour((98,208,255,255))
@@ -150,8 +169,7 @@ just enter the url and click start! For more click Show Links!")
         self.filter_btn.Bind(wx.EVT_BUTTON,self.filter)
         self.filter_btn.Disable()
         
-        #--------------------------------------------------------------------------
-        #defining text areas; to input text
+        #--------------------------TEXT AREAS------------------------------------------------
         '''
         >>>"http://www.google.com/" -> keyed in url_field
         calls (enter)
@@ -175,7 +193,7 @@ just enter the url and click start! For more click Show Links!")
         progress = wx.StaticText(panel, -1, "Progress")
 
         #--------------------------------------------------------------------------
- 
+        
         #text box for url, calls (enter) method on text event
         self.url_field = wx.TextCtrl(panel,
                                      size=(0,10),pos=(5,5),                                     
@@ -204,9 +222,7 @@ just enter the url and click start! For more click Show Links!")
         #Progress bar
         self.progress = PG.PyGauge(panel,-1,size=(255,20),style=wx.GA_HORIZONTAL)
 
-        #--------------------------------------------------------------------------
-        #Defining CheckBoxes
-
+        #-------------------------------CHECKBOXES-------------------------------------------
         self.cb1 = wx.CheckBox(panel, -1, "jpeg",
                           (5, 295), (75, 20))
         self.cb2 = wx.CheckBox(panel, -1, "png",
@@ -232,32 +248,21 @@ just enter the url and click start! For more click Show Links!")
         self.selectDefault.Enable(False)
         
         #Binding events with checkboxes
-        
+
+        self.enable_checkes(False)        
         self.cb1.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb1.Enable(False)
         self.cb2.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb2.Enable(False)
         self.cb3.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb3.Enable(False)
         self.cb4.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb4.Enable(False)
         self.cb5.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb5.Enable(False)
         self.cb6.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb6.Enable(False)
         self.cb7.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb7.Enable(False)
         self.cb8.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb8.Enable(False)
         self.cb9.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb9.Enable(False)
         self.selectAll.Bind(wx.EVT_CHECKBOX, self.select_all)
         self.selectDefault.Bind(wx.EVT_CHECKBOX, self.select_default)
         
-        #--------------------------------------------------------------------------
-
-        #WRAPPING UP THE BOXES
-        #----------------------
+        #----------------------------WRAPPING UP THE BOXES-----------------------------------
         #The text controls
         #-----------------
 
@@ -290,7 +295,7 @@ just enter the url and click start! For more click Show Links!")
                   )
         Static_box.Add(reset_btn,proportion=0,border=5,flag=wx.LEFT|wx.TOP)
         #--------------------------------------------------------------------------
-
+        
         #--------------
         #The checkBoxes
         #--------------
@@ -348,7 +353,7 @@ just enter the url and click start! For more click Show Links!")
         feature_box.Add(feature_box4,proportion=0,flag=wx.EXPAND)
 
         #--------------------------------------------------------------------------
-
+        
         #container for progres bar                              Container#5
         prog_box = wx.BoxSizer()
         prog_box.Add(progress, proportion=0, flag=wx.ALL,border=5)
@@ -361,7 +366,7 @@ just enter the url and click start! For more click Show Links!")
         prog_box.Add(close_btn, proportion=0,border=5,
                      flag=wx.LEFT)
 
-        #--------------------------------------------------------------------------      
+        #--------------------------------------------------------------------------
         #container for introsizer and Containers #1,#2,#3,#4,#5
         #-------------------------------------------
         self.main_container = wx.BoxSizer(wx.VERTICAL)
@@ -396,65 +401,34 @@ just enter the url and click start! For more click Show Links!")
         self.countLink = 0
         menu = Menu(self.win)
         
-    #--------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------
     def EvtCheckBox(self, event):
+        '''
+        Event fired on checking any of check box.
+        '''
         check_box = event.GetEventObject()
-        regex = '.*\.'+check_box.GetLabelText()                       #creating a regex pattern based on
-                                                                                                     #the label str of selected checkbox.
+        regex = check_box.GetLabelText()                      #creating a regex pattern based on
+                                                                        #the label str of selected checkbox.
         try:            
-            filtered = re.findall(regex, '\n'.join(self.urls),re.I|re.M)
-
             if event.IsChecked():
-                self.checked_boxes.append(check_box.GetLabelText())
-
-                if filtered:
-                    self.filtered.extend(filtered)
-                    self.box.SetLabel("")
-                    self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
-                    self.main_container.Show(self.hbox)
-                    self.panel.Layout()
-                else:
-                    self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
-                    if not self.filtered:
-                        self.main_container.Hide(self.hbox)
-                        self.panel.Layout()
-                    
-                self.check_list.SetItems(self.filtered)
-                if self.selectAll.IsChecked():
-                    self.select_all()
-                    
+                self.checked_boxes.append(regex)
+   
             else:
-                self.checked_boxes.remove(check_box.GetLabelText())
-                self.box.SetLabel("")
-                for item in filtered:
-                    self.filtered.remove(item)
+                self.checked_boxes.remove(regex)
 
-                self.check_list.SetItems(self.filtered)
-                self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
+            self.filter()
 
-                if not self.checked_boxes:
-                    self.main_container.Show(self.hbox)
-                    self.panel.Layout()
-                    self.check_list.SetItems(self.urls)
-                    self.count.SetLabel("No. of links found: "+str(self.countLink))
-                        
-                elif not self.filtered:
-                    self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")           
-                    self.main_container.Hide(self.hbox)
-                    self.panel.Layout()
-
-                if self.selectAll.IsChecked():
-                    self.select_all()
+            if self.selectAll.IsChecked():
+                self.select_all()
                                     
-            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
-            #self.check_list.SetSelection(0)
         except Exception as e:
             print e
             
-    #--------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------
     def select_all(self, *event):
         if self.selectAll.IsChecked():
             if self.filtered:
+                 print "checking"
                  try:
                     self.checked_items = self.filtered
                     indices = range(len(self.filtered))
@@ -475,65 +449,50 @@ just enter the url and click start! For more click Show Links!")
             except:
                 pass
             
-    #--------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------
     def select_default(self, event):
         if event.IsChecked():
-            print 'disable all other filters'
+            print 'enabled default filter'
             self.filter_btn.Disable()
-            self.cb1.Enable(False)
-            self.cb2.Enable(False)
-            self.cb3.Enable(False)
-            self.cb4.Enable(False)
-            self.cb5.Enable(False)
-            self.cb6.Enable(False)
-            self.cb7.Enable(False)
-            self.cb8.Enable(False)
-            self.cb9.Enable(False)
+            self.enable_checkes(False)
             self.regex.SetEditable(False)
 
             self.filter()
+            if self.selectAll.IsChecked():
+                self.select_all()
 
             self.panel.Layout()
         else:
             #enable all other filters
             self.filter_btn.Enable()
-            self.cb1.Enable(True)
-            self.cb2.Enable(True)
-            self.cb3.Enable(True)
-            self.cb4.Enable(True)
-            self.cb5.Enable(True)
-            self.cb6.Enable(True)
-            self.cb7.Enable(True)
-            self.cb8.Enable(True)
-            self.cb9.Enable(True)
+            self.enable_checkes(True)
             self.regex.SetEditable(True)
-
+            
             self.panel.Layout()
             
             self.box.SetLabel("")
-            if self.preserve_filter:
+            if self.preserve_filter and self.checked_boxes:
                 self.filtered = self.preserve_filter
                 self.check_list.SetItems(self.filtered)
                 self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
             else:
                 self.check_list.SetItems(self.urls)
                 self.count.SetLabel("No. of links found: "+str(self.countLink))
+
+            if self.selectAll.IsChecked():
+                self.select_all()
             self.panel.Layout()                    
-            
-                       
-    #--------------------------------------------------------------------------
+                               
+    #------------------------------------------------------------------------------------
     def enter(self, event):
         '''
         The function to prepare a list of all urls found on home page,
         It works on text_enter_event of textctrl box called 'url'.
         '''
         global default_dir
-        #-----------------saving history-------------------------------------
-        if class_preferences.option_selected == class_preferences.history_options[0]:
-            class_preferences.to_history += ", ('"+self.url_field.GetValue()+"', '"+time.ctime()+"')"
-            print class_preferences.to_history
-        #-----------------------------------------------------------------------
-        
+        #------------------------------saving history-----------------------------------------
+        write_history(self.url_field.GetValue())
+
         #Fetching urls
         home_url = self.url_field.GetValue().strip()
         if home_url == "":
@@ -549,15 +508,7 @@ just enter the url and click start! For more click Show Links!")
             
             self.main_container.Show(self.hbox)
             #Enabling the checkboxes, and buttons
-            self.cb1.Enable(True)
-            self.cb2.Enable(True)
-            self.cb3.Enable(True)
-            self.cb4.Enable(True)
-            self.cb5.Enable(True)
-            self.cb6.Enable(True)
-            self.cb7.Enable(True)
-            self.cb8.Enable(True)
-            self.cb9.Enable(True)
+            self.enable_checkes(True)
             self.selectDefault.Enable(True)
 
             self.filter_btn.Enable()
@@ -586,7 +537,7 @@ just enter the url and click start! For more click Show Links!")
         else:
             print error
             
-    #--------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------
     def filter(self,*event):
         '''
         The function filters links found on the page.
@@ -596,58 +547,39 @@ just enter the url and click start! For more click Show Links!")
         global filters
         
         #if default filter applied
-        if self.selectDefault.IsChecked():
-            self.preserve_filter = self.filtered
-            self.filtered = []
-            pattern = filters
-        else:
-            pattern = self.regex.GetValue()
+        pattern = self.make_pattern()
             
         try:
-             if self.urls:
-                 filtered = None
-                 if pattern:
-                     filtered = re.findall(pattern,'\n'.join(self.urls),re.I|re.M)
-                     self.filtered.extend(filtered)
-                     if not self.selectDefault.IsChecked():
-                         self.old_filtered = filtered
+            filtered = None
+            if pattern:
+                filtered = re.findall(pattern,'\n'.join(self.urls),re.I|re.M)
+                self.filtered = filtered
 
-                 elif self.old_filtered:
-                     for item in self.old_filtered:
-                         self.filtered.remove(item)
-                     self.old_filtered = []
-                         
-                 if pattern and not filtered:
-                     self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
+                if self.filtered:
+                    self.box.SetLabel("")
+                    self.main_container.Show(self.hbox)
+                    self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
+                else:
+                    self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
+                    self.main_container.Hide(self.hbox)
 
-                 if self.filtered:
-                     self.check_list.SetItems(self.filtered)
-                     self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
-                 else:
-                     self.check_list.SetItems(self.urls)
-                     self.count.SetLabel("No. of links found: "+str(self.countLink))
-               
-                 self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
-                 self.check_list.SetSelection(0)
+                self.check_list.SetItems(self.filtered)                   
+
+            else:
+                self.filtered = []
+                self.box.SetLabel("")
+                self.main_container.Show(self.hbox)
+                self.check_list.SetItems(self.urls)
+                self.count.SetLabel("No. of links found: "+str(self.countLink))
+
+            if self.selectAll.IsChecked():
+                self.select_all()
+           
+            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
         except Exception as e:
             print e
         
-    def EvtCheckListBox(self, event):
-        '''
-        Function to implement checking and unchecking of list items.
-        Also, according to checking and unchecking, adds and removes
-        items to/from download list.
-        '''
-        index = event.GetSelection()
-        label = self.check_list.GetString(index)
-        status = 'un'
-        string_at_index = self.check_list.GetString(index)
-        
-        if self.check_list.IsChecked(index):
-            status = ''
-            self.check_list.SetSelection(index)                             #so that (un)checking also selects (moves the highl
-
-    #--------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------
     def download(self,event):
         '''
         The function is bind with download button and download the content.
@@ -691,7 +623,7 @@ just enter the url and click start! For more click Show Links!")
         else:
             self.url_field.SetValue("Please Enter url")
 
-    #--------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------
     def browse(self,event):
         '''
         The function is bind with the browse button.
@@ -713,12 +645,13 @@ just enter the url and click start! For more click Show Links!")
 
         dlg.Destroy()
         
-    #--------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------
     def reset(self,*event):
         '''
         This is bound to reset button, when pressed, it clears all text areas.
         '''
         self.url_field.SetValue(" ")
+        self.url_field.SetFocus()
         try:
             self.check_list.Destroy()
         except Exception:
@@ -729,15 +662,7 @@ just enter the url and click start! For more click Show Links!")
         self.main_container.Hide(self.hbox)
         
         #Disabling all checkboxes
-        self.cb1.Enable(False)
-        self.cb2.Enable(False)
-        self.cb3.Enable(False)
-        self.cb4.Enable(False)
-        self.cb5.Enable(False)
-        self.cb6.Enable(False)
-        self.cb7.Enable(False)
-        self.cb8.Enable(False)
-        self.cb8.Enable(False)
+        self.enable_checkes(False)
         self.cb1.SetValue(False)
         self.cb2.SetValue(False)
         self.cb3.SetValue(False)
@@ -755,10 +680,82 @@ just enter the url and click start! For more click Show Links!")
         
         self.panel.Layout()
 
-    #--------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------
     def cancel(self, event):
         downloader_script.stop = True
         self.win.Destroy()
     
+    #------------------------------------------------------------------------------------
     def close(self, event):
         self.win.Destroy()
+
+    #------------------------------------------------------------------------------------
+    def enable_checkes(self,check = None):
+        if check:
+            self.cb1.Enable(True)
+            self.cb2.Enable(True)
+            self.cb3.Enable(True)
+            self.cb4.Enable(True)
+            self.cb5.Enable(True)
+            self.cb6.Enable(True)
+            self.cb7.Enable(True)
+            self.cb8.Enable(True)
+            self.cb9.Enable(True)           
+        else:
+            self.cb1.Enable(False)
+            self.cb2.Enable(False)
+            self.cb3.Enable(False)
+            self.cb4.Enable(False)
+            self.cb5.Enable(False)
+            self.cb6.Enable(False)
+            self.cb7.Enable(False)
+            self.cb8.Enable(False)
+            self.cb9.Enable(False)
+    #------------------------------------------------------------------------------------
+    def EvtCheckListBox(self, event):
+        '''
+        Function to implement checking and unchecking of list items.
+        Also, according to checking and unchecking, adds and removes
+        items to/from download list.
+        '''
+        index = event.GetSelection()
+        label = self.check_list.GetString(index)
+        status = 'un'
+        string_at_index = self.check_list.GetString(index)
+        
+        if self.check_list.IsChecked(index):
+            status = ''
+            self.check_list.SetSelection(index)        #so that (un)checking also selects
+
+    #------------------------------------------------------------------------------------
+    def make_pattern(self):
+        '''
+        method to prepare a pattern to be filtered by filter method.
+        '''
+        pattern = None
+
+        if self.selectDefault.IsChecked():
+            self.preserve_filter = self.filtered
+            self.filtered = []
+            pattern = filters
+           
+        else:           
+            if self.checked_boxes:
+                pattern = '.*\.'
+                for i,pat in enumerate(self.checked_boxes):
+                    if i == 0:
+                        pattern += pat
+                    else:
+                        pattern += '|.*\.'+pat
+                pattern += '.*'
+
+            regex = self.regex.GetValue()
+            
+            if regex:
+                if pattern:
+                    pattern += '|'+ regex
+                else:
+                    pattern = regex
+
+        return pattern         
+    #------------------------------------------------------------------------------------
