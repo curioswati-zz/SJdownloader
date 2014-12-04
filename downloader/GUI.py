@@ -20,8 +20,6 @@ def main():
 
     #box object
     bkg = wx.Panel(win)
-    bkg.SetBackgroundColour((198,222,223,255))
-    bkg.SetForegroundColour((60,60,60,255))
     
     #packing the box
     Mypanel(bkg,win)
