@@ -11,6 +11,7 @@ It defines:
     -createMenu
     -General
     -Filters
+    -History
     -Populate
     -SetStringItem
     -browse
@@ -25,10 +26,10 @@ from wx.lib.agw import aquabutton as AB
 import  wx.lib.mixins.listctrl  as  listmix
 
 import change_config
-from join_path import opj
+from utils import opj
+import utils
 
-#Constants
-#----------------------------------------------------------------------
+#---------------------------CONSTANTS---------------------------------------
 #flags for toolbar
 TBFLAGS = ( wx.TB_HORIZONTAL
             | wx.NO_BORDER
@@ -41,45 +42,46 @@ tID = wx.NewId()
 GENERAL_ID = wx.NewId()
 FILTER_ID = wx.NewId()
 HISTORY_ID = wx.NewId()
+#options for history configuration
 history_options = ['Always save history','Never save history']
 
-#fetched from config file
+#fetching configurations from config file
 with open(opj('config.txt')) as config_file:
     data = config_file.read()
     #default_dir
     dir_point = data.find('PATH')
     end_point = data.find('\n',dir_point+1)
     DD = data[dir_point+7:end_point]
-    print DD
     #filter
     filter_point = data.find('FILTER')
     end_point = data.find('\n',filter_point+1)
     filters = data[filter_point+9:end_point]
-    print filters
     #history_option
     opt_point = data.find('OPTION')
     end_point = data.find('\n',opt_point+1)
     option_selected = data[opt_point+9:end_point]
-    print option_selected
     #history list
-    to_history = data[data.find('HISTORY')+11:-1]
-    print to_history
+    to_history = data[data.find('HISTORY')+10:]
 
-#-------------------------------------------------------------------------
+#--------------------------------------------------------------------------
 class open_pref(object):
 
     def __init__(self,win, panel):
         #selected option for history to show on first appearence of window
         global option_selected
-        
+
         self.win = win
         self.panel = panel
         self.mainPanel = wx.Panel(panel)
         self.win.MakeModal()
-        #------------------------------------------------------------------
+
+        #window icon
+        self.win.SetIcon(wx.Icon(opj('../Icons/Logo.png'),
+                       wx.BITMAP_TYPE_PNG))
+        
+        #-------------------------------------------------------------------------------------------------------------
         #Creating widgets for window
-        #------------------------------------------------------------------
-        #Buttons
+        #-----------------------------------------------BUTTONS-------------------------------------------------------
         OKbtn = AB.AquaButton(self.mainPanel, -1, None,
                                 "OK",size=(60,30))
         OKbtn.SetBackgroundColour((198,222,223,255))
@@ -101,7 +103,7 @@ class open_pref(object):
         browse_btn.SetToolTipString("Select location")
         browse_btn.Bind(wx.EVT_BUTTON,self.browse)
         
-        #------------------------------------------------------------------
+        #----------------------------------------------OTHER WIDGETS----------------------------------------------------
         #Text ctrl for showing selected location
         self.dir = wx.TextCtrl(self.mainPanel,size=(400,25))
         self.dir.SetToolTipString("Selected default location");
@@ -109,18 +111,25 @@ class open_pref(object):
         #combobox for saving history
         history_label = wx.StaticText(self.mainPanel,-1,"Downloader will:",
                                        size=(90,15))
+        print option_selected
         self.history = wx.ComboBox(self.mainPanel, -1,option_selected,
                                    choices=history_options,style=wx.CB_DROPDOWN
                                    |wx.CB_READONLY)
         
-        #------------------------------------------------------------------
+        #-------------------------------------------------------------------------------------------------------------
         #Filters list
-        self.filter_list = {1:('Images(jpg,jpeg,gif,...)','.*\.(?:jp(?:e?g|e|2)|gif|png|tiff?|bmp|ico)$'),
-                            2:('Archives(zip,rar,...)','.*\.(?:z(?:ip|[0-9]{2})|r(?:ar|[0-9]{2})|jar|bz2|gz|tar|rpm|7z(?:ip)?|lzma|xz)$'),
-                            3:('Audio(mp3,wav,...)','.*\.(?:mp3|wav|og(?:g|a)|flac|midi?|rm|aac|wma|mka|ape)$'),
-                            4:('Software(exe,xpi,...)','.*\.(?:exe|msi|dmg|bin|xpi|iso)$'),
-                            5:('Videos(mpeg,avi,...)','.*\.(?:mpeg|ra?m|avi|mp(?:g|e|4)|mov|divx|asf|qt|wmv|m\dv|rv|vob|asx|ogm|ogv|webm)$'),
-                            6:('Documents(pdf,odf,...)','.*\.(?:pdf|xlsx?|docx?|odf|odt|rtf)$')
+        self.filter_list = {1:('Images(jpg,jpeg,gif,...)',
+                                '.*\.(?:jp(?:e?g|e|2)|gif|png|tiff?|bmp|ico)$'),
+                            2:('Archives(zip,rar,...)',
+                                '.*\.(?:z(?:ip|[0-9]{2})|r(?:ar|[0-9]{2})|jar|bz2|gz|tar|rpm|7z(?:ip)?|lzma|xz)$'),
+                            3:('Audio(mp3,wav,...)',
+                                '.*\.(?:mp3|wav|og(?:g|a)|flac|midi?|rm|aac|wma|mka|ape)$'),
+                            4:('Software(exe,xpi,...)',
+                                '.*\.(?:exe|msi|dmg|bin|xpi|iso)$'),
+                            5:('Videos(mpeg,avi,...)',
+                                '.*\.(?:mpeg|ra?m|avi|mp(?:g|e|4)|mov|divx|asf|qt|wmv|m\dv|rv|vob|asx|ogm|ogv|webm)$'),
+                            6:('Documents(pdf,odf,...)',
+                                '.*\.(?:pdf|xlsx?|docx?|odf|odt|rtf)$')
                             }
         self.filter_list_box = TestListCtrl(self.mainPanel, tID,
                                            (5,45),(472,240),
@@ -129,26 +138,31 @@ class open_pref(object):
                                            | wx.LC_SORT_ASCENDING
                                            )
         
-        self.Populate(self.filter_list,self.filter_list_box)
+        self.Populate(self.filter_list,self.filter_list_box,"Caption","Extension")
         self.win.Bind(wx.EVT_LIST_ITEM_SELECTED,
                       self.filter_list_box.OnItemSelected,
                       self.filter_list_box)
         
-        #------------------------------------------------------------------
+        #-------------------------------------------------------------------------------------------------------------
         #Filters list
-##        if to_history:
-##            self.history_list = {i+1:(entry[0],entry[1]) for i,entry in enumerate(to_history)}
-##            self.history_list_box = TestListCtrl(self.mainPanel, tID,
-##                                               (5,45),(472,240),
-##                                               style=wx.LC_REPORT
-##                                               | wx.BORDER_NONE
-##                                               | wx.LC_SORT_ASCENDING
-##                                               )
-##            
-##            self.Populate(self.history_list,self.history_list_box)        
-        #------------------------------------------------------------------
-        #Containers
-        #------------------------------------------------------------------
+        global to_history
+
+        if to_history:
+            history = utils.string_to_tuple(to_history)
+        else:
+            history = [('None','None')]
+        self.history_list = {i+1:(entry[0],entry[1]) for i,entry in enumerate(history)}
+
+        self.history_list_box = TestListCtrl(self.mainPanel, tID,
+                                           (5,45),(472,240),
+                                           style=wx.LC_REPORT
+                                           | wx.BORDER_NONE
+                                           | wx.LC_SORT_ASCENDING
+                                           )
+        
+        self.Populate(self.history_list,self.history_list_box,"URL","Time")        
+
+        #-------------------------------------------------CONTAINERS--------------------------------------------------
         #for directory box
         dir_box = wx.BoxSizer()
         dir_box.Add(self.dir,proportion=1,flag=wx.ALL|wx.EXPAND,border=5)
@@ -176,13 +190,13 @@ class open_pref(object):
         button_cont.Add(OKbtn,proportion=0,flag=wx.LEFT,border=350)
         button_cont.Add(cancelbtn,proportion=0,flag=wx.ALL)
 
-        #------------------------------------------------------------------        
-        #Wrapping the boxes
+        #-------------------------------------------WRAPPING BOXES----------------------------------------------------
         container = wx.StaticBox(self.mainPanel, -1)
         self.subSizer = wx.StaticBoxSizer(container,wx.VERTICAL)
 
         self.subSizer.Add(self.dir_sizer,0,wx.EXPAND)
         self.subSizer.Add(self.filter_list_box,1,wx.EXPAND)
+        self.subSizer.Add(self.history_list_box,1,wx.EXPAND)
         self.subSizer.Add(self.history_sizer,0,wx.EXPAND)
 
         #Wrraping the panel and its widgets
@@ -204,14 +218,14 @@ class open_pref(object):
         self.win.CenterOnScreen()
         self.win.Bind(wx.EVT_CLOSE,self.cancel)
 
-    #-------------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------------------------------
     def createMenu(self,win):
 
         self.toolBar = wx.ToolBar(self.panel, style=TBFLAGS)
         tsize = (30,30)
                 
         #Toolbar icons
-        #---------------------------------------------------------------------
+        #-------------------------------------------------------------------------------------------------------------
         general_bmp = wx.Bitmap(opj("../Icons/pref.png"), wx.BITMAP_TYPE_PNG)
         filter_bmp = wx.Bitmap(opj("../Icons/new.png"), wx.BITMAP_TYPE_PNG)
         history_bmp = wx.Bitmap(opj("../Icons/package.png"), wx.BITMAP_TYPE_PNG)
@@ -226,10 +240,10 @@ class open_pref(object):
         self.toolBar.AddLabelTool(HISTORY_ID, "&History", history_bmp, shortHelp="History")
         self.win.Bind(wx.EVT_TOOL, self.History, id=HISTORY_ID)
 
-        #---------------------------------------------------------------------
+        #-------------------------------------------------------------------------------------------------------------
         self.toolBar.Realize()    
 
-    #-------------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------------------------------
     def General(self, *event):
         '''
         Function called when clicked general tool.
@@ -239,6 +253,7 @@ class open_pref(object):
             self.subSizer.Hide(self.dir_sizer)
             self.subSizer.Hide(self.history_sizer)
             self.subSizer.Hide(self.filter_list_box)
+            self.subSizer.Hide(self.history_list_box)
         except Exception as e:
             print e
 
@@ -246,7 +261,7 @@ class open_pref(object):
         self.subSizer.Show(self.history_sizer)
         self.panel.Layout()
         
-    #-------------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------------------------------
     def Filters(self, event):
         '''
         Function called when Filters tool clicked.
@@ -255,6 +270,7 @@ class open_pref(object):
             self.subSizer.Hide(self.dir_sizer)
             self.subSizer.Hide(self.history_sizer)
             self.subSizer.Hide(self.filter_list_box)
+            self.subSizer.Hide(self.history_list_box)
         except Exception as e:
             print e
             
@@ -262,18 +278,28 @@ class open_pref(object):
         
         self.panel.Layout()
         
-    #-------------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------------------------------
     def History(self, event):
-        print to_history
+        try:
+            self.subSizer.Hide(self.dir_sizer)
+            self.subSizer.Hide(self.history_sizer)
+            self.subSizer.Hide(self.filter_list_box)
+            self.subSizer.Hide(self.history_list_box)
+        except Exception as e:
+            print e
+            
+        self.subSizer.Show(self.history_list_box)
+        
+        self.panel.Layout()
 
-    #-------------------------------------------------------------------
-    def Populate(self,list_,box):
+    #-----------------------------------------------------------------------------------------------------------------
+    def Populate(self,list_,box,col1_head,col2_head):
         '''
-        Helper to Filters method.
+        Helper to Filters, and History method.
         '''
         # for normal, simple columns, you can add them like this:
-        box.InsertColumn(0, "Caption")
-        box.InsertColumn(1, "Extension")
+        box.InsertColumn(0, col1_head)
+        box.InsertColumn(1, col2_head)
         
         items = list_.items()
         for key, data in items:
@@ -287,10 +313,10 @@ class open_pref(object):
 
         box.currentItem = 0
         
-    #-------------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------------------------------
     def SetStringItem(self, index, col, data):
         '''
-        Helper to Filters method.
+        Helper to Filters, and History method.
         '''
         if col in range(2):
             wx.ListCtrl.SetStringItem(self, index, col, data)
@@ -306,7 +332,7 @@ class open_pref(object):
             data = self.GetItem(index, col-2).GetText()
             wx.ListCtrl.SetStringItem(self, index, col-2, data[0:datalen])
             
-    #-------------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------------------------------
     def browse(self, event):
         '''
         The function is bind with the browse button.
@@ -327,7 +353,7 @@ class open_pref(object):
 
         dlg.Destroy()
             
-    #-------------------------------------------------------------------    
+    #-----------------------------------------------------------------------------------------------------------------
     def save(self, event):
         '''
         The function is bind with the save button.
@@ -341,27 +367,26 @@ class open_pref(object):
         #selected option string
         option_selected = history_options[select_index]
         #changing configuration
+        print to_history
         change_config.main(DD,filters,option_selected,to_history)
         self.win.MakeModal(False)
         self.win.Destroy()
-    #-------------------------------------------------------------------    
+    #-----------------------------------------------------------------------------------------------------------------
     def cancel(self, event):
         '''
         The function is bind with the save button.
         It saves all the changes in preferences.
         '''
-#        global history_options
         self.win.MakeModal(False)
         self.win.Destroy()
 
-    #------------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------------------------------
 
-#Left for enabling editing the filter list
 class TestListCtrl(wx.ListCtrl,
                    listmix.ListCtrlAutoWidthMixin,
                    listmix.TextEditMixin):
     '''
-    Class for implementing List Ctrl for filters.
+    Class for implementing List Ctrl for filters, and history.
     '''
 
     def __init__(self, parent, ID, pos=wx.DefaultPosition,
