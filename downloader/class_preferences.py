@@ -25,7 +25,6 @@ import os,sys
 from wx.lib.agw import aquabutton as AB
 import  wx.lib.mixins.listctrl  as  listmix
 
-import change_config
 from utils import opj
 import utils
 
@@ -44,6 +43,8 @@ FILTER_ID = wx.NewId()
 HISTORY_ID = wx.NewId()
 #options for history configuration
 history_options = ['Always save history','Never save history']
+#renaming options
+choice_list = ['Rename', 'Replace', 'Cancel']
 
 #fetching configurations from config file
 with open(opj('config.txt')) as config_file:
@@ -60,6 +61,10 @@ with open(opj('config.txt')) as config_file:
     opt_point = data.find('OPTION')
     end_point = data.find('\n',opt_point+1)
     option_selected = data[opt_point+9:end_point]
+    #rename option
+    radio_point = data.find('RENAME')
+    end_point = data.find('\n',radio_point+1)
+    radio_selected = data[radio_point+9:end_point]
     #history list
     to_history = data[data.find('HISTORY')+10:]
 
@@ -68,7 +73,7 @@ class open_pref(object):
 
     def __init__(self,win, panel):
         #selected option for history to show on first appearence of window
-        global option_selected
+        global option_selected, radio_selected
 
         self.win = win
         self.panel = panel
@@ -105,17 +110,28 @@ class open_pref(object):
         
         #----------------------------------------------OTHER WIDGETS----------------------------------------------------
         #Text ctrl for showing selected location
-        self.dir = wx.TextCtrl(self.mainPanel,size=(400,25))
+        self.dir = wx.TextCtrl(self.mainPanel,size=(400,25),
+                               style=wx.TE_READONLY)
+        self.dir.Disable()
         self.dir.SetToolTipString("Selected default location");
 
         #combobox for saving history
         history_label = wx.StaticText(self.mainPanel,-1,"Downloader will:",
                                        size=(90,15))
-        print option_selected
         self.history = wx.ComboBox(self.mainPanel, -1,option_selected,
                                    choices=history_options,style=wx.CB_DROPDOWN
                                    |wx.CB_READONLY)
-        
+
+        #radio box for renaming options
+        self.rename_sizer = wx.RadioBox(self.mainPanel, -1, "If file already exist",
+                                 wx.DefaultPosition,(300,60), choice_list,3,
+                                 wx.RA_SPECIFY_COLS|wx.NO_BORDER
+                                 )
+        if radio_selected:
+            index = choice_list.index(radio_selected)
+        else: index = 0
+        self.rename_sizer.SetSelection(index)
+
         #-------------------------------------------------------------------------------------------------------------
         #Filters list
         self.filter_list = {1:('Images(jpg,jpeg,gif,...)',
@@ -198,6 +214,7 @@ class open_pref(object):
         self.subSizer.Add(self.filter_list_box,1,wx.EXPAND)
         self.subSizer.Add(self.history_list_box,1,wx.EXPAND)
         self.subSizer.Add(self.history_sizer,0,wx.EXPAND)
+        self.subSizer.Add(self.rename_sizer,0,wx.EXPAND)
 
         #Wrraping the panel and its widgets
         panelSizer = wx.BoxSizer(wx.VERTICAL)
@@ -252,12 +269,14 @@ class open_pref(object):
         try:
             self.subSizer.Hide(self.dir_sizer)
             self.subSizer.Hide(self.history_sizer)
+            self.subSizer.Hide(self.rename_sizer)
             self.subSizer.Hide(self.filter_list_box)
             self.subSizer.Hide(self.history_list_box)
         except Exception as e:
             print e
 
         self.subSizer.Show(self.dir_sizer)
+        self.subSizer.Show(self.rename_sizer)
         self.subSizer.Show(self.history_sizer)
         self.panel.Layout()
         
@@ -269,6 +288,7 @@ class open_pref(object):
         try:
             self.subSizer.Hide(self.dir_sizer)
             self.subSizer.Hide(self.history_sizer)
+            self.subSizer.Hide(self.rename_sizer)
             self.subSizer.Hide(self.filter_list_box)
             self.subSizer.Hide(self.history_list_box)
         except Exception as e:
@@ -283,6 +303,7 @@ class open_pref(object):
         try:
             self.subSizer.Hide(self.dir_sizer)
             self.subSizer.Hide(self.history_sizer)
+            self.subSizer.Hide(self.rename_sizer)
             self.subSizer.Hide(self.filter_list_box)
             self.subSizer.Hide(self.history_list_box)
         except Exception as e:
@@ -352,23 +373,23 @@ class open_pref(object):
             self.dir.SetValue(DD)
 
         dlg.Destroy()
-            
+
     #-----------------------------------------------------------------------------------------------------------------
     def save(self, event):
         '''
         The function is bind with the save button.
         It saves all the changes in preferences.
         '''
-        global option_selected, to_history
+        global option_selected, to_history, radio_selected
         #index of selection
         select_index = self.history.GetSelection()
-        #setting current selection
-        self.history.SetSelection(select_index)
         #selected option string
         option_selected = history_options[select_index]
+        #radio selection
+        select_index = self.rename_sizer.GetSelection()
+        radio_selected = choice_list[select_index]
         #changing configuration
-        print to_history
-        change_config.main(DD,filters,option_selected,to_history)
+        utils.change_config(DD,filters,option_selected,radio_selected,to_history)
         self.win.MakeModal(False)
         self.win.Destroy()
     #-----------------------------------------------------------------------------------------------------------------
