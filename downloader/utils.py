@@ -43,3 +43,12 @@ def string_to_tuple(string):
         else:
             break
     return all_entries
+#--------------------------------------------------------------------------
+def change_config(dir_,filters,option,radio,history):
+     dir_file = open(opj('config.txt'),'w')
+     dir_file.write('PATH = '+dir_)
+     dir_file.write("\n"+'FILTER = '+filters)
+     dir_file.write("\n"+'OPTION = '+option)
+     dir_file.write("\n"+'RENAME = '+radio)
+     dir_file.write("\n"+'HISTORY = '+history)
+     dir_file.close()
