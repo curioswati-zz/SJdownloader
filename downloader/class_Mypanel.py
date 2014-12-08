@@ -33,24 +33,23 @@ from wx.lib.agw import pygauge as PG
 
 import get_urls,downloader_script
 from class_Menu import Menu
-from utils import opj
+from utils import opj, change_config
 import class_preferences
-import change_config
 
 #---------------------------Global constants---------------------------------
 #reading configurations from config file
 with open(opj('config.txt')) as config_file:
     data = config_file.read()
-    #default_dir
-    dir_point = data.find('PATH')
-    end_point = data.find('\n',dir_point+1)
-    default_dir = data[dir_point+7:end_point]
-    #filter
-    filter_point = data.find('FILTER')
-    end_point = data.find('\n',filter_point+1)
-    filters = data[filter_point+9:end_point]
-    #for writing to only history, used in `enter` method
-    history_point = data.find('HISTORY')
+#default_dir
+dir_point = data.find('PATH')
+end_point = data.find('\n',dir_point+1)
+default_dir = data[dir_point+7:end_point]
+#filter
+filter_point = data.find('FILTER')
+end_point = data.find('\n',filter_point+1)
+filters = data[filter_point+9:end_point]
+#for writing to only history, used in `enter` method
+history_point = data.find('HISTORY')
 
 #---------------------------------------------------------------------------
 def write_history(url):
@@ -66,8 +65,6 @@ def write_history(url):
     with open(opj('config.txt'),'r+') as config_file:
         config_file.seek(history_point+1)
         config_file.write('\nHISTORY = '+class_preferences.to_history)
-
-    print class_preferences.to_history
 
 #---------------------------------------------------------------------------
 class Mypanel(object):
@@ -489,9 +486,6 @@ just enter the url and click start! For more click Show Links!")
         The function to prepare a list of all urls found on home page,
         It works on text_enter_event of textctrl box called 'url'.
         '''
-        global default_dir
-        #------------------------------saving history-----------------------------------------
-        write_history(self.url_field.GetValue())
 
         #Fetching urls
         home_url = self.url_field.GetValue().strip()
@@ -588,20 +582,17 @@ just enter the url and click start! For more click Show Links!")
         Uses 'browse' filedialogs current path to save files.
         '''
         global default_dir
+        #------------------saving history------------------------------
+        write_history(self.url_field.GetValue())
 
-        #-----------------saving history-------------------------------------
-        if class_preferences.option_selected == class_preferences.history_options[0]:
-            class_preferences.to_history += ', ('+str(self.url_field.GetValue())+', '+str(time.ctime())+')'
-            print class_preferences.to_history
-        #-----------------------------------------------------------------------
-
+        #--------------------------------------------------------------
         if not(self.url_field.GetValue() == ""):                           #If url field is not empty
             if self.dir.GetValue() == "":                                  #if dir field is empty       
 
                 self.dir.SetValue(default_dir)
                 self.path = default_dir.replace("\n","")
             self.path = default_dir.replace("\n","")
-            self.box.SetLabel("Fetching.....")
+            self.box.SetLabel("Fetching Information.....")
                 
             try:
                 urls_to_download = self.check_list.GetCheckedStrings()              
