@@ -47,11 +47,11 @@ class Menu():
         fileMenu = wx.Menu()
         new = fileMenu.Append(101, '&New\tCtrl+N', 'New file')
         save = fileMenu.Append(102, '&Save\tCtrl+S', 'Save file')
-        close = fileMenu.Append(103, '&Exit\tCtrl+X', 'exit')
+        close = fileMenu.Append(103, 'E&xit\tCtrl+X', 'exit')
         menubar.Append(fileMenu, '&File')
 
         editMenu = wx.Menu()
-        pref = editMenu.Append(104, '&Preferences\tCtrl+E', 'settings')
+        pref = editMenu.Append(104, '&Preferences\tCtrl+p', 'settings')
         menubar.Append(editMenu, '&Edit')
 
         self.win.SetMenuBar(menubar)
