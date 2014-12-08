@@ -23,12 +23,25 @@ from threading import Thread
 from wx.lib.pubsub import pub
 from wx.lib.agw import pygauge as PG
 
+from utils import opj
+#---------------------------CONSTANTS---------------------------------------
+#fetching configurations from config file
+with open(opj('config.txt')) as config_file:
+    data = config_file.read()
+    #rename option
+radio_point = data.find('RENAME')
+end_point = data.find('\n',radio_point+1)
+rename = data[radio_point+9:end_point]
+
+#to check if file already exist
+FILE_EXIST = None
+
+#--------------------------------------------------------------------------
 class TestThread(Thread):
     '''
     TestThread class to run the thread of downloading.
     '''
-    def __init__(self,urls,path,stop,rename):
-        self.rename = rename
+    def __init__(self,urls,path,stop):
         self.urls = urls
         self.path = path
         self.stop = stop
@@ -36,17 +49,27 @@ class TestThread(Thread):
         self.start()
 
     def run(self):
+        global rename, FILE_EXIST
         print "Downloading into "+self.path+"..."
         for url in self.urls:
-            f_name = os.path.basename(url)
 
+            cancel = False
+            
+            f_name = os.path.basename(url)
             #Check if file exists and want to rename
-            if os.path.exists(f_name) and not self.rename:
-                return
-            else:
+            FILE_EXIST = os.path.exists(self.path+"/"+f_name)
+
+            #IF default option is to cancel download, when already exist
+            if FILE_EXIST and rename == 'Cancel':
+                print f_name+" already exists, Canceling download"
+                cancel = True
+            
+            #If default option is to rename new download, when already exist
+            if FILE_EXIST and rename == 'Rename':
                 count = 1
+                old_f_name = f_name
                 while True:
-                    if os.path.exists(f_name):
+                    if os.path.exists(self.path+"/"+f_name):
                            tmp, ext = os.path.splitext(f_name)
                            cnt = "(%s)" % count
                            f_name = tmp+cnt+ext
@@ -54,19 +77,26 @@ class TestThread(Thread):
                            print f_name
                     else:
                         break
-            
-            try:
-                data = urllib.urlopen(url).read()
-#                req = requests.get(url,stream=True)
-                print f_name
-                save_file = open(self.path+"/"+f_name, 'wb')
-                save_file.write(data)
-                dl_size = len(data)
-                save_file.close()
-                wx.CallAfter(pub.sendMessage,"Update",msg=dl_size)
-            except IOError as e:
-                return e
-                return "The connection could not establish."
+                print old_f_name+" already exist, renaming to "+f_name
+
+            #If default option is to remove old download, when already exist                        
+            elif FILE_EXIST and rename == 'Replace':
+                os.remove(self.path+"/"+f_name)
+                print f_name+" already exists, removing older one."
+
+            if not cancel:
+                try:
+                    data = urllib.urlopen(url).read()
+    #                req = requests.get(url,stream=True)
+                    save_file = open(self.path+"/"+f_name, 'wb')
+                    save_file.write(data)
+                    dl_size = len(data)
+                    save_file.close()
+                    print f_name
+    #                wx.CallAfter(pub.sendMessage,"Update",msg=dl_size)
+                except IOError as e:
+                    return e
+                    return "The connection could not establish."
 
 #--------------------------------------------------------------------------------------------------
 class Progress(wx.Gauge):
@@ -128,17 +158,11 @@ def main(urls, path,progress_bar):
     #update the progress bar
     #Progress(progress_bar,total_size)
     #Start thread
-    TestThread(urls, path,stop,True)
+    TestThread(urls, path,stop)
                 
 #--------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     main(url,dir_)
-
-
-
-
-
-
 
 
 
