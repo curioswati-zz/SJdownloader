@@ -19,22 +19,32 @@ import wx
 import time
 import os
 from threading import Thread
-#from wx.lib.pubsub import setuparg1
+from wx.lib.pubsub import setupkwargs
 from wx.lib.pubsub import pub
 from wx.lib.agw import pygauge as PG
 
 from utils import opj
 #---------------------------CONSTANTS---------------------------------------
-#fetching configurations from config file
-with open(opj('config.txt')) as config_file:
-    data = config_file.read()
-    #rename option
-radio_point = data.find('RENAME')
-end_point = data.find('\n',radio_point+1)
-rename = data[radio_point+9:end_point]
-
 #to check if file already exist
 FILE_EXIST = None
+#for reading rename option
+rename = None
+#the progress bar to be used in update_progress
+progress = None
+
+#Reading configuration file
+def read_config():
+    '''
+    function to read config_file for rename option
+    '''
+    global rename
+
+    with open(opj('config.txt')) as config_file:
+        data = config_file.read()
+        #rename option
+    radio_point = data.find('RENAME')
+    end_point = data.find('\n',radio_point+1)
+    rename = data[radio_point+9:end_point].strip()
 
 #--------------------------------------------------------------------------
 class TestThread(Thread):
@@ -46,10 +56,16 @@ class TestThread(Thread):
         self.path = path
         self.stop = stop
         Thread.__init__(self)
+        self.setDaemon(True)
         self.start()
 
     def run(self):
+        time.sleep(1)
         global rename, FILE_EXIST
+
+        read_config()
+        dl_size = 0
+
         print "Downloading into "+self.path+"..."
         for url in self.urls:
 
@@ -90,37 +106,15 @@ class TestThread(Thread):
     #                req = requests.get(url,stream=True)
                     save_file = open(self.path+"/"+f_name, 'wb')
                     save_file.write(data)
-                    dl_size = len(data)
+                    dl_size += len(data)
                     save_file.close()
                     print f_name
-    #                wx.CallAfter(pub.sendMessage,"Update",msg=dl_size)
-                except IOError as e:
-                    return e
+                    wx.CallAfter(pub.sendMessage,"update",msg=dl_size)
+#                    self.parent.Layout()
+                except IOError:
                     return "The connection could not establish."
-
-#--------------------------------------------------------------------------------------------------
-class Progress(wx.Gauge):
-    '''
-    Progress class to implement the updation of progress bar with
-    an ongoing process of downloading.
-    '''
-    def __init__(self,progress,total_size):
-        
-        progress_bar = progress
-        #progress bar attributes
-        progress_bar.SetBarColor([wx.Colour(162,255,178),wx.Colour(159,176,255)])
-        progress_bar.SetBackgroundColour(wx.CYAN)
-        progress_bar.SetBorderColor(wx.BLACK)
-        progress_bar.SetBorderPadding(2)
-        progress_bar.SetRange(total_size)
-
-        #updating bar
-        pub.subscribe(self.updateProgress, "Update")
-
-    #-----------------------------------------------------------------------------
-    def updateProgress(self, msg):
-        print "update:",msg
-        progress_bar.Update(msg,100)
+                except Exception as e:
+                    return e
 
 #--------------------------------------------------------------------------------------------------
 def main(urls, path,progress_bar):
@@ -129,6 +123,9 @@ def main(urls, path,progress_bar):
     Progress to update the progress bar. It also calculates the size
     of file before downloading.
     '''    
+    global progress
+    progress = progress_bar
+
     #When called with direct url
     stop = False
     if (not(urls[0].startswith("http"))
@@ -149,40 +146,34 @@ def main(urls, path,progress_bar):
                 total_size += size
     except IOError:
         return "The connection could not establish"
+    except Exception as e:
+        return e
+
     #-----------------------------------------------------------------------------
-    #replaced by dl_size in `Thread`
-    #update_value = total_size / len(urls)
     print_size = total_size/float(1024**2)
     print str(print_size) + "Mb selected for download"
     #-----------------------------------------------------------------------------
-    #update the progress bar
-    #Progress(progress_bar,total_size)
+
+    #progress bar attributes
+    progress_bar.SetBarColor([wx.Colour(162,255,178),wx.Colour(159,176,255)])
+    progress_bar.SetBackgroundColour(wx.CYAN)
+    progress_bar.SetBorderColor(wx.BLACK)
+    progress_bar.SetBorderPadding(2)
+    progress_bar.SetRange(total_size)
+
+    #updating bar
+    pub.subscribe(update_progress, "update")
+    wx.Yield()
     #Start thread
     TestThread(urls, path,stop)
-                
+
+def update_progress(msg):
+    '''
+    updates the progress bar
+    '''
+    global progress
+    progress.Update(msg,100)
+
 #--------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     main(url,dir_)
-
-
-
-    
-#-----------------------------------------------------------------------------------------------
-#implement when requests downloaded
-#writing byte by byte
-##                for byte in req.iter_content(chunk_size=1024):
-##                    if self.stop:
-##                        break
-##                    if byte:
-##                        save_file.write(byte)
-##                        save_file.flush()
-##                    dl_size = len(byte)
-##
-##                    if dl_size < total_size:
-##                        wx.CallAfter(pub.sendMessage,"update",msg=dl_size)
-##
-##    progress_bar.SetValue([0,total_size])   
-##    progress_bar.SetDrawValue(draw=True, drawPercent=True, font=wx.SMALL_FONT, colour=wx.BLUE)
-
-##            download_size = len(data)
-#            percent = download_size / float(total_size)           
