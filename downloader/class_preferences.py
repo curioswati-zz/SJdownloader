@@ -64,7 +64,7 @@ with open(opj('config.txt')) as config_file:
     #rename option
     radio_point = data.find('RENAME')
     end_point = data.find('\n',radio_point+1)
-    radio_selected = data[radio_point+9:end_point]
+    radio_selected = data[radio_point+9:end_point].strip()
     #history list
     to_history = data[data.find('HISTORY')+10:]
 
@@ -112,6 +112,7 @@ class open_pref(object):
         #Text ctrl for showing selected location
         self.dir = wx.TextCtrl(self.mainPanel,size=(400,25),
                                style=wx.TE_READONLY)
+        self.dir.SetValue(DD)
         self.dir.Disable()
         self.dir.SetToolTipString("Selected default location");
 
@@ -123,14 +124,16 @@ class open_pref(object):
                                    |wx.CB_READONLY)
 
         #radio box for renaming options
-        self.rename_sizer = wx.RadioBox(self.mainPanel, -1, "If file already exist",
-                                 wx.DefaultPosition,(300,60), choice_list,3,
-                                 wx.RA_SPECIFY_COLS|wx.NO_BORDER
-                                 )
+        rename = wx.RadioButton(self.mainPanel, -1, choice_list[0], style = wx.RB_GROUP )
+        replace = wx.RadioButton(self.mainPanel, -1, choice_list[1] )
+        cancel = wx.RadioButton(self.mainPanel, -1, choice_list[2] )
+        self.radio_list = [rename, replace, cancel]
+
+        #setting radio selected for previous choice
         if radio_selected:
             index = choice_list.index(radio_selected)
         else: index = 0
-        self.rename_sizer.SetSelection(index)
+        self.radio_list[index].SetValue(1)
 
         #-------------------------------------------------------------------------------------------------------------
         #Filters list
@@ -158,6 +161,7 @@ class open_pref(object):
         self.win.Bind(wx.EVT_LIST_ITEM_SELECTED,
                       self.filter_list_box.OnItemSelected,
                       self.filter_list_box)
+
         
         #-------------------------------------------------------------------------------------------------------------
         #Filters list
@@ -189,6 +193,10 @@ class open_pref(object):
         history_box.Add(history_label,proportion=0,flag=wx.ALL|wx.EXPAND,border=10)
         history_box.Add(self.history,proportion=1,border=5,flag=wx.ALL)
 
+        #for radio buttons
+        rename_box = wx.FlexGridSizer(cols=3,hgap=80)
+        rename_box.AddMany((rename,replace,cancel))
+
         #Static box for dir_container
         box = wx.StaticBox(self.mainPanel,-1,"Choose default directory",
                            size=(500,25))
@@ -201,6 +209,12 @@ class open_pref(object):
         self.history_sizer = wx.StaticBoxSizer(box)
         self.history_sizer.Add(history_box,1,wx.EXPAND)
 
+        #static box for history container
+        box = wx.StaticBox(self.mainPanel,-1,"If a file already exist",
+                           size=(500,25))
+        self.rename_sizer = wx.StaticBoxSizer(box)
+        self.rename_sizer.Add(rename_box,1,wx.EXPAND|wx.ALL,border=5)
+
         #Button container
         button_cont = wx.BoxSizer()
         button_cont.Add(OKbtn,proportion=0,flag=wx.LEFT,border=350)
@@ -210,11 +224,11 @@ class open_pref(object):
         container = wx.StaticBox(self.mainPanel, -1)
         self.subSizer = wx.StaticBoxSizer(container,wx.VERTICAL)
 
-        self.subSizer.Add(self.dir_sizer,0,wx.EXPAND)
+        self.subSizer.Add(self.dir_sizer,0,wx.EXPAND|wx.TOP, border=5)
         self.subSizer.Add(self.filter_list_box,1,wx.EXPAND)
         self.subSizer.Add(self.history_list_box,1,wx.EXPAND)
-        self.subSizer.Add(self.history_sizer,0,wx.EXPAND)
-        self.subSizer.Add(self.rename_sizer,0,wx.EXPAND)
+        self.subSizer.Add(self.history_sizer,0,wx.EXPAND|wx.TOP, border=5)
+        self.subSizer.Add(self.rename_sizer,0,wx.EXPAND|wx.TOP, border=5)
 
         #Wrraping the panel and its widgets
         panelSizer = wx.BoxSizer(wx.VERTICAL)
@@ -386,7 +400,7 @@ class open_pref(object):
         #selected option string
         option_selected = history_options[select_index]
         #radio selection
-        select_index = self.rename_sizer.GetSelection()
+        select_index = [self.radio_list.index(x) for x in self.radio_list if x.GetValue()][0]
         radio_selected = choice_list[select_index]
         #changing configuration
         utils.change_config(DD,filters,option_selected,radio_selected,to_history)
@@ -404,8 +418,8 @@ class open_pref(object):
     #-----------------------------------------------------------------------------------------------------------------
 
 class TestListCtrl(wx.ListCtrl,
-                   listmix.ListCtrlAutoWidthMixin,
-                   listmix.TextEditMixin):
+                   listmix.ListCtrlAutoWidthMixin):#,
+#                   listmix.TextEditMixin):
     '''
     Class for implementing List Ctrl for filters, and history.
     '''
@@ -415,7 +429,7 @@ class TestListCtrl(wx.ListCtrl,
         wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
 
         listmix.ListCtrlAutoWidthMixin.__init__(self)
-        listmix.TextEditMixin.__init__(self)
+#        listmix.TextEditMixin.__init__(self)
 
     #-------------------------------------------------------------------
     def OnItemSelected(self, event):
@@ -425,4 +439,4 @@ class TestListCtrl(wx.ListCtrl,
         cur_item = event.m_itemIndex
         #the item
         item = self.GetItem(cur_item, 1)
-        filters = item.GetText()       
+        filters = item.GetText()  
