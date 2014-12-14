@@ -60,10 +60,10 @@ def write_history(url):
 
     if (class_preferences.option_selected == 
         class_preferences.history_options[0]):
-        class_preferences.to_history = class_preferences.to_history[:-1] + "("+url+","+time.ctime()+")\n]"
+        class_preferences.to_history = class_preferences.to_history[:-1] + "("+url+","+time.ctime()+")\n"+class_preferences.to_history[-1]
         
     with open(opj('config.txt'),'r+') as config_file:
-        config_file.seek(history_point+1)
+        config_file.seek(history_point+2)
         config_file.write('\nHISTORY = '+class_preferences.to_history)
 
 #---------------------------------------------------------------------------
@@ -464,21 +464,26 @@ just enter the url and click start! For more click Show Links!")
             self.filter_btn.Enable()
             self.enable_checkes(True)
             self.regex.SetEditable(True)
-            
+
+            self.main_container.Show(self.hbox)            
             self.panel.Layout()
             
             self.box.SetLabel("")
-            if self.preserve_filter and self.checked_boxes:
+            if self.checked_boxes:
+                if not self.preserve_filter:
+                    self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
+                    self.main_container.Hide(self.hbox)
+
                 self.filtered = self.preserve_filter
                 self.check_list.SetItems(self.filtered)
                 self.count.SetLabel("No. of links found: "+str(len(self.filtered)))
+            
             else:
                 self.check_list.SetItems(self.urls)
                 self.count.SetLabel("No. of links found: "+str(self.countLink))
 
             if self.selectAll.IsChecked():
-                self.select_all()
-            self.panel.Layout()                    
+                self.select_all()                   
                                
     #------------------------------------------------------------------------------------
     def enter(self, event):
@@ -558,6 +563,7 @@ just enter the url and click start! For more click Show Links!")
                     self.main_container.Hide(self.hbox)
 
                 self.check_list.SetItems(self.filtered)                   
+                print pattern
 
             else:
                 self.filtered = []
@@ -598,18 +604,20 @@ just enter the url and click start! For more click Show Links!")
                 urls_to_download = self.check_list.GetCheckedStrings()              
                 error = downloader_script.main(urls_to_download,self.path,
                                                self.progress)
-                self.progress.SetValue(100)
-    
+
             except AttributeError:
                 error = downloader_script.main([self.url_field.GetValue().strip()],self.path,
                                                self.progress)
-                self.progress.SetValue(100)
+
             if error:
                 print error
                 dlg = wx.MessageDialog(self.panel,str(error),
                                        'Oops!', wx.OK|wx.ICON_INFORMATION)
                 dlg.ShowModal()
                 dlg.Destroy()
+            else:
+                self.box.SetLabel("Done")            
+
             
         else:
             self.url_field.SetValue("Please Enter url")
@@ -668,6 +676,7 @@ just enter the url and click start! For more click Show Links!")
         
         self.filter_btn.Disable()        
         self.regex.SetEditable(False)
+        self.progress.SetValue(0)
         
         self.panel.Layout()
 
@@ -731,7 +740,8 @@ just enter the url and click start! For more click Show Links!")
             pattern = filters
            
         else:           
-            if self.checked_boxes:
+            if (self.checked_boxes and
+                not(self.checked_boxes[0] == self.checked_boxes[-1] == 'regex')):
                 pattern = '.*\.'
                 for i,pat in enumerate(self.checked_boxes):
                     if i == 0:
@@ -743,10 +753,13 @@ just enter the url and click start! For more click Show Links!")
             regex = self.regex.GetValue()
             
             if regex:
+                self.checked_boxes.append('regex')
                 if pattern:
                     pattern += '|'+ regex
                 else:
                     pattern = regex
+            elif 'regex' in self.checked_boxes:
+                self.checked_boxes.remove('regex')
 
         return pattern         
     #------------------------------------------------------------------------------------
