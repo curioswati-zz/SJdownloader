@@ -37,17 +37,20 @@ from utils import opj, change_config
 import class_preferences
 
 #---------------------------Global constants---------------------------------
+default_dir=''; filters=''; 
 #reading configurations from config file
 with open(opj('config.txt')) as config_file:
     data = config_file.read()
 #default_dir
 dir_point = data.find('PATH')
-end_point = data.find('\n',dir_point+1)
-default_dir = data[dir_point+7:end_point]
+if dir_point > 0:
+    end_point = data.find('\n',dir_point+1)
+    default_dir = data[dir_point+7:end_point]
 #filter
 filter_point = data.find('FILTER')
-end_point = data.find('\n',filter_point+1)
-filters = data[filter_point+9:end_point]
+if filter_point > 0:
+    end_point = data.find('\n',filter_point+1)
+    filters = data[filter_point+9:end_point]
 #for writing to only history, used in `enter` method
 history_point = data.find('HISTORY')
 
@@ -63,7 +66,10 @@ def write_history(url):
         class_preferences.to_history = class_preferences.to_history[:-1] + "("+url+","+time.ctime()+")\n"+class_preferences.to_history[-1]
         
     with open(opj('config.txt'),'r+') as config_file:
-        config_file.seek(history_point+2)
+        if history_point > 0:
+            config_file.seek(history_point+2)
+        else:
+            config_file.seek(-1)
         config_file.write('\nHISTORY = '+class_preferences.to_history)
 
 #---------------------------------------------------------------------------

@@ -43,8 +43,9 @@ def read_config():
         data = config_file.read()
         #rename option
     radio_point = data.find('RENAME')
-    end_point = data.find('\n',radio_point+1)
-    rename = data[radio_point+9:end_point].strip()
+    if radio_point > 0:
+        end_point = data.find('\n',radio_point+1)
+        rename = data[radio_point+9:end_point].strip()
 
 #--------------------------------------------------------------------------
 class TestThread(Thread):

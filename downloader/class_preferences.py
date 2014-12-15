@@ -46,27 +46,34 @@ history_options = ['Always save history','Never save history']
 #renaming options
 choice_list = ['Rename', 'Replace', 'Cancel']
 
+DD=''; filters=''; option_selected=''; radio_selected=''; to_history='[]';
 #fetching configurations from config file
 with open(opj('config.txt')) as config_file:
     data = config_file.read()
-    #default_dir
-    dir_point = data.find('PATH')
+#default_dir
+dir_point = data.find('PATH')
+if dir_point > 0:
     end_point = data.find('\n',dir_point+1)
     DD = data[dir_point+7:end_point]
-    #filter
-    filter_point = data.find('FILTER')
+#filter
+filter_point = data.find('FILTER')
+if filter_point > 0:
     end_point = data.find('\n',filter_point+1)
     filters = data[filter_point+9:end_point]
-    #history_option
-    opt_point = data.find('OPTION')
+#history_option
+opt_point = data.find('OPTION')
+if opt_point > 0:
     end_point = data.find('\n',opt_point+1)
     option_selected = data[opt_point+9:end_point]
-    #rename option
-    radio_point = data.find('RENAME')
+#rename option
+radio_point = data.find('RENAME')
+if radio_point > 0:
     end_point = data.find('\n',radio_point+1)
     radio_selected = data[radio_point+9:end_point].strip()
-    #history list
-    to_history = data[data.find('HISTORY')+10:]
+#history list
+history_point = data.find('HISTORY')
+if history_point > 0:
+    to_history = data[history_point+10:]
 
 #--------------------------------------------------------------------------
 class open_pref(object):
