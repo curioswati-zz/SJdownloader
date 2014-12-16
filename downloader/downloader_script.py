@@ -23,7 +23,7 @@ from wx.lib.pubsub import setupkwargs
 from wx.lib.pubsub import pub
 from wx.lib.agw import pygauge as PG
 
-from utils import opj
+from utils import opj, sanitize_string
 #---------------------------CONSTANTS---------------------------------------
 #to check if file already exist
 FILE_EXIST = None
@@ -43,9 +43,12 @@ def read_config():
         data = config_file.read()
         #rename option
     radio_point = data.find('RENAME')
-    if radio_point > 0:
+    if radio_point >= 0:
         end_point = data.find('\n',radio_point+1)
         rename = data[radio_point+9:end_point].strip()
+
+    #Trailing extra whitespaces
+    rename = sanitize_string(rename)
 
 #--------------------------------------------------------------------------
 class TestThread(Thread):
@@ -61,61 +64,66 @@ class TestThread(Thread):
         self.start()
 
     def run(self):
-        time.sleep(1)
-        global rename, FILE_EXIST
+    	try:
+	        time.sleep(1)
+	        global rename, FILE_EXIST
 
-        read_config()
-        dl_size = 0
+	        read_config()
+	        dl_size = 0
 
-        print "Downloading into "+self.path+"..."
-        for url in self.urls:
+	        print "Downloading into "+self.path+"..."
+                print self.path
 
-            cancel = False
-            
-            f_name = os.path.basename(url)
-            #Check if file exists and want to rename
-            FILE_EXIST = os.path.exists(self.path+"/"+f_name)
+	        for url in self.urls:
 
-            #IF default option is to cancel download, when already exist
-            if FILE_EXIST and rename == 'Cancel':
-                print f_name+" already exists, Canceling download"
-                cancel = True
-            
-            #If default option is to rename new download, when already exist
-            if FILE_EXIST and rename == 'Rename':
-                count = 1
-                old_f_name = f_name
-                while True:
-                    if os.path.exists(self.path+"/"+f_name):
-                           tmp, ext = os.path.splitext(f_name)
-                           cnt = "(%s)" % count
-                           f_name = tmp+cnt+ext
-                           count += 1
-                           print f_name
-                    else:
-                        break
-                print old_f_name+" already exist, renaming to "+f_name
+	            cancel = False
+	            
+	            f_name = os.path.basename(url)
+	            #Check if file exists and want to rename
+	            FILE_EXIST = os.path.exists(self.path+"/"+f_name)
 
-            #If default option is to remove old download, when already exist                        
-            elif FILE_EXIST and rename == 'Replace':
-                os.remove(self.path+"/"+f_name)
-                print f_name+" already exists, removing older one."
+	            #IF default option is to cancel download, when already exist
+	            if FILE_EXIST and rename == 'Cancel':
+	                print f_name+" already exists, Canceling download"
+	                cancel = True
+	            
+	            #If default option is to rename new download, when already exist
+	            if FILE_EXIST and rename == 'Rename':
+	                count = 1
+	                old_f_name = f_name
+	                while True:
+	                    if os.path.exists(self.path+"/"+f_name):
+	                           tmp, ext = os.path.splitext(f_name)
+	                           cnt = "(%s)" % count
+	                           f_name = tmp+cnt+ext
+	                           count += 1
+	                           print f_name
+	                    else:
+	                        break
+	                print old_f_name+" already exist, renaming to "+f_name
 
-            if not cancel:
-                try:
-                    data = urllib.urlopen(url).read()
-    #                req = requests.get(url,stream=True)
-                    save_file = open(self.path+"/"+f_name, 'wb')
-                    save_file.write(data)
-                    dl_size += len(data)
-                    save_file.close()
-                    print f_name
-                    wx.CallAfter(pub.sendMessage,"update",msg=dl_size)
-#                    self.parent.Layout()
-                except IOError:
-                    return "The connection could not establish."
-                except Exception as e:
-                    return e
+	            #If default option is to remove old download, when already exist                        
+	            elif FILE_EXIST and rename == 'Replace':
+	                os.remove(self.path+"/"+f_name)
+	                print f_name+" already exists, removing older one."
+
+	            if not cancel:
+	                try:
+	                    data = urllib.urlopen(url).read()
+	    #                req = requests.get(url,stream=True)
+	                    save_file = open(self.path+"/"+f_name, 'wb')
+	                    save_file.write(data)
+	                    dl_size = len(data)
+	                    save_file.close()
+	                    print f_name
+	                    wx.CallAfter(pub.sendMessage,"update",msg=dl_size)
+	#                    self.parent.Layout()
+	                except IOError:
+	                    return "The connection could not establish."
+	                except Exception as e:
+	                    return e
+        except Exception as e:
+            print e
 
 #--------------------------------------------------------------------------------------------------
 def main(urls, path,progress_bar):
@@ -160,6 +168,7 @@ def main(urls, path,progress_bar):
     progress_bar.SetBackgroundColour(wx.CYAN)
     progress_bar.SetBorderColor(wx.BLACK)
     progress_bar.SetBorderPadding(2)
+    print total_size
     progress_bar.SetRange(total_size)
 
     #updating bar
@@ -173,6 +182,7 @@ def update_progress(msg):
     updates the progress bar
     '''
     global progress
+    print msg
     progress.Update(msg,100)
 
 #--------------------------------------------------------------------------------------------------

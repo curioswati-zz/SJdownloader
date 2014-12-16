@@ -52,3 +52,15 @@ def change_config(dir_,filters,option,radio,history):
      dir_file.write("\n"+'RENAME = '+radio)
      dir_file.write("\n"+'HISTORY = '+history)
      dir_file.close()
+
+def sanitize_string(string):
+    '''
+    function to trail whitespaces from strings
+    '''
+    if type(string) == list:
+        for i,s in enumerate(string):
+            string[i] = s.strip()
+    else:
+        strip = string.strip()
+
+    return string

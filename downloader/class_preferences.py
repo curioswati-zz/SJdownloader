@@ -25,7 +25,7 @@ import os,sys
 from wx.lib.agw import aquabutton as AB
 import  wx.lib.mixins.listctrl  as  listmix
 
-from utils import opj
+from utils import opj, sanitize_string
 import utils
 
 #---------------------------CONSTANTS---------------------------------------
@@ -52,29 +52,32 @@ with open(opj('config.txt')) as config_file:
     data = config_file.read()
 #default_dir
 dir_point = data.find('PATH')
-if dir_point > 0:
+if dir_point >= 0:
     end_point = data.find('\n',dir_point+1)
     DD = data[dir_point+7:end_point]
 #filter
 filter_point = data.find('FILTER')
-if filter_point > 0:
+if filter_point >= 0:
     end_point = data.find('\n',filter_point+1)
     filters = data[filter_point+9:end_point]
 #history_option
 opt_point = data.find('OPTION')
-if opt_point > 0:
+if opt_point >= 0:
     end_point = data.find('\n',opt_point+1)
     option_selected = data[opt_point+9:end_point]
 #rename option
 radio_point = data.find('RENAME')
-if radio_point > 0:
+if radio_point >= 0:
     end_point = data.find('\n',radio_point+1)
     radio_selected = data[radio_point+9:end_point].strip()
 #history list
 history_point = data.find('HISTORY')
-if history_point > 0:
+if history_point >= 0:
     to_history = data[history_point+10:]
 
+#Trailing extra whitespaces
+var = [DD, filters, option_selected, radio_selected, to_history]
+DD, filters, option_selected, radio_selected, to_history = sanitize_string(var)
 #--------------------------------------------------------------------------
 class open_pref(object):
 
@@ -174,7 +177,8 @@ class open_pref(object):
         #Filters list
         global to_history
 
-        if to_history:
+        print len(to_history)
+        if to_history != '[]':
             history = utils.string_to_tuple(to_history)
         else:
             history = [('None','None')]

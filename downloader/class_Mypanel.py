@@ -27,13 +27,14 @@ It defines:
 """Required modules"""
 import re,os
 import wx
+import wx.animate
 import time
 from wx.lib.agw import aquabutton as AB
 from wx.lib.agw import pygauge as PG
 
 import get_urls,downloader_script
 from class_Menu import Menu
-from utils import opj, change_config
+from utils import opj, sanitize_string
 import class_preferences
 
 #---------------------------Global constants---------------------------------
@@ -43,16 +44,19 @@ with open(opj('config.txt')) as config_file:
     data = config_file.read()
 #default_dir
 dir_point = data.find('PATH')
-if dir_point > 0:
+if dir_point >= 0:
     end_point = data.find('\n',dir_point+1)
     default_dir = data[dir_point+7:end_point]
 #filter
 filter_point = data.find('FILTER')
-if filter_point > 0:
+if filter_point >= 0:
     end_point = data.find('\n',filter_point+1)
     filters = data[filter_point+9:end_point]
 #for writing to only history, used in `enter` method
 history_point = data.find('HISTORY')
+
+#trailing extra whitespaces
+default_dir, filters = sanitize_string([default_dir, filters])
 
 #---------------------------------------------------------------------------
 def write_history(url):
@@ -61,12 +65,10 @@ def write_history(url):
     '''
     global history_point
 
-    if (class_preferences.option_selected == 
-        class_preferences.history_options[0]):
-        class_preferences.to_history = class_preferences.to_history[:-1] + "("+url+","+time.ctime()+")\n"+class_preferences.to_history[-1]
+    class_preferences.to_history = class_preferences.to_history[:-1] + "("+url+","+time.ctime()+")\n"+class_preferences.to_history[-1]
         
     with open(opj('config.txt'),'r+') as config_file:
-        if history_point > 0:
+        if history_point >= 0:
             config_file.seek(history_point+2)
         else:
             config_file.seek(-1)
@@ -98,12 +100,22 @@ class Mypanel(object):
         png = wx.Image(opj('../Icons/folder.png'),
                        wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         folder_icon = wx.StaticBitmap(panel, -1, png,size=(25,22))
+
+        loading_icon = opj('../Icons/lightbox-ico-loading.gif')
+        #loading_gif = wx.animate.GIFAnimationCtrl(panel, -1, loading_icon,
+#                                                  pos=(100,20))
+        # clears the background
+        #loading_gif.GetPlayer().UseBackgroundColour(True)
+        # continuously loop through the frames of the gif file (default)
+        #loading_gif.Play()
         
         #loading_icon = wx.Image(opj('../Icons/lightbox-ico-loading2.gif'),
          #                       wx.BITMAP_TYPE_ANY).ConvertToBitmap()
         #container for loading_icon
-        #self.loading_icon = wx.StaticBitmap(panel,-1,loading_icon,size=(40,40))
-        
+        #box = wx.StaticBox(panel, -1)
+        #self.loading_icon = wx.StaticBoxSizer(box)
+        #self.loading_icon.Add(loading_gif)
+
         #------------------------------Description-------------------------------------------      
         sub_container = wx.BoxSizer(wx.VERTICAL)
         description = wx.TextCtrl(self.panel, -1,"\t\t\tSJdownloader\n",size=(460,72),
@@ -217,6 +229,7 @@ just enter the url and click start! For more click Show Links!")
         self.bsizer = wx.StaticBoxSizer(self.box, wx.VERTICAL)
         #adding loading_icon
         #self.bsizer.Add(self.loading_icon)
+        #self.loading_icon.Hide(loading_gif)
         
         #text box for entering regex pattern
         self.regex = wx.TextCtrl(panel,size=(200,25))
@@ -504,8 +517,9 @@ just enter the url and click start! For more click Show Links!")
             self.url_field.SetValue("Please enter url")
             return
         self.box.SetLabel("Fetching...")
-        #self.loading_icon.Show()
+        #self.bsizer.Show(self.loading_icon)
         error, self.urls = get_urls.main(home_url)
+        #self.bsizer.Hide(self.loading_icon)
 
         #if urls fetched
         if self.urls:
@@ -595,7 +609,9 @@ just enter the url and click start! For more click Show Links!")
         '''
         global default_dir
         #------------------saving history------------------------------
-        write_history(self.url_field.GetValue())
+        if (class_preferences.option_selected == 
+            class_preferences.history_options[0]):
+            write_history(self.url_field.GetValue())
 
         #--------------------------------------------------------------
         if not(self.url_field.GetValue() == ""):                           #If url field is not empty
