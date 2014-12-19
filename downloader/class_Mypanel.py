@@ -27,6 +27,7 @@ It defines:
 """Required modules"""
 import re,os
 import wx
+import platform
 import wx.animate
 import time
 from wx.lib.agw import aquabutton as AB
@@ -118,15 +119,31 @@ class Mypanel(object):
 
         #------------------------------Description-------------------------------------------      
         sub_container = wx.BoxSizer(wx.VERTICAL)
-        description = wx.TextCtrl(self.panel, -1,"\t\t\tSJdownloader\n",size=(460,72),
-                                  style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_NO_VSCROLL|
-                                  wx.TE_READONLY)
-        font = wx.Font(20, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
-        description.SetStyle(0,15,wx.TextAttr("WHITE",(0,162,232,255),font))
-        description.AppendText("A free internet downloader, Now download It all,\
-just enter the url and click start! For more click Show Links!")
-        font = wx.Font(9, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
-        description.SetStyle(17,126,wx.TextAttr("BLACK",(0,162,232,255),font))
+
+        if platform.system() == "Linux":
+
+            description = wx.TextCtrl(self.panel, -1,"SJdownloader\n",size=(440,72),
+                                      style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_NO_VSCROLL|
+                                      wx.TE_READONLY|wx.ALIGN_CENTER)
+            font = wx.Font(20, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
+            description.SetStyle(0,12,wx.TextAttr("WHITE",(0,162,232,255),font))
+            description.AppendText("A free internet downloader, Now download It all,\
+    just enter the url and click start! For more click Show Links!")
+            font = wx.Font(9, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
+            description.SetStyle(13,-1,wx.TextAttr("BLACK",(0,162,232,255),font))
+
+        elif platform.system() == "Windows":
+
+            description = wx.TextCtrl(self.panel, -1,"\t\t\tSJdownloader\n",size=(460,72),
+                                      style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_NO_VSCROLL|
+                                      wx.TE_READONLY)
+            font = wx.Font(20, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
+            description.SetStyle(0,15,wx.TextAttr("WHITE",(0,162,232,255),font))
+            description.AppendText("A free internet downloader, Now download It all,\
+    just enter the url and click start! For more click Show Links!")
+            font = wx.Font(9, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
+            description.SetStyle(17,126,wx.TextAttr("BLACK",(0,162,232,255),font))
+
         description.SetBackgroundColour((0,162,232,255))
         sub_container.Add(description,0,wx.EXPAND)
 
@@ -307,7 +324,7 @@ just enter the url and click start! For more click Show Links!")
         #container for main output box                           Container#3
         Static_box = wx.BoxSizer()
         Static_box.Add(self.bsizer,proportion=1,flag=wx.EXPAND
-                  |wx.LEFT|wx.RIGHT|wx.BOTTOM,border=2
+                  |wx.LEFT|wx.RIGHT|wx.BOTTOM,border=5
                   )
         Static_box.Add(reset_btn,proportion=0,border=5,flag=wx.LEFT|wx.TOP)
         #--------------------------------------------------------------------------
