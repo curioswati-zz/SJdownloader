@@ -15,10 +15,11 @@ It defines:
     -select_all
     -select_default
     -enter
+    -filter
     -download
     -browse
     -reset
-    -filter
+    -cancel
     -close
     -enable_checkes
     -EvtCheckListBox
@@ -27,7 +28,6 @@ It defines:
 """Required modules"""
 import re,os
 import wx
-import platform
 import wx.animate
 import time
 from wx.lib.agw import aquabutton as AB
@@ -35,7 +35,8 @@ from wx.lib.agw import pygauge as PG
 
 import get_urls,downloader_script
 from class_Menu import Menu
-from utils import opj, sanitize_string
+import utils
+from utils import opj
 import class_preferences
 
 #---------------------------Global constants---------------------------------
@@ -43,37 +44,21 @@ default_dir=''; filters='';
 #reading configurations from config file
 with open(opj('config.txt')) as config_file:
     data = config_file.read()
+
 #default_dir
 dir_point = data.find('PATH')
 if dir_point >= 0:
     end_point = data.find('\n',dir_point+1)
     default_dir = data[dir_point+7:end_point]
+
 #filter
 filter_point = data.find('FILTER')
 if filter_point >= 0:
     end_point = data.find('\n',filter_point+1)
     filters = data[filter_point+9:end_point]
-#for writing to only history, used in `enter` method
-history_point = data.find('HISTORY')
 
 #trailing extra whitespaces
-default_dir, filters = sanitize_string([default_dir, filters])
-
-#---------------------------------------------------------------------------
-def write_history(url):
-    '''
-    writing history configurations to config file
-    '''
-    global history_point
-
-    class_preferences.to_history = class_preferences.to_history[:-1] + "("+url+","+time.ctime()+")\n"+class_preferences.to_history[-1]
-        
-    with open(opj('config.txt'),'r+') as config_file:
-        if history_point >= 0:
-            config_file.seek(history_point+2)
-        else:
-            config_file.seek(-1)
-        config_file.write('\nHISTORY = '+class_preferences.to_history)
+default_dir, filters = utils.sanitize_string([default_dir, filters])
 
 #---------------------------------------------------------------------------
 class Mypanel(object):
@@ -533,9 +518,17 @@ class Mypanel(object):
         if home_url == "":
             self.url_field.SetValue("Please enter url")
             return
+
+        #------------------saving history------------------------------
+        if (class_preferences.option_selected == 
+            class_preferences.history_options[0]):
+            utils.write_history(self.url_field.GetValue())
+            
         self.box.SetLabel("Fetching...")
+        wx.BeginBusyCursor()
         #self.bsizer.Show(self.loading_icon)
         error, self.urls = get_urls.main(home_url)
+        wx.EndBusyCursor()
         #self.bsizer.Hide(self.loading_icon)
 
         #if urls fetched
@@ -572,6 +565,10 @@ class Mypanel(object):
             self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox)
         else:
             print error
+            dlg = wx.MessageDialog(self.panel,str(error),
+                                       'Oops!', wx.OK|wx.ICON_INFORMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
             
     #------------------------------------------------------------------------------------
     def filter(self,*event):
@@ -625,10 +622,6 @@ class Mypanel(object):
         Uses 'browse' filedialogs current path to save files.
         '''
         global default_dir
-        #------------------saving history------------------------------
-        if (class_preferences.option_selected == 
-            class_preferences.history_options[0]):
-            write_history(self.url_field.GetValue())
 
         #--------------------------------------------------------------
         if not(self.url_field.GetValue() == ""):                           #If url field is not empty
@@ -637,14 +630,17 @@ class Mypanel(object):
                 self.dir.SetValue(default_dir)
                 self.path = default_dir.replace("\n","")
             self.path = default_dir.replace("\n","")
+            wx.BeginBusyCursor()
             self.box.SetLabel("Fetching Information.....")
                 
             try:
-                urls_to_download = self.check_list.GetCheckedStrings()              
+                urls_to_download = self.check_list.GetCheckedStrings()
+                utils.write_downloads(urls_to_download,False)
                 error = downloader_script.main(urls_to_download,self.path,
                                                self.progress)
 
             except AttributeError:
+                utils.write_downloads(self.url_field.GetValue(),False)            
                 error = downloader_script.main([self.url_field.GetValue().strip()],self.path,
                                                self.progress)
 
@@ -655,9 +651,8 @@ class Mypanel(object):
                 dlg.ShowModal()
                 dlg.Destroy()
             else:
-                self.box.SetLabel("Done")            
-
-            
+                self.box.SetLabel("Done")
+            wx.EndBusyCursor()            
         else:
             self.url_field.SetValue("Please Enter url")
 
@@ -716,13 +711,14 @@ class Mypanel(object):
         self.filter_btn.Disable()        
         self.regex.SetEditable(False)
         self.progress.SetValue(0)
+        self.win.Refresh()
         
         self.panel.Layout()
 
     #------------------------------------------------------------------------------------
     def cancel(self, event):
         downloader_script.stop = True
-        self.win.Destroy()
+        #self.win.Destroy()
     
     #------------------------------------------------------------------------------------
     def close(self, event):
