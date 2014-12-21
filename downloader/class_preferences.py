@@ -20,12 +20,12 @@ It defines:
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 """Required Modules"""
 import wx
-import os,sys
+import sys
 
 from wx.lib.agw import aquabutton as AB
 import  wx.lib.mixins.listctrl  as  listmix
 
-from utils import opj, sanitize_string
+from utils import opj
 import utils
 
 #---------------------------CONSTANTS---------------------------------------
@@ -46,38 +46,38 @@ history_options = ['Always save history','Never save history']
 #renaming options
 choice_list = ['Rename', 'Replace', 'Cancel']
 
-DD=''; filters=''; option_selected=''; radio_selected=''; to_history='[]';
+DD=''; filters=''; option_selected=''; radio_selected='';
 #fetching configurations from config file
 with open(opj('config.txt')) as config_file:
     data = config_file.read()
+
 #default_dir
 dir_point = data.find('PATH')
 if dir_point >= 0:
     end_point = data.find('\n',dir_point+1)
     DD = data[dir_point+7:end_point]
+
 #filter
 filter_point = data.find('FILTER')
 if filter_point >= 0:
     end_point = data.find('\n',filter_point+1)
     filters = data[filter_point+9:end_point]
+
 #history_option
 opt_point = data.find('OPTION')
 if opt_point >= 0:
     end_point = data.find('\n',opt_point+1)
     option_selected = data[opt_point+9:end_point]
+
 #rename option
 radio_point = data.find('RENAME')
 if radio_point >= 0:
     end_point = data.find('\n',radio_point+1)
     radio_selected = data[radio_point+9:end_point].strip()
-#history list
-history_point = data.find('HISTORY')
-if history_point >= 0:
-    to_history = data[history_point+10:]
 
 #Trailing extra whitespaces
-var = [DD, filters, option_selected, radio_selected, to_history]
-DD, filters, option_selected, radio_selected, to_history = sanitize_string(var)
+var = [DD, filters, option_selected, radio_selected]
+DD, filters, option_selected, radio_selected = sanitize_string(var)
 #--------------------------------------------------------------------------
 class open_pref(object):
 
@@ -97,16 +97,14 @@ class open_pref(object):
         #-------------------------------------------------------------------------------------------------------------
         #Creating widgets for window
         #-----------------------------------------------BUTTONS-------------------------------------------------------
-        OKbtn = AB.AquaButton(self.mainPanel, -1, None,
-                                "OK",size=(60,30))
-        OKbtn.SetBackgroundColour((198,222,223,255))
+        OKbtn = wx.Button(self.mainPanel, -1,
+                                "OK",size=(60,25))
         OKbtn.SetForegroundColour("Black")
         OKbtn.SetToolTipString("Save changes")
         OKbtn.Bind(wx.EVT_BUTTON, self.save)
         
-        cancelbtn = AB.AquaButton(self.mainPanel, -1, None,
-                                  "Cancel",size=(60,30))
-        cancelbtn.SetBackgroundColour((198,222,223,255))
+        cancelbtn = wx.Button(self.mainPanel, -1,
+                                  "Cancel",size=(60,25))
         cancelbtn.SetForegroundColour("Black")
         cancelbtn.SetToolTipString("Click to cancel changes")
         cancelbtn.Bind(wx.EVT_BUTTON, self.cancel)
@@ -117,6 +115,12 @@ class open_pref(object):
         browse_btn.SetForegroundColour("Black")
         browse_btn.SetToolTipString("Select location")
         browse_btn.Bind(wx.EVT_BUTTON,self.browse)
+
+        clearbtn = wx.Button(self.mainPanel, -1,
+                                            "Clear History",size=(80,25))
+        clearbtn.SetForegroundColour("Black")
+        clearbtn.SetToolTipString("Click to clear list")
+        clearbtn.Bind(wx.EVT_BUTTON, self.clear_list)
         
         #----------------------------------------------OTHER WIDGETS----------------------------------------------------
         #Text ctrl for showing selected location
@@ -174,14 +178,25 @@ class open_pref(object):
 
         
         #-------------------------------------------------------------------------------------------------------------
-        #Filters list
-        global to_history
+        #History list
+        #fetching downloads from content file
+        with open(opj('content.txt')) as content_file:
+            data = content_file.read()
+            
+        history_point = data.find('HISTORY')
+        if history_point >= 0:
+            end_point = data.find(']', history_point+1)
+            HISTORY = data[history_point+10:end_point+1]
 
-        print len(to_history)
-        if to_history != '[]':
-            history = utils.string_to_tuple(to_history)
+            #Trailing extra whitespaces
+            HISTORY = utils.sanitize_string(HISTORY)
         else:
-            history = [('None','None')]
+            HISTORY = '[]'
+
+        if HISTORY != '[]':
+            history = utils.string_to_tuple(HISTORY)
+        else:
+            history = [('','')]
         self.history_list = {i+1:(entry[0],entry[1]) for i,entry in enumerate(history)}
 
         self.history_list_box = TestListCtrl(self.mainPanel, tID,
@@ -200,9 +215,16 @@ class open_pref(object):
         dir_box.Add(browse_btn,proportion=0,border=5,flag=wx.ALL)
 
         #for history box
-        history_box = wx.BoxSizer()
-        history_box.Add(history_label,proportion=0,flag=wx.ALL|wx.EXPAND,border=10)
-        history_box.Add(self.history,proportion=1,border=5,flag=wx.ALL)
+        history_btn_cont = wx.BoxSizer()
+        history_btn_cont.Add(clearbtn,proportion=0,border=370,flag=wx.LEFT)
+        
+        history_widgets = wx.BoxSizer()
+        history_widgets.Add(history_label,proportion=0,flag=wx.ALL|wx.EXPAND,border=10)
+        history_widgets.Add(self.history,proportion=1,border=5,flag=wx.ALL)
+        
+        history_box = wx.BoxSizer(wx.VERTICAL)
+        history_box.Add(history_widgets,1,wx.EXPAND)
+        history_box.Add(history_btn_cont)
 
         #for radio buttons
         rename_box = wx.FlexGridSizer(cols=3,hgap=80)
@@ -228,8 +250,8 @@ class open_pref(object):
 
         #Button container
         button_cont = wx.BoxSizer()
-        button_cont.Add(OKbtn,proportion=0,flag=wx.LEFT,border=350)
         button_cont.Add(cancelbtn,proportion=0,flag=wx.ALL)
+        button_cont.Add(OKbtn,proportion=0,flag=wx.ALL,border=5)
 
         #-------------------------------------------WRAPPING BOXES----------------------------------------------------
         container = wx.StaticBox(self.mainPanel, -1)
@@ -405,7 +427,7 @@ class open_pref(object):
         The function is bind with the save button.
         It saves all the changes in preferences.
         '''
-        global option_selected, to_history, radio_selected
+        global option_selected,  radio_selected
         #index of selection
         select_index = self.history.GetSelection()
         #selected option string
@@ -414,7 +436,7 @@ class open_pref(object):
         select_index = [self.radio_list.index(x) for x in self.radio_list if x.GetValue()][0]
         radio_selected = choice_list[select_index]
         #changing configuration
-        utils.change_config(DD,filters,option_selected,radio_selected,to_history)
+        utils.change_config(DD,filters,option_selected,radio_selected)
         self.win.MakeModal(False)
         self.win.Destroy()
     #-----------------------------------------------------------------------------------------------------------------
@@ -425,6 +447,14 @@ class open_pref(object):
         '''
         self.win.MakeModal(False)
         self.win.Destroy()
+
+    #-----------------------------------------------------------------------------------------------------------------
+    def clear_list(self, event):
+        '''
+        The function clear history list.
+        '''
+        self.history_list_box.DeleteAllItems()
+        utils.write_history('',True)
 
     #-----------------------------------------------------------------------------------------------------------------
 
