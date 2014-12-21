@@ -29,7 +29,7 @@ It defines:
 import re,os
 import wx
 import wx.animate
-import time
+import platform
 from wx.lib.agw import aquabutton as AB
 from wx.lib.agw import pygauge as PG
 

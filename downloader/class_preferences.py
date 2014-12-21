@@ -77,7 +77,7 @@ if radio_point >= 0:
 
 #Trailing extra whitespaces
 var = [DD, filters, option_selected, radio_selected]
-DD, filters, option_selected, radio_selected = sanitize_string(var)
+DD, filters, option_selected, radio_selected = utils.sanitize_string(var)
 #--------------------------------------------------------------------------
 class open_pref(object):
 
@@ -250,7 +250,7 @@ class open_pref(object):
 
         #Button container
         button_cont = wx.BoxSizer()
-        button_cont.Add(cancelbtn,proportion=0,flag=wx.ALL)
+        button_cont.Add(cancelbtn,proportion=0,flag=wx.ALL,border=5)
         button_cont.Add(OKbtn,proportion=0,flag=wx.ALL,border=5)
 
         #-------------------------------------------WRAPPING BOXES----------------------------------------------------
@@ -376,7 +376,7 @@ class open_pref(object):
             box.SetStringItem(index, 1, data[1])
             box.SetItemData(index, key)
 
-        box.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+        box.SetColumnWidth(0, 300)
         box.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 
         box.currentItem = 0
