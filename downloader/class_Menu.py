@@ -19,7 +19,9 @@ It defines:
 import wx
 import os, sys
 from wx.lib.agw import aquabutton as AB
+
 import class_preferences
+import class_downloads
 import class_Mypanel
 
 #Linking to icons path.
@@ -54,6 +56,15 @@ class Menu():
         pref = editMenu.Append(104, '&Preferences\tCtrl+p', 'settings')
         menubar.Append(editMenu, '&Edit')
 
+        viewMenu = wx.Menu()
+        history = viewMenu.Append(105, '&History\tCtrl+h', 'history')
+        downloads = viewMenu.Append(196, '&Downloads\tCtrl+d', 'downloads')
+        menubar.Append(viewMenu, '&View')
+
+        helpMenu = wx.Menu()
+        about = helpMenu.Append(106, '&About\tCtrl+a','about')
+        menubar.Append(helpMenu, '&Help')
+
         self.win.SetMenuBar(menubar)
 
         #Binding events with menu items
@@ -62,6 +73,9 @@ class Menu():
         self.win.Bind(wx.EVT_MENU, self.Save, id=102)
         self.win.Bind(wx.EVT_MENU, self.Exit, id=103)
         self.win.Bind(wx.EVT_MENU, self.Pref, pref)
+        self.win.Bind(wx.EVT_MENU, self.History, history)
+        self.win.Bind(wx.EVT_MENU, self.Downloads, downloads)
+        self.win.Bind(wx.EVT_MENU, self.About, about)
     #-----------------------------------------------------------------------------
     def New(self, event):
         #window object
@@ -98,6 +112,18 @@ class Menu():
     #-----------------------------------------------------------------------------
     def Exit(self, event):
         self.win.Destroy()
+
+    #-----------------------------------------------------------------------------
+    def History(self, event):
+        open_pref()
+
+    #-----------------------------------------------------------------------------
+    def Downloads(self, event):
+        open_downloads()
+
+    #-----------------------------------------------------------------------------
+    def About(self, event):
+        about_dl()
         
 #---------------------------------------------------------------------------------        
 def open_pref():
@@ -118,4 +144,45 @@ def open_pref():
     #show the window
     window.Show()
    
+#---------------------------------------------------------------------------------  
+def about_dl():
+    pass
+
 #---------------------------------------------------------------------------------        
+def open_history():
+    '''
+    main function for preferences window
+    '''
+    #window object
+    window = wx.Frame(None,title = "History",size=(400,300))
+
+    #box object
+    bkg = wx.Panel(window)
+    bkg.SetBackgroundColour((198,222,223,255))
+    bkg.SetForegroundColour((60,60,60,255))
+
+    #packing the box
+    #class_preferences.open_pref(window,bkg)
+
+    #show the window
+    window.Show()
+
+#---------------------------------------------------------------------------------        
+def open_downloads():
+    '''
+    main function for preferences window
+    '''
+    #window object
+    window = wx.Frame(None,title = "Downloads",size=(480,300))
+
+    #box object
+    bkg = wx.Panel(window)
+    bkg.SetBackgroundColour((198,222,223,255))
+    bkg.SetForegroundColour((60,60,60,255))
+
+    #packing the box
+    class_downloads.open_downloads(window,bkg)
+
+    #show the window
+    window.Show()
+
