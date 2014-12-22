@@ -629,7 +629,7 @@ class Mypanel(object):
 
                 self.dir.SetValue(default_dir)
                 self.path = default_dir.replace("\n","")
-            self.path = default_dir.replace("\n","")
+
             wx.BeginBusyCursor()
             self.box.SetLabel("Fetching Information.....")
                 
