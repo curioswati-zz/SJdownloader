@@ -30,13 +30,15 @@ FILE_EXIST = None
 #If partial file exist
 PART_EXIST = None
 #for reading rename option
-RENAME = None
+RENAME = ''
 #the progress bar to be used in update_progress
 progress = None
 #dictionary for files sizes
 SIZE_DICT = {}
 #To stop downloading
 STOP = False
+#segment option
+SEGMENT = 1
 
 #--------------------------------------------------------------------------
 #Reading configuration file
@@ -44,19 +46,29 @@ def read_config():
     '''
     function to read config_file for rename option
     '''
-    global RENAME
+    global RENAME, SEGMENT
 
     with open(opj('config.txt')) as config_file:
         data = config_file.read()
+
     #rename option
     radio_point = data.find('RENAME')
     if radio_point >= 0:
         end_point = data.find('\n',radio_point+1)
         RENAME = data[radio_point+9:end_point].strip()
 
+    #segment option
+    segment_point = data.find('SEGMENT')
+    if segment_point >= 0:
+        end_point = data.find('\n',segment_point+1)
+        SEGMENT = data[segment_point+10:end_point].strip()
+
+    var = [RENAME, SEGMENT]
+
     #Trailing extra whitespaces
-    if RENAME:
-        RENAME = utils.sanitize_string(RENAME)
+    RENAME, SEGMENT = utils.sanitize_string(var)
+    SEGMENT = int(SEGMENT)
+    print 'SEGMENT: ',SEGMENT
 
 #--------------------------------------------------------------------------
 class TestThread(Thread):
@@ -74,7 +86,7 @@ class TestThread(Thread):
     def run(self):
         try:
             time.sleep(1)
-            global RENAME, FILE_EXIST, PART_EXIST, progress, STOP
+            global RENAME, FILE_EXIST, PART_EXIST, progress, STOP, SEGMENT
             
             read_config()
             print "Downloading into "+self.path+"..."
@@ -170,16 +182,21 @@ class TestThread(Thread):
                             save_file = open(disk_file+"_part", 'ab+')
                         else:
                             print disk_file
-                            save_file = open(disk_file, 'wb')
+                            save_file = open(disk_file, 'wb')                          
 
-                        block_sz = 1024
+                        if SEGMENT != 1:
+                            block_sz = SIZE_DICT[url] / SEGMENT
+                        else:
+                            block_sz = 1024
 
-                        #------------------------------------------------------------------------------------------------------
+                        print block_sz
+
+                        #-----------------------------------------------------------------------
                         #Setting the progress bar 
                         progress.SetRange(SIZE_DICT[url] - seek_point)
                         progress.SetValue(0)
                         progress.Parent.Refresh()
-                        #------------------------------------------------------------------------------------------------------
+                        #-----------------------------------------------------------------------
 
                         #Downloading
                         #------------------------------------------------------------------------------------------------------
