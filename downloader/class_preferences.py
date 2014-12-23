@@ -41,12 +41,16 @@ tID = wx.NewId()
 GENERAL_ID = wx.NewId()
 FILTER_ID = wx.NewId()
 HISTORY_ID = wx.NewId()
-#options for history configuration
-history_options = ['Always save history','Never save history']
-#renaming options
-choice_list = ['Rename', 'Replace', 'Cancel']
+DOWNLOAD_ID = wx.NewId()
 
-DD=''; filters=''; option_selected=''; radio_selected='';
+#options for history configuration
+HISTORY_OPTIONS = ['Always save history','Never save history']
+#renaming options
+CHOICE_LIST = ['Rename', 'Replace', 'Cancel']
+#segment options
+SEGMENT_OPTIONS = ['Default','2', '4', '8']
+
+DD=''; FILTERS=''; OPTION_SELECTED=''; RADIO_SELECTED=''; SEGMENT_SELECTED='';
 #fetching configurations from config file
 with open(opj('config.txt')) as config_file:
     data = config_file.read()
@@ -67,23 +71,29 @@ if filter_point >= 0:
 opt_point = data.find('OPTION')
 if opt_point >= 0:
     end_point = data.find('\n',opt_point+1)
-    option_selected = data[opt_point+9:end_point]
+    OPTION_SELECTED = data[opt_point+9:end_point]
 
 #rename option
 radio_point = data.find('RENAME')
 if radio_point >= 0:
     end_point = data.find('\n',radio_point+1)
-    radio_selected = data[radio_point+9:end_point].strip()
+    RADIO_SELECTED = data[radio_point+9:end_point].strip()
+
+#segment option
+segment_point = data.find('SEGMENT')
+if segment_point >= 0:
+	end_point = data.find('\n', segment_point+1)
+	SEGMENT_SELECTED = data[segment_point+10:end_point].strip()
 
 #Trailing extra whitespaces
-var = [DD, filters, option_selected, radio_selected]
-DD, filters, option_selected, radio_selected = utils.sanitize_string(var)
+var = [DD, FILTERS, OPTION_SELECTED, RADIO_SELECTED, SEGMENT_SELECTED]
+DD, filters, OPTION_SELECTED, RADIO_SELECTED, SEGMENT_SELECTED = utils.sanitize_string(var)
 #--------------------------------------------------------------------------
 class open_pref(object):
 
     def __init__(self,win, panel):
         #selected option for history to show on first appearence of window
-        global option_selected, radio_selected
+        global OPTION_SELECTED, RADIO_SELECTED, SEGMENT_SELECTED
 
         self.win = win
         self.panel = panel
@@ -133,21 +143,34 @@ class open_pref(object):
         #combobox for saving history
         history_label = wx.StaticText(self.mainPanel,-1,"Downloader will:",
                                        size=(90,15))
-        self.history = wx.ComboBox(self.mainPanel, -1,option_selected,
-                                   choices=history_options,style=wx.CB_DROPDOWN
+        self.history = wx.ComboBox(self.mainPanel, -1,OPTION_SELECTED,
+                                   choices=HISTORY_OPTIONS,style=wx.CB_DROPDOWN
                                    |wx.CB_READONLY)
 
         #radio box for renaming options
-        rename = wx.RadioButton(self.mainPanel, -1, choice_list[0], style = wx.RB_GROUP )
-        replace = wx.RadioButton(self.mainPanel, -1, choice_list[1] )
-        cancel = wx.RadioButton(self.mainPanel, -1, choice_list[2] )
+        rename = wx.RadioButton(self.mainPanel, -1, CHOICE_LIST[0], style = wx.RB_GROUP )
+        replace = wx.RadioButton(self.mainPanel, -1, CHOICE_LIST[1] )
+        cancel = wx.RadioButton(self.mainPanel, -1, CHOICE_LIST[2] )
         self.radio_list = [rename, replace, cancel]
-
+		
         #setting radio selected for previous choice
-        if radio_selected:
-            index = choice_list.index(radio_selected)
+        if RADIO_SELECTED:
+            index = CHOICE_LIST.index(RADIO_SELECTED)
         else: index = 0
         self.radio_list[index].SetValue(1)
+
+		#segment box for segmentation options
+        default = wx.RadioButton(self.mainPanel, -1, SEGMENT_OPTIONS[0], style = wx.RB_GROUP )
+        two = wx.RadioButton(self.mainPanel, -1, SEGMENT_OPTIONS[1])
+        four = wx.RadioButton(self.mainPanel, -1, SEGMENT_OPTIONS[2] )
+        eight = wx.RadioButton(self.mainPanel, -1, SEGMENT_OPTIONS[3] )
+        self.segment_list = [default,two, four, eight]
+
+        #setting radio selected for previous choice
+        if SEGMENT_SELECTED:
+            index = SEGMENT_OPTIONS.index(SEGMENT_SELECTED)
+        else: index = 0
+        self.segment_list[index].SetValue(1)
 
         #-------------------------------------------------------------------------------------------------------------
         #Filters list
@@ -226,9 +249,13 @@ class open_pref(object):
         history_box.Add(history_widgets,1,wx.EXPAND)
         history_box.Add(history_btn_cont)
 
-        #for radio buttons
+        #for rename radio buttons
         rename_box = wx.FlexGridSizer(cols=3,hgap=80)
         rename_box.AddMany((rename,replace,cancel))
+
+        #for segment radio buttons
+        segment_box = wx.FlexGridSizer(cols=4,hgap=60)
+        segment_box.AddMany((default,two,four,eight))
 
         #Static box for dir_container
         box = wx.StaticBox(self.mainPanel,-1,"Choose default directory",
@@ -242,11 +269,17 @@ class open_pref(object):
         self.history_sizer = wx.StaticBoxSizer(box)
         self.history_sizer.Add(history_box,1,wx.EXPAND)
 
-        #static box for history container
+        #static box for rename container
         box = wx.StaticBox(self.mainPanel,-1,"If a file already exist",
                            size=(500,25))
         self.rename_sizer = wx.StaticBoxSizer(box)
         self.rename_sizer.Add(rename_box,1,wx.EXPAND|wx.ALL,border=5)
+
+        #static box for segment container
+        box = wx.StaticBox(self.mainPanel,-1,"Choose no. of segments for download",
+                           size=(500,25))
+        self.segment_sizer = wx.StaticBoxSizer(box)
+        self.segment_sizer.Add(segment_box,1,wx.EXPAND|wx.ALL,border=5)
 
         #Button container
         button_cont = wx.BoxSizer()
@@ -262,6 +295,7 @@ class open_pref(object):
         self.subSizer.Add(self.history_list_box,1,wx.EXPAND)
         self.subSizer.Add(self.history_sizer,0,wx.EXPAND|wx.TOP, border=5)
         self.subSizer.Add(self.rename_sizer,0,wx.EXPAND|wx.TOP, border=5)
+        self.subSizer.Add(self.segment_sizer,0,wx.EXPAND|wx.TOP, border=5)
 
         #Wrraping the panel and its widgets
         panelSizer = wx.BoxSizer(wx.VERTICAL)
@@ -293,6 +327,7 @@ class open_pref(object):
         general_bmp = wx.Bitmap(opj("../Icons/pref.png"), wx.BITMAP_TYPE_PNG)
         filter_bmp = wx.Bitmap(opj("../Icons/new.png"), wx.BITMAP_TYPE_PNG)
         history_bmp = wx.Bitmap(opj("../Icons/package.png"), wx.BITMAP_TYPE_PNG)
+        history_bmp = wx.Bitmap(opj("../Icons/package.png"), wx.BITMAP_TYPE_PNG)
 
         self.toolBar.SetToolBitmapSize(tsize)
         self.toolBar.AddLabelTool(GENERAL_ID, "&General", general_bmp, shortHelp="General")
@@ -303,6 +338,9 @@ class open_pref(object):
 
         self.toolBar.AddLabelTool(HISTORY_ID, "&History", history_bmp, shortHelp="History")
         self.win.Bind(wx.EVT_TOOL, self.History, id=HISTORY_ID)
+
+        self.toolBar.AddLabelTool(DOWNLOAD_ID, "&Downloads", history_bmp, shortHelp="Downloads")
+        self.win.Bind(wx.EVT_TOOL, self.Downloads, id=DOWNLOAD_ID)
 
         #-------------------------------------------------------------------------------------------------------------
         self.toolBar.Realize()    
@@ -317,6 +355,7 @@ class open_pref(object):
             self.subSizer.Hide(self.dir_sizer)
             self.subSizer.Hide(self.history_sizer)
             self.subSizer.Hide(self.rename_sizer)
+            self.subSizer.Hide(self.segment_sizer)
             self.subSizer.Hide(self.filter_list_box)
             self.subSizer.Hide(self.history_list_box)
         except Exception as e:
@@ -357,6 +396,22 @@ class open_pref(object):
             print e
             
         self.subSizer.Show(self.history_list_box)
+        
+        self.panel.Layout()
+
+    #-----------------------------------------------------------------------------------------------------------------
+    def Downloads(self, event):
+        try:
+            self.subSizer.Hide(self.dir_sizer)
+            self.subSizer.Hide(self.history_sizer)
+            self.subSizer.Hide(self.rename_sizer)
+            self.subSizer.Hide(self.segment_sizer)
+            self.subSizer.Hide(self.filter_list_box)
+            self.subSizer.Hide(self.history_list_box)
+        except Exception as e:
+            print e
+            
+        self.subSizer.Show(self.segment_sizer)
         
         self.panel.Layout()
 
@@ -427,16 +482,19 @@ class open_pref(object):
         The function is bind with the save button.
         It saves all the changes in preferences.
         '''
-        global option_selected,  radio_selected
+        global OPTION_SELECTED,  RADIO_SELECTED
         #index of selection
         select_index = self.history.GetSelection()
         #selected option string
-        option_selected = history_options[select_index]
+        OPTION_SELECTED = HISTORY_OPTIONS[select_index]
         #radio selection
         select_index = [self.radio_list.index(x) for x in self.radio_list if x.GetValue()][0]
-        radio_selected = choice_list[select_index]
+        RADIO_SELECTED = CHOICE_LIST[select_index]
+        #segment selection
+        select_index = [self.segment_list.index(x) for x in self.segment_list if x.GetValue()][0]
+        SEGMENT_SELECTED = SEGMENT_OPTIONS[select_index]
         #changing configuration
-        utils.change_config(DD,filters,option_selected,radio_selected)
+        utils.change_config(DD,FILTERS,OPTION_SELECTED,RADIO_SELECTED,SEGMENT_SELECTED)
         self.win.MakeModal(False)
         self.win.Destroy()
     #-----------------------------------------------------------------------------------------------------------------
@@ -462,7 +520,7 @@ class TestListCtrl(wx.ListCtrl,
                    listmix.ListCtrlAutoWidthMixin):#,
 #                   listmix.TextEditMixin):
     '''
-    Class for implementing List Ctrl for filters, and history.
+    Class for implementing List Ctrl for Filters, and history.
     '''
 
     def __init__(self, parent, ID, pos=wx.DefaultPosition,
@@ -475,9 +533,9 @@ class TestListCtrl(wx.ListCtrl,
     #-------------------------------------------------------------------
     def OnItemSelected(self, event):
         #so that it refers to the global constant
-        global filters
+        global FILTERS
         #index of the selected item
         cur_item = event.m_itemIndex
         #the item
         item = self.GetItem(cur_item, 1)
-        filters = item.GetText()  
+        FILTERS = item.GetText()  
