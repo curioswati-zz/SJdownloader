@@ -521,8 +521,8 @@ class Mypanel(object):
             return
 
         #------------------saving history------------------------------
-        if (class_preferences.option_selected == 
-            class_preferences.history_options[0]):
+        if (class_preferences.OPTION_SELECTED == 
+            class_preferences.HISTORY_OPTIONS[0]):
             utils.write_history(self.url_field.GetValue())
             
         self.box.SetLabel("Fetching...")
@@ -627,6 +627,10 @@ class Mypanel(object):
         #--------------------------------------------------------------
         home_url = self.url_field.GetValue()
         if not(home_url == ""):                           #If url field is not empty
+
+            if self.dir.GetValue() == '':
+                self.dir.SetValue("Please select location")
+                return
 
             self.path = self.dir.GetValue()
 
