@@ -35,6 +35,8 @@ RENAME = None
 progress = None
 #dictionary for files sizes
 SIZE_DICT = {}
+#To stop downloading
+STOP = False
 
 #--------------------------------------------------------------------------
 #Reading configuration file
@@ -61,10 +63,9 @@ class TestThread(Thread):
     '''
     TestThread class to run the thread of downloading.
     '''
-    def __init__(self,urls,path,stop):
+    def __init__(self,urls,path):
         self.urls = urls
         self.path = path
-        self.stop = stop
         Thread.__init__(self)
         self.setDaemon(True)
         self.start()
@@ -73,7 +74,7 @@ class TestThread(Thread):
     def run(self):
         try:
             time.sleep(1)
-            global RENAME, FILE_EXIST, PART_EXIST, progress
+            global RENAME, FILE_EXIST, PART_EXIST, progress, STOP
             
             read_config()
             print "Downloading into "+self.path+"..."
@@ -98,7 +99,8 @@ class TestThread(Thread):
 
                     print f_name+" already exists, Canceling download"
                     cancel = True
-	            
+
+                #-------------------------------------------------------------------------------------------	            
                 #If default option is to rename new download, when already exist
                 if FILE_EXIST and RENAME == 'Rename':
                     count = 1
@@ -121,6 +123,7 @@ class TestThread(Thread):
                     dlg.Destroy()
                     # print old_f_name+" already exist, renaming to "+f_name
 
+                #-------------------------------------------------------------------------------------------
                 #If default option is to remove old download, when already exist                        
                 elif FILE_EXIST and RENAME == 'Replace':
                     os.remove(disk_file)
@@ -133,6 +136,7 @@ class TestThread(Thread):
                 PART_EXIST = os.path.exists(disk_file+"_part")
                 print PART_EXIST
 
+                #-------------------------------------------------------------------------------------------
                 if not cancel:
 
                     seek_point = 0
@@ -183,6 +187,9 @@ class TestThread(Thread):
                             buffer = connection.read(block_sz)
                             if not buffer:
                                 break
+                            if STOP:
+                                STOP = False
+                                raise IOError
                             dl_size += len(buffer)
                             save_file.write(buffer)
                             save_file.flush()
@@ -241,7 +248,6 @@ def main(urls, path,progress_bar):
     progress = progress_bar
 
     #When called with direct url
-    stop = False
     if (not(urls[0].startswith("http"))
         and ".html" not in urls[0]):
         return "Invalid url"
@@ -281,7 +287,7 @@ def main(urls, path,progress_bar):
     pub.subscribe(update_progress, "update")
     wx.Yield()
     #Start thread
-    TestThread(urls, path,stop)
+    TestThread(urls, path)
 
 #-------------------------------------------------------------------------------------------------
 def update_progress(msg):
