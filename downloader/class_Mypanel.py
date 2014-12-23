@@ -172,11 +172,12 @@ class Mypanel(object):
         close_btn.SetToolTipString("Close")
         close_btn.Bind(wx.EVT_BUTTON,self.close)
         
-        cancel_btn = AB.AquaButton(panel, -1, None, "Cancel",size=(70,25))
-        cancel_btn.SetBackgroundColour((98,208,255,255))
-        cancel_btn.SetForegroundColour("Black")
-        cancel_btn.SetToolTipString("Cancel download")
-        cancel_btn.Bind(wx.EVT_BUTTON,self.cancel)
+        self.cancel_btn = AB.AquaButton(panel, -1, None, "Cancel",size=(70,25))
+        self.cancel_btn.SetBackgroundColour((98,208,255,255))
+        self.cancel_btn.SetForegroundColour("Black")
+        self.cancel_btn.SetToolTipString("Cancel download")
+        self.cancel_btn.Bind(wx.EVT_BUTTON,self.cancel)
+        self.cancel_btn.Disable()
 
         #calls filter method
         self.filter_btn = AB.AquaButton(panel, -1, None, "Filter",size=(70,25))
@@ -379,7 +380,7 @@ class Mypanel(object):
                      flag=wx.RIGHT|wx.LEFT,border=5)
         prog_box.Add(self.download_btn,proportion=0,border=5,
                      flag=wx.RIGHT|wx.LEFT)
-        prog_box.Add(cancel_btn, proportion=0, border=5,
+        prog_box.Add(self.cancel_btn, proportion=0, border=5,
                       flag=wx.RIGHT|wx.LEFT)
         prog_box.Add(close_btn, proportion=0,border=5,
                      flag=wx.LEFT)
@@ -624,23 +625,28 @@ class Mypanel(object):
         global default_dir
 
         #--------------------------------------------------------------
-        if not(self.url_field.GetValue() == ""):                           #If url field is not empty
-            if self.dir.GetValue() == "":                                  #if dir field is empty       
+        home_url = self.url_field.GetValue()
+        if not(home_url == ""):                           #If url field is not empty
 
-                self.dir.SetValue(default_dir)
-                self.path = default_dir.replace("\n","")
+            self.path = self.dir.GetValue()
 
             wx.BeginBusyCursor()
             self.box.SetLabel("Fetching Information.....")
+            self.cancel_btn.Enable()
                 
             try:
                 urls_to_download = self.check_list.GetCheckedStrings()
+
+                #If no option selected
+                if not urls_to_download:
+                    urls_to_download = [home_url]
+
                 utils.write_downloads(urls_to_download,False)
                 error = downloader_script.main(urls_to_download,self.path,
                                                self.progress)
 
             except AttributeError:
-                utils.write_downloads(self.url_field.GetValue(),False)            
+                utils.write_downloads(home_url,False)            
                 error = downloader_script.main([self.url_field.GetValue().strip()],self.path,
                                                self.progress)
 
@@ -708,6 +714,7 @@ class Mypanel(object):
         self.selectAll.SetValue(False)
         self.selectDefault.Enable(False)
         
+        self.cancel_btn.Disable()        
         self.filter_btn.Disable()        
         self.regex.SetEditable(False)
         self.progress.SetValue(0)
@@ -717,7 +724,11 @@ class Mypanel(object):
 
     #------------------------------------------------------------------------------------
     def cancel(self, event):
-        downloader_script.stop = True
+        downloader_script.STOP = True
+        dlg = wx.MessageDialog(self.panel,"Download canceled",
+                                       'Oops!', wx.OK|wx.ICON_INFORMATION)
+        dlg.ShowModal()
+        dlg.Destroy()
         #self.win.Destroy()
     
     #------------------------------------------------------------------------------------
