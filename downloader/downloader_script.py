@@ -67,7 +67,6 @@ def read_config():
 
     #Trailing extra whitespaces
     RENAME, SEGMENT = utils.sanitize_string(var)
-    SEGMENT = int(SEGMENT)
     print 'SEGMENT: ',SEGMENT
 
 #--------------------------------------------------------------------------
@@ -184,10 +183,10 @@ class TestThread(Thread):
                             print disk_file
                             save_file = open(disk_file, 'wb')                          
 
-                        if SEGMENT != 1:
-                            block_sz = SIZE_DICT[url] / SEGMENT
-                        else:
+                        if SEGMENT == 1 or SEGMENT == "Default":
                             block_sz = 1024
+                        else:
+                            block_sz = SIZE_DICT[url] / int(SEGMENT)
 
                         print block_sz
 
