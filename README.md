@@ -12,10 +12,6 @@ Instructions:
 ------------
 The project is under work.
 Until now, it has individual python scripts for various tasks, which are all written here only. The GUI script is the main script to run.
-To setup the binaries, follow the instructions below:
-For windows->
- cd to the downloader inside the repo, and
-<code>run python setup.py py2exe</code>
 
 Dependencies:
 -------------
