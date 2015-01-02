@@ -1,5 +1,12 @@
 #setup.py
 from distutils.core import setup
-import py2exe
 
-setup(console=['GUI.py'])
+setup(
+	name='SJdownloader',
+	version='1.0.0',
+	description='Desktop application for internet content downloading.',
+	author='Swati Jaiswal',
+	author_email='jaiswalswati94@gmail.com',
+	url='https://github.com/swati-jaiswal/Downloader'
+	packages=['downloader']
+	)
