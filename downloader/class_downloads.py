@@ -59,7 +59,7 @@ class open_downloads(object):
         #----------------------------------------------OTHER WIDGETS----------------------------------------------------
         #Downloads list
         #fetching downloads from content file
-        with open(opj('content.txt')) as content_file:
+        with open(opj('../config/content.txt')) as content_file:
             data = content_file.read()
 
         download_point = data.find('DOWNLOADS')
