@@ -52,7 +52,7 @@ SEGMENT_OPTIONS = ['Default','2', '4', '8']
 
 DD=''; FILTERS=''; OPTION_SELECTED=''; RADIO_SELECTED=''; SEGMENT_SELECTED='';
 #fetching configurations from config file
-with open(opj('config.txt')) as config_file:
+with open(opj('../config/config.txt')) as config_file:
     data = config_file.read()
 
 #default_dir
@@ -203,7 +203,7 @@ class open_pref(object):
         #-------------------------------------------------------------------------------------------------------------
         #History list
         #fetching downloads from content file
-        with open(opj('content.txt')) as content_file:
+        with open(opj('../config/content.txt')) as content_file:
             data = content_file.read()
             
         history_point = data.find('HISTORY')
