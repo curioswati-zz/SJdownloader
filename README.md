@@ -12,14 +12,17 @@ Instructions:
 ------------
 The project is under work.
 Until now, it has individual python scripts for various tasks, which are all written here only. The GUI script is the main script to run.
-To setup the binaries, cd to the downloader inside the repo, and
+To setup the binaries, follow the instructions below:
+For windows->
+ cd to the downloader inside the repo, and
 <code>run python setup.py py2exe</code>
 
 Dependencies:
 -------------
-Mentioned in the requirement file.
-
-There are no other external packages needed, all the requirements are satisfied by the python itself. They are listed in standard modules section. As for now, the scripts requires wxpython to run.
+All the dependencies are mentioned in the requirement file.
+For py2exe listed in requirements file, python 3 is required. For python 2 [follow the link][].
+For py2exe, you may require [msvcp90.dll][].
+Build instructions are [here][].
 
 Standard modules used:
 ---------------------
@@ -39,3 +42,6 @@ Rest and required information is provided in the script itself.
 [documentation of OS]: https://docs.python.org/2/library/os.html
 [documentation of urllib]:https://docs.python.org/2/library/urllib.html
 [documentation of wxpython]: http://wxpython.org/Phoenix/docs/html/main.html
+[follow the link]: http://sourceforge.net/projects/py2exe/files/py2exe/0.6.9/
+[msvcp90.dll]: http://www.dll-files.com/dllindex/dll-files.shtml?msvcp90
+[here]: https://code.google.com/p/sj-downloader/wiki/DevGuide
