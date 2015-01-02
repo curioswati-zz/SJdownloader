@@ -186,7 +186,7 @@ class TestThread(Thread):
                         if SEGMENT == 1 or SEGMENT == "Default":
                             block_sz = 1024
                         else:
-                            block_sz = SIZE_DICT[url] / int(SEGMENT)
+                            block_sz = int(SIZE_DICT[url] / int(SEGMENT))
 
                         print block_sz
 
