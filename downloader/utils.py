@@ -46,7 +46,7 @@ def string_to_tuple(string):
     return all_entries
 #------------------------------------------------------------------------------------------------------
 def change_config(dir_,filters,option,radio,segment):
-     dir_file = open(opj('config.txt'),'w')
+     dir_file = open(opj('../config/config.txt'),'w')
      dir_file.write('PATH = '+dir_)
      dir_file.write("\n"+'FILTER = '+filters)
      dir_file.write("\n"+'OPTION = '+option)
@@ -89,7 +89,7 @@ def write_downloads(dl_list, clear=False):
         DL_list.append("("+time.ctime()+","+dl+")\n")
 
     #reading content file
-    with open(opj('content.txt'),'r+') as content_file:
+    with open(opj('../config/content.txt'),'r+') as content_file:
         data = content_file.read()
         download_point = data.find('DOWNLOADS')
 
@@ -114,7 +114,7 @@ def write_history(url, clear=False):
     writing history configurations to config file
     '''
 
-    with open(opj('content.txt'),'r+') as content_file:
+    with open(opj('../config/content.txt'),'r+') as content_file:
         data = content_file.read()
         content_file.seek(0)
         history_point = data.find('HISTORY')
