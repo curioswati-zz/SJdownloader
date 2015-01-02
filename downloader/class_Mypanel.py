@@ -42,7 +42,7 @@ import class_preferences
 #---------------------------Global constants---------------------------------
 default_dir=''; filters=''; 
 #reading configurations from config file
-with open(opj('config.txt')) as config_file:
+with open(opj('../config/config.txt')) as config_file:
     data = config_file.read()
 
 #default_dir
@@ -650,7 +650,7 @@ class Mypanel(object):
                                                self.progress)
 
             except AttributeError:
-                utils.write_downloads(home_url,False)            
+                utils.write_downloads([home_url],False)            
                 error = downloader_script.main([self.url_field.GetValue().strip()],self.path,
                                                self.progress)
 
