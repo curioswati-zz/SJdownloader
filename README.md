@@ -18,7 +18,6 @@ Dependencies:
 All the dependencies are mentioned in the requirement file.
 For py2exe listed in requirements file, python 3 is required. For python 2 [follow the link][].
 For py2exe, you may require [msvcp90.dll][].
-Build instructions are [here][].
 
 Standard modules used:
 ---------------------
@@ -40,4 +39,3 @@ Rest and required information is provided in the script itself.
 [documentation of wxpython]: http://wxpython.org/Phoenix/docs/html/main.html
 [follow the link]: http://sourceforge.net/projects/py2exe/files/py2exe/0.6.9/
 [msvcp90.dll]: http://www.dll-files.com/dllindex/dll-files.shtml?msvcp90
-[here]: https://code.google.com/p/sj-downloader/wiki/DevGuide
