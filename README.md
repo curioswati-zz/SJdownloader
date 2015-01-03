@@ -12,6 +12,30 @@ Instructions:
 ------------
 The project is under work.
 Until now, it has individual python scripts for various tasks, which are all written here only. The GUI script is the main script to run.
+Build instructions:
+on windows:
+	clone the repository from [here][]
+	{{{
+	cd Downloader
+	pyi-makespec GUI.py
+	}}}
+	modify the generated spec file, in the current directory. Add following before pyz = PYZ(a.pure):
+		{{{
+		imagesList = []
+		import glob
+		allImages = glob.glob('..\\Icons\\*.png')
+		for eachImage in allImages:
+		    imageParts = eachImage.split('\\')
+		    imagesList.append( (imageParts[-1], eachImage,  'DATA') )
+		a.datas += imagesList
+
+		configList = []
+		allconfig = glob.glob('..\\config\\*.txt')
+		for eachfile in allconfig:
+		    configParts = eachfile.split('\\')
+		    configList.append( (configParts[-1], eachfile,  'DATA') )
+		a.datas += configList
+		}}}
 
 Dependencies:
 -------------
@@ -39,3 +63,4 @@ Rest and required information is provided in the script itself.
 [documentation of wxpython]: http://wxpython.org/Phoenix/docs/html/main.html
 [follow the link]: http://sourceforge.net/projects/py2exe/files/py2exe/0.6.9/
 [msvcp90.dll]: http://www.dll-files.com/dllindex/dll-files.shtml?msvcp90
+[here]: https://github.com/swati-jaiswal/Downloader
