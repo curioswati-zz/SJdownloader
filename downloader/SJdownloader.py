@@ -1,6 +1,6 @@
 """
 The downloader main module.
-It creates a GUI window with the help of Mypanel classes.
+It creates a GUI window with the help of two classes.
 It import:
     -wx
     -Mypanel    
@@ -16,7 +16,7 @@ def main():
     app = wx.App()
 
     #window object
-    win = wx.Frame(None,title = "SJdownloader",size=(575,420))
+    win = wx.Frame(None,title = "Downloader",size=(575,420))
 
     #box object
     bkg = wx.Panel(win)
