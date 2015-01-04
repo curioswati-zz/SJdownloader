@@ -204,7 +204,7 @@ def open_downloads():
     bkg.SetForegroundColour((60,60,60,255))
 
     #packing the box
-    class_downloads.open_downloads(window,bkg)
+    class_downloads.OpenDownloads(window,bkg)
 
     #show the window
     window.Show()
