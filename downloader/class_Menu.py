@@ -1,51 +1,48 @@
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-The Menu class for class_Mypanel.
-It creates a menubar.
-The methods defined inside the class are menu item events,that
-occurs when an item is clicked. Method names themselves reflect their function.
+The script is used by Mypanel class to create menubar using the Menu class
+defined here.
 
 It imports:
     -wx
     -os
     -sys
+    -class_preferences
+    -class_downloads
+    -class_Mypanel
 It defines:
     -__init__
     -New
     -Save
     -Exit
     -Pref
+    -History
+    -Downloads
+    -About
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 """Required Modules"""
 import wx
-import os, sys
-from wx.lib.agw import aquabutton as AB
+import os
+import sys
 
 import class_preferences
 import class_downloads
 import class_Mypanel
 
-#Linking to icons path.
-#----------------------------------------------------------
-try:
-    dirName = os.path.dirname(os.path.abspath(__file__))
-except:
-    dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-
-iconsDir = os.path.join(dirName, 'Icons')
-sys.path.append(os.path.split(dirName)[0])
-#----------------------------------------------------------
-
+#---------------------------------------------------------------------------------
 class Menu():
-    
-    default_dir = '.'
+    '''
+    The Menu class for creating menu.
+    The methods defined inside the class are menu item events,that
+    occurs when an item is clicked. Method names themselves reflect their function.
+    '''
     
     def __init__(self,win):
         self.win = win
+
         #The menubar
         menubar = wx.MenuBar()
 
-        #Creating menu items
-        #---------------------------------------------------------------------
+        #-------------------------Creating menu items-------------------------
         fileMenu = wx.Menu()
         new = fileMenu.Append(101, '&New\tCtrl+N', 'New file')
         save = fileMenu.Append(102, '&Save\tCtrl+S', 'Save file')
@@ -67,8 +64,7 @@ class Menu():
 
         self.win.SetMenuBar(menubar)
 
-        #Binding events with menu items
-        #---------------------------------------------------------------------
+        #------------------Binding events with menu items---------------------
         self.win.Bind(wx.EVT_MENU, self.New, new, id=101)
         self.win.Bind(wx.EVT_MENU, self.Save, id=102)
         self.win.Bind(wx.EVT_MENU, self.Exit, id=103)
@@ -78,8 +74,12 @@ class Menu():
         self.win.Bind(wx.EVT_MENU, self.About, about)
     #-----------------------------------------------------------------------------
     def New(self, event):
+        '''
+        Method fired on new item of file menu.
+        Creates a new instance of gui window.
+        '''
         #window object
-        win = wx.Frame(None,title = "Downloader",
+        win = wx.Frame(None,title = "SJdownloader",
                        size=(575,420))
         panel = wx.Panel(win)
         class_Mypanel.Mypanel(panel,win)
@@ -87,7 +87,10 @@ class Menu():
 
     #-----------------------------------------------------------------------------
     def Save(self, event):
-
+        '''
+        Method fired on save item of file menu.
+        '''
+        #currently the method has no significant use.
         #The save file dialog
         dlg = wx.FileDialog(
             self.win, message="Save file in", defaultDir=os.getcwd(), 
@@ -106,23 +109,42 @@ class Menu():
         dlg.Destroy()
 
     #-----------------------------------------------------------------------------
-    def Pref(self, event):
-        open_pref()
-
-    #-----------------------------------------------------------------------------
     def Exit(self, event):
+        '''
+        Method fired on exit item of file menu
+        '''
         self.win.Destroy()
 
     #-----------------------------------------------------------------------------
+    def Pref(self, event):
+        '''
+        Method fired on preferences item of edit menu.
+        Used to open preferences window.
+        '''
+        open_pref()
+
+    #-----------------------------------------------------------------------------
     def History(self, event):
+        '''
+        Method fired on history item of view menu.
+        Currently using preferences window to show hsitory.
+        '''
         open_pref()
 
     #-----------------------------------------------------------------------------
     def Downloads(self, event):
+        '''
+        Method fired on downloads item of view menu.
+        used to open downloads window.
+        '''
         open_downloads()
 
     #-----------------------------------------------------------------------------
     def About(self, event):
+        '''
+        Method fired on about item of help menu.
+        '''
+        #currently not implemented.
         about_dl()
         
 #---------------------------------------------------------------------------------        
@@ -149,28 +171,29 @@ def about_dl():
     pass
 
 #---------------------------------------------------------------------------------        
-def open_history():
-    '''
-    main function for preferences window
-    '''
-    #window object
-    window = wx.Frame(None,title = "History",size=(400,300))
+# def open_history():
+#     '''
+#     main function for history window
+#     '''
+#     #currently not implemented.
+#     #window object
+#     window = wx.Frame(None,title = "History",size=(400,300))
 
-    #box object
-    bkg = wx.Panel(window)
-    bkg.SetBackgroundColour((198,222,223,255))
-    bkg.SetForegroundColour((60,60,60,255))
+#     #box object
+#     bkg = wx.Panel(window)
+#     bkg.SetBackgroundColour((198,222,223,255))
+#     bkg.SetForegroundColour((60,60,60,255))
 
-    #packing the box
-    #class_preferences.open_pref(window,bkg)
+#     #packing the box
+#     #class_preferences.open_pref(window,bkg)
 
-    #show the window
-    window.Show()
+#     #show the window
+#     window.Show()
 
 #---------------------------------------------------------------------------------        
 def open_downloads():
     '''
-    main function for preferences window
+    main function for downloads window
     '''
     #window object
     window = wx.Frame(None,title = "Downloads",size=(480,300))
@@ -186,3 +209,4 @@ def open_downloads():
     #show the window
     window.Show()
 
+#---------------------------------------------------------------------------------        
