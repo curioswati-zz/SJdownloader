@@ -1,13 +1,15 @@
-"""
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 The downloader main module.
-It creates a GUI window with the help of two classes.
+It creates a GUI window with the help of Mypanel class.
 It import:
     -wx
-    -Mypanel    
-"""
+    -Mypanel from class_Mypanel
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+"""Required modules"""
 import wx
 from class_Mypanel import Mypanel
 
+#----------------------------------------------------------------------
 def main():
     '''
     The main function which creates the window and box objects and uses
@@ -30,8 +32,6 @@ def main():
     #execute the loop for maintaining the window
     app.MainLoop()
 
-    #destroy window
-    #win.Destroy()
-
+#----------------------------------------------------------------------
 if __name__ == '__main__':
     main()
