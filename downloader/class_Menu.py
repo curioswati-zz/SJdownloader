@@ -161,7 +161,7 @@ def open_pref():
     bkg.SetForegroundColour((60,60,60,255))
 
     #packing the box
-    class_preferences.open_pref(window,bkg)
+    class_preferences.OpenPref(window,bkg)
 
     #show the window
     window.Show()
