@@ -1,67 +1,85 @@
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-This is the Mypanel class for GUI module.
-It creates the widgets like buttons and textAreas; packs them into container.
-It also implements the binding of buttons to various events using functions to
-filter, browse location, and download content.
+This script is used by the entry script SJdownloader to create a window panel
+and its widgets using the Mypanel class defined here.
 
 It imports:
     -wx
     -re
+    -platform
+    -aquabutton from wx.lib.agw
+    -pygauge from wx.lib.agw
     -get_urls
     -downloader_script
+    -Menu from class_Menu
+    -utils
+    -opj form utils
+    -class_preferences
 It defines:
+  -Mypanel
     -__init__
-    -EvtCheckBox
-    -select_all
-    -select_default
-    -enter
-    -filter
-    -download
-    -browse
-    -reset
-    -cancel
-    -close
-    -enable_checkes
-    -EvtCheckListBox
-    -make_pattern
+    -Evt_Check_Box
+    -Select_All
+    -Select_Default
+    -Enter
+    -Filter
+    -Download
+    -Browse
+    -Reset
+    -Cancel
+    -Close
+    -Enable_Checkes
+    -Evt_Check_List_Box
+    -Make_Pattern
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 """Required modules"""
-import re,os
+import re
 import wx
-import wx.animate
 import platform
 from wx.lib.agw import aquabutton as AB
 from wx.lib.agw import pygauge as PG
 
-import get_urls,downloader_script
+import get_urls
+import downloader_script
 from class_Menu import Menu
 import utils
 from utils import opj
 import class_preferences
 
 #---------------------------Global constants---------------------------------
-default_dir=''; filters=''; 
-#reading configurations from config file
-with open(opj('../config/config.txt')) as config_file:
-    data = config_file.read()
+DEFAULT_DIR=''
+FILTERS=''
 
-#default_dir
-dir_point = data.find('PATH')
-if dir_point >= 0:
-    end_point = data.find('\n',dir_point+1)
-    default_dir = data[dir_point+7:end_point]
+#----------------reading configurations from config file---------------------
+def read_config():
+    '''
+    Function to read configuration options from config file.
+    '''
+    with open(opj('config/config.txt')) as config_file:
+        data = config_file.read()
 
-#filter
-filter_point = data.find('FILTER')
-if filter_point >= 0:
-    end_point = data.find('\n',filter_point+1)
-    filters = data[filter_point+9:end_point]
+    #default_dir
+    dir_point = data.find('PATH')
+    if dir_point >= 0:
+        end_point = data.find('\n',dir_point+1)
+        DEFAULT_DIR = data[dir_point+7:end_point]
 
-#trailing extra whitespaces
-default_dir, filters = utils.sanitize_string([default_dir, filters])
+    #filter
+    filter_point = data.find('FILTER')
+    if filter_point >= 0:
+        end_point = data.find('\n',filter_point+1)
+        FILTERS = data[filter_point+9:end_point]
 
-#---------------------------------------------------------------------------
+    #trailing extra whitespaces
+    DEFAULT_DIR, FILTERS = utils.sanitize_string([DEFAULT_DIR, FILTERS])
+
+#--------------------------------------------------------------------------------------------
 class Mypanel(object):
+    '''
+    This is the Mypanel class for GUI module.
+    It creates the widgets like buttons and textAreas, checkboxes; packs them into container.
+    It also implements the binding of buttons to various events using functions to
+    filter, browse location, and download content.
+    '''
     def __init__(self,panel,win):
         self.win = win                                              #The window object
         self.panel = panel                                          #The panel object
@@ -69,8 +87,11 @@ class Mypanel(object):
         self.panel.SetForegroundColour((60,60,60,255))
         
         #window icon
-        self.win.SetIcon(wx.Icon(opj('../Icons/Logo.png'),
+        self.win.SetIcon(wx.Icon(opj('Icons/Logo.png'),
                        wx.BITMAP_TYPE_PNG))
+
+        #reading configurations
+        read_config()
                        
         #upper container for logo, description, url and dir
         box = wx.StaticBox(self.panel, -1,size=(500,50))
@@ -78,33 +99,19 @@ class Mypanel(object):
 
         #---------------------------------Images---------------------------------------------
         #LOGO
-        png = wx.Image(opj('../Icons/Logo.png'),
+        png = wx.Image(opj('Icons/Logo.png'),
                        wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         logo = wx.StaticBitmap(panel, -1, png)
         
         #folder
-        png = wx.Image(opj('../Icons/folder.png'),
+        png = wx.Image(opj('Icons/folder.png'),
                        wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         folder_icon = wx.StaticBitmap(panel, -1, png,size=(25,22))
-
-        loading_icon = opj('../Icons/lightbox-ico-loading.gif')
-        #loading_gif = wx.animate.GIFAnimationCtrl(panel, -1, loading_icon,
-#                                                  pos=(100,20))
-        # clears the background
-        #loading_gif.GetPlayer().UseBackgroundColour(True)
-        # continuously loop through the frames of the gif file (default)
-        #loading_gif.Play()
-        
-        #loading_icon = wx.Image(opj('../Icons/lightbox-ico-loading2.gif'),
-         #                       wx.BITMAP_TYPE_ANY).ConvertToBitmap()
-        #container for loading_icon
-        #box = wx.StaticBox(panel, -1)
-        #self.loading_icon = wx.StaticBoxSizer(box)
-        #self.loading_icon.Add(loading_gif)
 
         #------------------------------Description-------------------------------------------      
         sub_container = wx.BoxSizer(wx.VERTICAL)
 
+        #--------------------------------Linux-------------------------------------------
         if platform.system() == "Linux":
 
             description = wx.TextCtrl(self.panel, -1,"SJdownloader\n",size=(440,72),
@@ -117,6 +124,7 @@ class Mypanel(object):
             font = wx.Font(9, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
             description.SetStyle(13,-1,wx.TextAttr("BLACK",(0,162,232,255),font))
 
+        #--------------------------------Windows-----------------------------------------
         elif platform.system() == "Windows":
 
             description = wx.TextCtrl(self.panel, -1,"\t\t\tSJdownloader\n",size=(460,72),
@@ -129,6 +137,7 @@ class Mypanel(object):
             font = wx.Font(9, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
             description.SetStyle(17,126,wx.TextAttr("BLACK",(0,162,232,255),font))
 
+        #--------------------------------------------------------------------------------
         description.SetBackgroundColour((0,162,232,255))
         sub_container.Add(description,0,wx.EXPAND)
 
@@ -138,63 +147,58 @@ class Mypanel(object):
         self.introsizer.Add(sub_container,proportion=1,flag=wx.EXPAND)
 
         #--------------------------Buttons and events----------------------------------------      
-        #calls (enter) method
+        #calls (Enter) method
         show_btn = AB.AquaButton(panel, -1, None, "Links",size=(70,22))
         show_btn.SetBackgroundColour((98,208,255,255))
         show_btn.SetForegroundColour("Black")
         show_btn.SetToolTipString("Click to show found links")
-        show_btn.Bind(wx.EVT_BUTTON,self.enter)
+        show_btn.Bind(wx.EVT_BUTTON,self.Enter)
 
-        #calls browse method;
+        #calls Browse method;
         browse_btn = AB.AquaButton(panel, -1, None, "Browse",size=(70,22))
         browse_btn.SetBackgroundColour((98,208,255,255))
         browse_btn.SetForegroundColour("Black")
         browse_btn.SetToolTipString("Select location")
-        browse_btn.Bind(wx.EVT_BUTTON,self.browse)
+        browse_btn.Bind(wx.EVT_BUTTON,self.Browse)
         
-        #calls reset method
+        #calls Reset method
         reset_btn = AB.AquaButton(panel, -1, None, "Reset",size=(70,25))
         reset_btn.SetBackgroundColour((98,208,255,255))
         reset_btn.SetForegroundColour("Black")
         reset_btn.SetToolTipString("Reset downloader")
-        reset_btn.Bind(wx.EVT_BUTTON,self.reset)
+        reset_btn.Bind(wx.EVT_BUTTON,self.Reset)
 
-        #calls download metod
+        #calls Download metod
         self.download_btn = AB.AquaButton(panel, -1, None, "Start",size=(70,25))
         self.download_btn.SetBackgroundColour((98,208,255,255))
         self.download_btn.SetForegroundColour("Black")
         self.download_btn.SetToolTipString("Start download")
-        self.download_btn.Bind(wx.EVT_BUTTON,self.download)
-        
+        self.download_btn.Bind(wx.EVT_BUTTON,self.Download)
+
+        #calls Close method        
         close_btn = AB.AquaButton(panel, -1, None, "Close",size=(70,25))
         close_btn.SetBackgroundColour((98,208,255,255))
         close_btn.SetForegroundColour("Black")
         close_btn.SetToolTipString("Close")
-        close_btn.Bind(wx.EVT_BUTTON,self.close)
-        
+        close_btn.Bind(wx.EVT_BUTTON,self.Close)
+
+        #calls cancle method        
         self.cancel_btn = AB.AquaButton(panel, -1, None, "Cancel",size=(70,25))
         self.cancel_btn.SetBackgroundColour((98,208,255,255))
         self.cancel_btn.SetForegroundColour("Black")
         self.cancel_btn.SetToolTipString("Cancel download")
         self.cancel_btn.Bind(wx.EVT_BUTTON,self.cancel)
-        self.cancel_btn.Disable()
+        self.Cancel_btn.Disable()
 
         #calls filter method
         self.filter_btn = AB.AquaButton(panel, -1, None, "Filter",size=(70,25))
         self.filter_btn.SetBackgroundColour((98,208,255,255))
         self.filter_btn.SetForegroundColour("Black")
         self.filter_btn.SetToolTipString("Filter links")
-        self.filter_btn.Bind(wx.EVT_BUTTON,self.filter)
+        self.filter_btn.Bind(wx.EVT_BUTTON,self.Filter)
         self.filter_btn.Disable()
         
         #--------------------------TEXT AREAS------------------------------------------------
-        '''
-        >>>"http://www.google.com/" -> keyed in url_field
-        calls (enter)
-        >>>C:\Python27 -> keyed in dir
-        >>>.*.jpg -> keyed in regex
-        '''
-
         #Static text area:
 
         #Label, before text box for url
@@ -212,7 +216,7 @@ class Mypanel(object):
 
         #--------------------------------------------------------------------------
         
-        #text box for url, calls (enter) method on text event
+        #-----------------------------text box for url-----------------------------
         self.url_field = wx.TextCtrl(panel,
                                      size=(0,10),pos=(5,5),                                     
                                      style=wx.TE_PROCESS_ENTER,
@@ -220,25 +224,23 @@ class Mypanel(object):
         self.url_field.SetToolTipString("Enter url here");
         self.url_field.SetFocus()                                                                   
         
-        #text box for showing dir location
+        #---------------------text box for showing dir location--------------------
         self.dir = wx.TextCtrl(panel,size=(0,10),pos=(5,30))
         #set directory value
-        self.dir.SetValue(default_dir)
+        self.dir.SetValue(DEFAULT_DIR)
 
         self.dir.SetToolTipString("Selected location to save file");
 
-        #Static box For showing links
+        #--------------------Static box For showing links--------------------------
         self.box = wx.StaticBox(self.panel, -1, "The links will be shown here")
         self.bsizer = wx.StaticBoxSizer(self.box, wx.VERTICAL)
-        #adding loading_icon
-        #self.bsizer.Add(self.loading_icon)
-        #self.loading_icon.Hide(loading_gif)
         
-        #text box for entering regex pattern
+        #-----------------text box for entering regex pattern----------------------
         self.regex = wx.TextCtrl(panel,size=(200,25))
         self.regex.SetToolTipString("Enter type string to filter content");
         self.regex.SetEditable(False)
-        #Progress bar
+
+        #----------------------------Progress bar----------------------------------
         self.progress = PG.PyGauge(panel,-1,size=(255,20),style=wx.GA_HORIZONTAL)
 
         #-------------------------------CHECKBOXES-------------------------------------------
@@ -260,33 +262,31 @@ class Mypanel(object):
                           (70, 310), (55, 20))
         self.cb9 = wx.CheckBox(panel, -1, "jpg",
                           (70, 310), (55, 20))
-        self.selectAll = wx.CheckBox(self.panel, -1, "select all",
+        self.select_all = wx.CheckBox(self.panel, -1, "select all",
                               (70, 310), (85, 15))
-        self.selectDefault = wx.CheckBox(self.panel, -1, "Apply default filter",
+        self.select_default = wx.CheckBox(self.panel, -1, "Apply default filter",
                               (70, 310), (400, 20))
-        self.selectDefault.Enable(False)
-        
-        #Binding events with checkboxes
+        self.select_default.Enable(False)
+        self.Enable_Checkes(False)
 
-        self.enable_checkes(False)        
-        self.cb1.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb2.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb3.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb4.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb5.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb6.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb7.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb8.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.cb9.Bind(wx.EVT_CHECKBOX, self.EvtCheckBox)
-        self.selectAll.Bind(wx.EVT_CHECKBOX, self.select_all)
-        self.selectDefault.Bind(wx.EVT_CHECKBOX, self.select_default)
+        #--------------------Binding events with checkboxes---------------------
+        self.cb1.Bind(wx.EVT_CHECKBOX, self.Evt_Check_Box)
+        self.cb2.Bind(wx.EVT_CHECKBOX, self.Evt_Check_Box)
+        self.cb3.Bind(wx.EVT_CHECKBOX, self.Evt_Check_Box)
+        self.cb4.Bind(wx.EVT_CHECKBOX, self.Evt_Check_Box)
+        self.cb5.Bind(wx.EVT_CHECKBOX, self.Evt_Check_Box)
+        self.cb6.Bind(wx.EVT_CHECKBOX, self.Evt_Check_Box)
+        self.cb7.Bind(wx.EVT_CHECKBOX, self.Evt_Check_Box)
+        self.cb8.Bind(wx.EVT_CHECKBOX, self.Evt_Check_Box)
+        self.cb9.Bind(wx.EVT_CHECKBOX, self.Evt_Check_Box)
+        self.select_all.Bind(wx.EVT_CHECKBOX, self.Select_All)
+        self.select_default.Bind(wx.EVT_CHECKBOX, self.Select_Default)
         
         #----------------------------WRAPPING UP THE BOXES-----------------------------------
         #The text controls
         #-----------------
 
-        #The url, url label containers                           Container#1
-        
+        #The url, url label containers                           Container#1 
         url_box = wx.BoxSizer()                                  
         url_box.Add(url,proportion=0,flag=wx.TOP|wx.RIGHT,border=7)
         url_box.Add(self.url_field,proportion=1,flag=wx.EXPAND|
@@ -302,7 +302,7 @@ class Mypanel(object):
         #--------------------------------------------------------------------------
         #For select all and count box
         self.hbox = wx.FlexGridSizer(cols=2,hgap=250)
-        self.hbox.Add(self.selectAll,proportion=0,flag=wx.LEFT|
+        self.hbox.Add(self.select_all,proportion=0,flag=wx.LEFT|
                       wx.RIGHT,border=3)
         self.hbox.Add(self.count,proportion=1,flag=wx.LEFT|
                       wx.RIGHT,border=3)
@@ -358,10 +358,10 @@ class Mypanel(object):
         regex_box.Add(self.filter_btn,proportion=0,
                       flag=wx.TOP|wx.RIGHT|wx.BOTTOM,border=3)
 
-        #container for (regex,filter) container and count text box
+        #container for (regex,Filter) container and count text box
         feature_box4 = wx.BoxSizer(wx.VERTICAL)
         feature_box4.Add(regex_box,proportion=0,flag=wx.ALL)
-        feature_box4.Add(self.selectDefault,proportion=1,flag=wx.TOP,border=2)
+        feature_box4.Add(self.select_default,proportion=1,flag=wx.TOP,border=2)
         
         #--------------------------------------------------------------------------
         #container for (checkbox, extra feature) containers     Container#4
@@ -407,47 +407,55 @@ class Mypanel(object):
         
         #an empty list for showing filtered links.
         self.filtered = []
-        #for keeping track of old regex filtered list; used in (filter)
-        self.old_filtered = []
         #to take note of checkboxes checked or unchecked
         self.checked_boxes = []
-        #for select_all method, to keep track of checked items
+        #for Select_All method, to keep track of checked items
         self.checked_items = []
         #to keep urls that were filtered manually, if default was unchecked
         self.preserve_filter = []
         #List for checked links to download;
-         #used in (enter),(filter),(EvtCheckBox)
+         #used in (Enter),(Filter),(Evt_Check_Box)
         self.countLink = 0
+
+        #---------------------------creating menubar-------------------------------
         menu = Menu(self.win)
         
     #------------------------------------------------------------------------------------
-    def EvtCheckBox(self, event):
+    def Evt_Check_Box(self, event):
         '''
         Event fired on checking any of check box.
         '''
         check_box = event.GetEventObject()
         regex = check_box.GetLabelText()                      #creating a regex pattern based on
-                                                                        #the label str of selected checkbox.
+                                                                #the label str of selected checkbox.
         try:            
             if event.IsChecked():
+                #if box is checked, append its label to global checked boxes list
                 self.checked_boxes.append(regex)
    
             else:
+                #otherwise, remove it from there
                 self.checked_boxes.remove(regex)
 
-            self.filter()
+            #calling for applying filter according to current selected checkbox
+            self.Filter()
 
-            if self.selectAll.IsChecked():
-                self.select_all()
+            if self.select_all.IsChecked():
+                #if select all was checked before current checkbox,
+                 #add checkes to current selection too.
+                self.Select_All()
                                     
         except Exception as e:
             print e
             
     #------------------------------------------------------------------------------------
-    def select_all(self, *event):
-        if self.selectAll.IsChecked():
+    def Select_All(self, *event):
+        '''
+        Method called when select_all is checked.
+        '''
+        if self.select_all.IsChecked():
             if self.filtered:
-                 print "checking"
+                #if a filtered list exists, check all its items.
                  try:
                     self.checked_items = self.filtered
                     indices = range(len(self.filtered))
@@ -455,6 +463,7 @@ class Mypanel(object):
                  except Exception as e:
                      print e
             else:
+                #else, check all items from found urls.
                 try:
                     self.checked_items = self.urls
                     indices = range(len(self.urls))
@@ -469,22 +478,26 @@ class Mypanel(object):
                 pass
             
     #------------------------------------------------------------------------------------
-    def select_default(self, event):
+    def Select_Default(self, event):
+        '''
+        Method for applying default filters.
+        '''
         if event.IsChecked():
-            print 'enabled default filter'
+            #disable all other filters
             self.filter_btn.Disable()
-            self.enable_checkes(False)
+            self.Enable_Checkes(False)
             self.regex.SetEditable(False)
 
-            self.filter()
-            if self.selectAll.IsChecked():
-                self.select_all()
+            #call for applying current selected filters.
+            self.Filter()
+            if self.select_all.IsChecked():
+                self.Select_All()
 
             self.panel.Layout()
         else:
             #enable all other filters
             self.filter_btn.Enable()
-            self.enable_checkes(True)
+            self.Enable_Checkes(True)
             self.regex.SetEditable(True)
 
             self.main_container.Show(self.hbox)            
@@ -492,6 +505,7 @@ class Mypanel(object):
             
             self.box.SetLabel("")
             if self.checked_boxes:
+                #if any filter was applied before applying default; then apply that now.
                 if not self.preserve_filter:
                     self.box.SetLabel("No links matched, try another filter; or to show all links, click 'show links' button")
                     self.main_container.Hide(self.hbox)
@@ -504,17 +518,15 @@ class Mypanel(object):
                 self.check_list.SetItems(self.urls)
                 self.count.SetLabel("No. of links found: "+str(self.countLink))
 
-            if self.selectAll.IsChecked():
-                self.select_all()                   
+            if self.select_all.IsChecked():
+                self.Select_All()                   
                                
     #------------------------------------------------------------------------------------
-    def enter(self, event):
+    def Enter(self, event):
         '''
-        The function to prepare a list of all urls found on home page,
-        It works on text_enter_event of textctrl box called 'url'.
+        The method to prepare a list of all urls found on home page,
         '''
-
-        #Fetching urls
+        #--------------------Fetching urls-----------------------------
         home_url = self.url_field.GetValue().strip()
         if home_url == "":
             self.url_field.SetValue("Please enter url")
@@ -524,29 +536,32 @@ class Mypanel(object):
         if (class_preferences.OPTION_SELECTED == 
             class_preferences.HISTORY_OPTIONS[0]):
             utils.write_history(self.url_field.GetValue())
-            
+
+        #------------------fetching urls-------------------------------            
         self.box.SetLabel("Fetching...")
         wx.BeginBusyCursor()
-        #self.bsizer.Show(self.loading_icon)
+
+        #--------------calling get_urls--------------------------------
         error, self.urls = get_urls.main(home_url)
         wx.EndBusyCursor()
-        #self.bsizer.Hide(self.loading_icon)
 
-        #if urls fetched
+        #-----------------compiling results----------------------------
         if self.urls:
+            #-----------------if urls fetched--------------------------
             self.countLink = len(self.urls)
             
             self.main_container.Show(self.hbox)
-            #Enabling the checkboxes, and buttons
-            self.enable_checkes(True)
-            self.selectDefault.Enable(True)
+
+            #------------Enabling the checkboxes, and buttons----------
+            self.Enable_Checkes(True)
+            self.select_default.Enable(True)
 
             self.filter_btn.Enable()
             self.regex.SetEditable(True)
 
-            #--------------------------------------------------------------
-            #Creating check list box
+            #----------------Creating check list box-------------------
             try:
+                #if already exist, destroy that.
                 self.check_list.Destroy()
                 self.filtered = []
             except:
@@ -563,7 +578,7 @@ class Mypanel(object):
                       )
                       
             self.panel.Layout()
-            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox)
+            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.Evt_Check_List_Box)
         else:
             print error
             dlg = wx.MessageDialog(self.panel,str(error),
@@ -572,20 +587,21 @@ class Mypanel(object):
             dlg.Destroy()
             
     #------------------------------------------------------------------------------------
-    def filter(self,*event):
+    def Filter(self,*event):
         '''
-        The function filters links found on the page.
+        The method filters links found on the page.
         It uses regex to filter and display a list of urls matching the pattern.
         The pattern is specified in the box called regex.
         '''
-        global filters
+        global FILTERS
         
-        #if default filter applied
-        pattern = self.make_pattern()
+        #----------------------if default filter applied------------------------
+        pattern = self.Make_Pattern()
             
         try:
             filtered = None
             if pattern:
+                #--------------if any filter is applied.------------------------
                 filtered = re.findall(pattern,'\n'.join(self.urls),re.I|re.M)
                 self.filtered = filtered
 
@@ -598,54 +614,59 @@ class Mypanel(object):
                     self.main_container.Hide(self.hbox)
 
                 self.check_list.SetItems(self.filtered)                   
-                print pattern
 
             else:
+                #-------------------else, show all urls------------------------
                 self.filtered = []
                 self.box.SetLabel("")
                 self.main_container.Show(self.hbox)
                 self.check_list.SetItems(self.urls)
                 self.count.SetLabel("No. of links found: "+str(self.countLink))
 
-            if self.selectAll.IsChecked():
-                self.select_all()
+            if self.select_all.IsChecked():
+                self.Select_All()
            
-            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox) 
+            self.check_list.Bind(wx.EVT_CHECKLISTBOX, self.Evt_Check_List_Box) 
         except Exception as e:
             print e
         
     #------------------------------------------------------------------------------------
-    def download(self,event):
+    def Download(self,event):
         '''
-        The function is bind with download button and download the content.
-        It fetches urls from the 'contents' textctrl and sends urls to
+        The method is bound with download button and download the content.
+        It fetches urls from the check_list and sends urls to
         downloader_script.
-        Uses 'browse' filedialogs current path to save files.
+        Uses 'browse' filedialog's path to save files.
         '''
-        global default_dir
+        global DEFAULT_DIR
 
-        #--------------------------------------------------------------
+        #----------------collecting home_url----------------------------------------
         home_url = self.url_field.GetValue()
-        if not(home_url == ""):                           #If url field is not empty
-
+        if not(home_url == ""):      
+            #If url field is not empty
             if self.dir.GetValue() == '':
                 self.dir.SetValue("Please select location")
                 return
 
             self.path = self.dir.GetValue()
 
+            #-------------------start downloading process--------------------------
             wx.BeginBusyCursor()
             self.box.SetLabel("Fetching Information.....")
             self.cancel_btn.Enable()
                 
             try:
+                #get all checked links
                 urls_to_download = self.check_list.GetCheckedStrings()
 
-                #If no option selected
                 if not urls_to_download:
+                    #If no link selected, assume the home_url to download
                     urls_to_download = [home_url]
 
+                #-----------------write download history--------------------------
                 utils.write_downloads(urls_to_download,False)
+
+                #-----------------call downloader script--------------------------
                 error = downloader_script.main(urls_to_download,self.path,
                                                self.progress)
 
@@ -667,9 +688,9 @@ class Mypanel(object):
             self.url_field.SetValue("Please Enter url")
 
     #------------------------------------------------------------------------------------
-    def browse(self,event):
+    def Browse(self,event):
         '''
-        The function is bind with the browse button.
+        The method is bound with the browse button.
         It opens a directory location.
         Treats the dir input in dir_ box as the default.
         '''
@@ -689,9 +710,9 @@ class Mypanel(object):
         dlg.Destroy()
         
     #------------------------------------------------------------------------------------
-    def reset(self,*event):
+    def Reset(self,*event):
         '''
-        This is bound to reset button, when pressed, it clears all text areas.
+        This is bound to reset button, when pressed, it resets all widgets.
         '''
         self.url_field.SetValue(" ")
         self.url_field.SetFocus()
@@ -705,7 +726,7 @@ class Mypanel(object):
         self.main_container.Hide(self.hbox)
         
         #Disabling all checkboxes
-        self.enable_checkes(False)
+        self.Enable_Checkes(False)
         self.cb1.SetValue(False)
         self.cb2.SetValue(False)
         self.cb3.SetValue(False)
@@ -715,9 +736,10 @@ class Mypanel(object):
         self.cb7.SetValue(False)
         self.cb8.SetValue(False)
         self.cb9.SetValue(False)
-        self.selectAll.SetValue(False)
-        self.selectDefault.Enable(False)
+        self.select_all.SetValue(False)
+        self.select_default.Enable(False)
         
+        #disable unnecessary buttons
         self.cancel_btn.Disable()        
         self.filter_btn.Disable()        
         self.regex.SetEditable(False)
@@ -727,20 +749,29 @@ class Mypanel(object):
         self.panel.Layout()
 
     #------------------------------------------------------------------------------------
-    def cancel(self, event):
+    def Cancel(self, event):
+        '''
+        Method to cancel an on-going download.
+        '''
+        #sends stop interrupt to downloader script
         downloader_script.STOP = True
         dlg = wx.MessageDialog(self.panel,"Download canceled",
                                        'Oops!', wx.OK|wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
-        #self.win.Destroy()
     
     #------------------------------------------------------------------------------------
-    def close(self, event):
+    def Close(self, event):
+        '''
+        Method to close window.
+        '''
         self.win.Destroy()
 
     #------------------------------------------------------------------------------------
-    def enable_checkes(self,check = None):
+    def Enable_Checkes(self,check=None):
+        '''
+        Method for checking or un-checking check-boxes.
+        '''
         if check:
             self.cb1.Enable(True)
             self.cb2.Enable(True)
@@ -762,11 +793,9 @@ class Mypanel(object):
             self.cb8.Enable(False)
             self.cb9.Enable(False)
     #------------------------------------------------------------------------------------
-    def EvtCheckListBox(self, event):
+    def Evt_Check_List_Box(self, event):
         '''
-        Function to implement checking and unchecking of list items.
-        Also, according to checking and unchecking, adds and removes
-        items to/from download list.
+        Method to implement checking and unchecking of list items.
         '''
         index = event.GetSelection()
         label = self.check_list.GetString(index)
@@ -778,16 +807,18 @@ class Mypanel(object):
             self.check_list.SetSelection(index)        #so that (un)checking also selects
 
     #------------------------------------------------------------------------------------
-    def make_pattern(self):
+    def Make_Pattern(self):
         '''
-        method to prepare a pattern to be filtered by filter method.
+        Method to prepare a pattern to be filtered by filter method.
         '''
         pattern = None
 
-        if self.selectDefault.IsChecked():
+        if self.select_default.IsChecked():
+            #if default is selected, and any other filter is applied already, preserve
+             #the current applied filter's result to re-apply when default is unchecked.
             self.preserve_filter = self.filtered
             self.filtered = []
-            pattern = filters
+            pattern = FILTERS
            
         else:           
             if (self.checked_boxes and
@@ -813,3 +844,5 @@ class Mypanel(object):
 
         return pattern         
     #------------------------------------------------------------------------------------
+    
+#--------------------------------------------------------------------------------------------
