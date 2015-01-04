@@ -12,18 +12,18 @@ It defines:
   -get_next_url
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''Required modules'''
-''''''''''''''''''''''''''
 import urllib
-            
+
+#------------------------------------------------------------------------------------------------------------------------            
 def get_next_url(page):
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    ''This module finds the first url from the input page.
+    '''
+    This function finds the first url from the input page.
     where the href tag is found, is the starting of url.
     from the double qoutes, it finds end of the url.
     In the same way, it extracts src tags to find image and video urls.
     Finally returns the url and src, and its end point.
-    returns none and 0, if both the href and src are not found.''
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    returns none and 0, if both the href and src are not found.
+    '''
     
     start_link = page.find('href=')                    #to find if any url exist.
     start_src = page.find('src=')                      #to find if any src exist.
@@ -50,12 +50,13 @@ def get_next_url(page):
 
     return url,src, end                                
 
+#------------------------------------------------------------------------------------------------------------------------            
 def get_all_links(page,home_url):
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    ''This module collects all urls from the input page
+    '''
+    This function collects all urls from the input page
     It calls get_next_target to get a url in the page.
-    one by one collects urls and return a list of them.''
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    one by one collects urls and return a list of them.
+    '''
 
     urls = []
     while True:
@@ -86,19 +87,21 @@ def get_all_links(page,home_url):
             break
     return urls
 
+#------------------------------------------------------------------------------------------------------------------------            
 def get_page(page):
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    ''This module calls urlopen to collect the content of the input
+    '''
+    This function calls urlopen to collect the content of the input
     page from web.
     then returns that content to calling function.
     If any network error occurs and page is not fetched, it provides
-    the user with suitable error message.''
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    the user with suitable error message.
+    '''
     try:
         return (urllib.urlopen(page).read(), None)
     except:
         return (None, "There was some problem fetching the file.")
 
+#------------------------------------------------------------------------------------------------------------------------            
 def main(home_url):
 
     if (home_url.startswith("http")

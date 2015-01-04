@@ -2,9 +2,15 @@
 Script for some utility functions.
 It imports
     -os
+    -time
 It defines
     -opj
     -string_to_tuple
+    -change_config
+    -sanitize_string
+    -file_size
+    -write_downloads
+    -write_history
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 """Required Modules"""
 import os
@@ -30,7 +36,6 @@ def string_to_tuple(string):
     '''
     converts a string of tuple into an actual tuple.
     Used for showing history.
-    >>>"[(url1,time1)\n(url2,time2)]"
     '''
     all_entries = []
     start = 1
@@ -46,13 +51,16 @@ def string_to_tuple(string):
     return all_entries
 #------------------------------------------------------------------------------------------------------
 def change_config(dir_,filters,option,radio,segment):
-     dir_file = open(opj('../config/config.txt'),'w')
-     dir_file.write('PATH = '+dir_)
-     dir_file.write("\n"+'FILTER = '+filters)
-     dir_file.write("\n"+'OPTION = '+option)
-     dir_file.write("\n"+'RENAME = '+radio)
-     dir_file.write("\n"+'SEGMENT = '+str(segment)+"\n")
-     dir_file.close()
+    '''
+    Function for writing configurations in config file.
+    '''
+    dir_file = open(opj('config/config.txt'),'w')
+    dir_file.write('PATH = '+dir_)
+    dir_file.write("\n"+'FILTER = '+filters)
+    dir_file.write("\n"+'OPTION = '+option)
+    dir_file.write("\n"+'RENAME = '+radio)
+    dir_file.write("\n"+'SEGMENT = '+str(segment)+"\n")
+    dir_file.close()
      
 #------------------------------------------------------------------------------------------------------
 def sanitize_string(string):
@@ -89,7 +97,7 @@ def write_downloads(dl_list, clear=False):
         DL_list.append("("+time.ctime()+","+dl+")\n")
 
     #reading content file
-    with open(opj('../config/content.txt'),'r+') as content_file:
+    with open(opj('config/content.txt'),'a+') as content_file:
         data = content_file.read()
         download_point = data.find('DOWNLOADS')
 
@@ -101,7 +109,7 @@ def write_downloads(dl_list, clear=False):
                 DOWNLOADS = data[download_point+12:end_point+1]
             content_file.seek(download_point+1)        
         else:
-            content_file.seek(-1,2)
+            DOWNLOADS = '[]'
 
         DOWNLOADS = DOWNLOADS[:-1] + ''.join(DL_list) + ']'
         #to avoid ioerror raised because of r+ mode
@@ -114,7 +122,7 @@ def write_history(url, clear=False):
     writing history configurations to config file
     '''
 
-    with open(opj('../config/content.txt'),'r+') as content_file:
+    with open(opj('config/content.txt'),'r+') as content_file:
         data = content_file.read()
         content_file.seek(0)
         history_point = data.find('HISTORY')
@@ -133,7 +141,6 @@ def write_history(url, clear=False):
                 HISTORY = '[]'
 
             HISTORY = HISTORY[:-1] + "("+url+","+time.ctime()+")\n"+HISTORY[-1]
-            print HISTORY
 
             #to avoid ioerror raised because of r+ mode
             content_file.truncate()

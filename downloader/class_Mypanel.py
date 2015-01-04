@@ -54,6 +54,7 @@ def read_config():
     '''
     Function to read configuration options from config file.
     '''
+    global DEFAULT_DIR, FILTERS
     with open(opj('config/config.txt')) as config_file:
         data = config_file.read()
 
@@ -187,8 +188,8 @@ class Mypanel(object):
         self.cancel_btn.SetBackgroundColour((98,208,255,255))
         self.cancel_btn.SetForegroundColour("Black")
         self.cancel_btn.SetToolTipString("Cancel download")
-        self.cancel_btn.Bind(wx.EVT_BUTTON,self.cancel)
-        self.Cancel_btn.Disable()
+        self.cancel_btn.Bind(wx.EVT_BUTTON,self.Cancel)
+        self.cancel_btn.Disable()
 
         #calls filter method
         self.filter_btn = AB.AquaButton(panel, -1, None, "Filter",size=(70,25))
