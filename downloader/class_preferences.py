@@ -8,6 +8,7 @@ It imports:
     -listmix from wx.lib.mixins.listctrl
     -opj from utils
     -utils
+    -platform
 It defines:
   -OpenPref
     -__init__
@@ -19,7 +20,7 @@ It defines:
     -SetStringItem
     -Browse
     -Save
-    -close
+    -Cancel
   -TestListCtrl
     -__init__
     -OnItemSelected
@@ -27,6 +28,7 @@ It defines:
 """Required Modules"""
 import wx
 import sys
+import platform
 
 import  wx.lib.mixins.listctrl  as  listmix
 
@@ -56,6 +58,9 @@ CHOICE_LIST = ['Rename', 'Replace', 'Cancel']
 SEGMENT_OPTIONS = ['Default','2', '4', '8']
 
 DD=''; FILTERS=''; OPTION_SELECTED=''; RADIO_SELECTED=''; SEGMENT_SELECTED='';
+
+#for some os specific features.
+PLATFORM = platform.system()
 
 #--------------------fetching configurations from config file-----------------
 def read_config():
@@ -147,8 +152,12 @@ class OpenPref(object):
         browse_btn.SetToolTipString("Select location")
         browse_btn.Bind(wx.EVT_BUTTON,self.Browse)
 
-        clearbtn = wx.Button(self.mainPanel, -1,
-                                            "Clear History",size=(80,25))
+        if PLATFORM == "Linux":
+            clearbtn = wx.Button(self.mainPanel, -1,
+                                "Clear History",size=(100,25))
+        elif PLATFORM == "Windows":
+            clearbtn = wx.Button(self.mainPanel, -1,
+                                "Clear History",size=(80,25))
         clearbtn.SetForegroundColour("Black")
         clearbtn.SetToolTipString("Click to clear list")
         clearbtn.Bind(wx.EVT_BUTTON, self.Clear_List)
@@ -162,8 +171,12 @@ class OpenPref(object):
         self.dir.SetToolTipString("Selected default location");
 
         #----------------------combobox for saving history-------------------------------------
-        history_label = wx.StaticText(self.mainPanel,-1,"Downloader will:",
-                                       size=(90,15))
+        if PLATFORM == "Linux":
+        	history_label = wx.StaticText(self.mainPanel,-1,"Downloader will:",
+        		                          size=(115,15))
+        else:
+        	history_label = wx.StaticText(self.mainPanel,-1,"Downloader will:",
+        		                          size=(90,15))
         self.history = wx.ComboBox(self.mainPanel, -1,OPTION_SELECTED,
                                    choices=HISTORY_OPTIONS,style=wx.CB_DROPDOWN
                                    |wx.CB_READONLY)
@@ -349,16 +362,16 @@ class OpenPref(object):
 
         #---------------------------------------Tools--------------------------------------------
         self.toolBar.SetToolBitmapSize(tsize)
-        self.toolBar.AddLabelTool(GENERAL_ID, "&General", general_bmp, shortHelp="General")
+        self.toolBar.AddLabelTool(GENERAL_ID, "General", general_bmp, shortHelp="General")
         self.win.Bind(wx.EVT_TOOL, self.General, id=GENERAL_ID)
 
-        self.toolBar.AddLabelTool(FILTER_ID, "&Filters", filter_bmp, shortHelp="Filters")
+        self.toolBar.AddLabelTool(FILTER_ID, "Filters", filter_bmp, shortHelp="Filters")
         self.win.Bind(wx.EVT_TOOL, self.Filters, id=FILTER_ID)
 
-        self.toolBar.AddLabelTool(HISTORY_ID, "&History", history_bmp, shortHelp="History")
+        self.toolBar.AddLabelTool(HISTORY_ID, "History", history_bmp, shortHelp="History")
         self.win.Bind(wx.EVT_TOOL, self.History, id=HISTORY_ID)
 
-        self.toolBar.AddLabelTool(DOWNLOAD_ID, "&Downloads", history_bmp, shortHelp="Downloads")
+        self.toolBar.AddLabelTool(DOWNLOAD_ID, "Downloads", history_bmp, shortHelp="Downloads")
         self.win.Bind(wx.EVT_TOOL, self.Downloads, id=DOWNLOAD_ID)
 
         #-----------------------------------------------------------------------------------------
@@ -460,7 +473,7 @@ class OpenPref(object):
             box.SetStringItem(index, 1, data[1])
             box.SetItemData(index, key)
 
-        box.SetColumnWidth(0, 300)
+        box.SetColumnWidth(0, 170)
         box.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 
         box.currentItem = 0
