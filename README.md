@@ -15,10 +15,6 @@ Until now, it has individual python scripts for various tasks, which are all wri
 Build instructions:
 on windows:
 	clone the repository from [here][]
-	{{{
-	cd Downloader
-	pyi-makespec GUI.py
-	}}}
 	modify the generated spec file, in the current directory. Add following before pyz = PYZ(a.pure):
 		{{{
 		imagesList = []
