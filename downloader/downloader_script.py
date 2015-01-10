@@ -48,7 +48,7 @@ SIZE_DICT = {}
 #To stop downloading
 STOP = False
 #segment option
-SEGMENT = 1
+SEGMENT = '1'
 
 #--------------------------------------------------------------------------
 #Reading configuration file
@@ -58,7 +58,7 @@ def read_config():
     '''
     global RENAME, SEGMENT
 
-    with open(opj('config.txt')) as config_file:
+    with open(opj('config/config.txt')) as config_file:
         data = config_file.read()
 
     #rename option
@@ -187,7 +187,7 @@ class TestThread(Thread):
                         else:
                             save_file = open(disk_file, 'wb')                          
 
-                        if SEGMENT == 1 or SEGMENT == "Default":
+                        if SEGMENT == '1' or SEGMENT == "Default":
                             block_sz = 1024
                         else:
                             block_sz = int(SIZE_DICT[url] / int(SEGMENT))
