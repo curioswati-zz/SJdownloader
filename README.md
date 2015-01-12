@@ -21,36 +21,36 @@ Build from source:
 Windows:
 	Get the source from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.zip)  
 	After extracting the zip, from command line: 
-	{{{
+	<code>
 		cd /path/to/source  
-		pyi-makespec --noconsole --icon=downloader/Icons/Logo.ico --onedir downloader/SJdownloader.py
-	}}}
+		pyi-makespec --noconsole --icon=downloader/Icons/Logo.ico --onedir downloader/SJdownloader.py  
+	</code>  
    	modify the generated spec file, add the following after the call to analyse:  
-   	{{{
+   	<code>
     	images = Tree('downloader/Icons', prefix='Icons')  
 		configs = Tree('downloader/config', prefix='config')  
-    }}}
-    next, in call to COLLECT, add the following on the second line, keep the indentation same:
-    {{{
-    	[('README','README.txt','DATA')],
-        images,
-        configs,
-    }}}
-    run
-    {{{
-    	pyinstaller SJdownloader.spec
-    }}}
-    you will find the exe in dist/SJdownloader/
+        </code>  
+    next, in call to COLLECT, add the following on the second line, keep the indentation same:  
+        <code>
+    	[('README','README.txt','DATA')],  
+        images,  
+        configs,  
+        </code>  
+    run  
+    <code>
+    	pyinstaller SJdownloader.spec  
+    </code>  
+    you will find the exe in dist/SJdownloader/  
     
 Dependencies:
 -------------
 wxpython:  
-  [for windows] (http://www.wxpython.org/download.php#msw)
+  [for windows] (http://www.wxpython.org/download.php#msw)  
   for linux:  
-    <code>apt-get install wxpython</code>
-[pyinstaller] (https://pypi.python.org/pypi/PyInstaller/2.1)
-or else:
-<code>pip install pyinstaller</code>
+    <code>apt-get install wxpython</code>  
+[pyinstaller] (https://pypi.python.org/pypi/PyInstaller/2.1)  
+or else:  
+<code>pip install pyinstaller</code>  
 
 Standard modules used:
 ---------------------
