@@ -99,6 +99,7 @@ def write_downloads(dl_list, clear=False):
     #reading content file
     with open(opj('config/content.txt'),'a+') as content_file:
         data = content_file.read()
+        content_file.seek(0)
         download_point = data.find('DOWNLOADS')
 
         if download_point >= 0:
@@ -107,7 +108,7 @@ def write_downloads(dl_list, clear=False):
             else:
                 end_point = data.find(']', download_point+1)
                 DOWNLOADS = data[download_point+12:end_point+1]
-            content_file.seek(download_point+1)        
+            content_file.seek(download_point)        
         else:
             DOWNLOADS = '[]'
 
