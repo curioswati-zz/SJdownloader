@@ -1,56 +1,82 @@
-Downloader is a python project created for downloading stuff from internet.
+SJdownloader is a python project created for downloading stuff from internet.
 * * *
 
-Introduction:
-------------
+## Introduction:
+
 The project is initiated to provide a simple but yet powerful tool to download content from internet easily. It is not for commercial use. It provides a GUI based interface, where the user needs to enter url of site.
 All the links available on the page are listed as soon as the url is entered.
 There is option available to filter links according to user requirement.
 I hope, it will be of help to all.
 
-Instructions:
-------------
+## Instructions:
+
 The project is under work.
 Until now, it has individual python scripts for various tasks. The SJdownloader script in the downloader directory is the main script to run.  
 It can be run from command-line by:  
 	<code>python SJdownloader.py </code>  
 Windows users first need to check their system's path variable set to contain the path to python.exe.  
 
-Build from source:
-------------------
-Windows:
-	Get the source from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.zip)  
-	After extracting the zip, from command line: 
-	<code>
-		cd /path/to/source  
-		pyi-makespec --noconsole --icon=downloader/Icons/Logo.ico --onedir downloader/SJdownloader.py  
-	</code>  
-   	modify the generated spec file, add the following after the call to analyse:  
-   	<code>
-    	images = Tree('downloader/Icons', prefix='Icons')  
-		configs = Tree('downloader/config', prefix='config')  
-        </code>  
-    next, in call to COLLECT, add the following on the second line, keep the indentation same:  
-        <code>
-    	[('README','README.txt','DATA')],  
-        images,  
-        configs,  
-        </code>  
-    run  
-    <code>
-    	pyinstaller SJdownloader.spec  
-    </code>  
-    you will find the exe in dist/SJdownloader/  
-    
-Dependencies:
--------------
+## Build from source:
+
+### Windows:  
+Get the source from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.zip)  
+	
+After extracting the zip, from command line:  
+
+	cd /path/to/source
+	pyi-makespec --noconsole --icon=downloader/Icons/Logo.ico --onedir downloader/SJdownloader.py  
+		
+modify the generated spec file, add the following after the call to analyse:  
+
+    images = Tree('downloader/Icons', prefix='Icons')
+    configs = Tree('downloader/config', prefix='config')  
+        
+next, in call to COLLECT, add the following on the second line, keep the indentation same:  
+
+    [('README','README.txt','DATA')],  
+    images,  
+    configs,  
+run  
+
+    pyinstaller SJdownloader.spec  
+you will find the exe in dist/SJdownloader/  
+Then move the SJdownloader to C:\Program Files\  
+After that you can use the application in your system.  
+If you want to make an installation package, follow the instructions [here] (https://github.com/swati-jaiswal/SJdownloader/wiki/Build-instructions).
+
+### Linux:
+Get the source from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.tar.gz)
+open command prompt, then follow the commands:  
+
+	cd /home/{user}/wherever/you/wish/to/
+	mkdir SJdownloader
+	cd SJdownloader
+	mkdir sjdownloader-1.0.0
+	cd sjdownloader-1.0.0
+	cp /tar/archive/SJdownloader.tar.gz ./
+
+Then open the archive and copy the files inside SJdownloader-1.0.0 to current directory.  
+
+	dh_make -e <you email> -c BSD -f SJdownloader.tar.gz
+
+As you run the above command, you will see a debian directory created inside your current directory.  
+There are no. of files which need to modify. You will find the files [here] (https://github.com/swati-jaiswal/SJdownloader/wiki/Build-instructions).
+
+After editing all files properly, run  
+
+	dpkg -b sjdownloader-1.0.0
+
+## Dependencies:
+
 wxpython:  
   [for windows] (http://www.wxpython.org/download.php#msw)  
   for linux:  
-    <code>apt-get install wxpython</code>  
+  
+	apt-get install wxpython  
 [pyinstaller] (https://pypi.python.org/pypi/PyInstaller/2.1)  
 or else:  
-<code>pip install pyinstaller</code>  
+
+	pip install pyinstaller  
 
 Standard modules used:
 ---------------------
