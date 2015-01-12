@@ -96,7 +96,7 @@ class Mypanel(object):
                        
         #upper container for logo, description, url and dir
         box = wx.StaticBox(self.panel, -1,size=(500,50))
-        self.introsizer = wx.StaticBoxSizer(box)
+        self.introsizer = wx.StaticBoxSizer(box,wx.VERTICAL)
 
         #---------------------------------Images---------------------------------------------
         #LOGO
@@ -110,18 +110,18 @@ class Mypanel(object):
         folder_icon = wx.StaticBitmap(panel, -1, png,size=(25,22))
 
         #------------------------------Description-------------------------------------------      
-        sub_container = wx.BoxSizer(wx.VERTICAL)
+        sub_container_one = wx.BoxSizer()
+        sub_container_two = wx.BoxSizer(wx.VERTICAL)
 
         #--------------------------------Linux-------------------------------------------
         if platform.system() == "Linux":
 
-            description = wx.TextCtrl(self.panel, -1,"SJdownloader\n",size=(440,72),
+            description = wx.TextCtrl(self.panel, -1,"SJdownloader\n",size=(470,72),
                                       style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_NO_VSCROLL|
                                       wx.TE_READONLY|wx.ALIGN_CENTER)
             font = wx.Font(20, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
             description.SetStyle(0,12,wx.TextAttr("WHITE",(0,162,232,255),font))
-            description.AppendText("A free internet downloader, Now download It all,\
-    just enter the url and click start! For more click Show Links!")
+            description.AppendText("A free internet downloader, Now download It all, just enter the url and click start! For more click Show Links!")
             font = wx.Font(9, wx.SWISS,wx.NORMAL, wx.BOLD, False, "Courier New")
             description.SetStyle(13,-1,wx.TextAttr("BLACK",(0,162,232,255),font))
 
@@ -140,12 +140,14 @@ class Mypanel(object):
 
         #--------------------------------------------------------------------------------
         description.SetBackgroundColour((0,162,232,255))
-        sub_container.Add(description,0,wx.EXPAND)
-
-        sub_container.Layout()
+        sub_container_one.Add(logo)
+        sub_container_one.Add(description)
         
-        self.introsizer.Add(logo,proportion=0)
-        self.introsizer.Add(sub_container,proportion=1,flag=wx.EXPAND)
+        sub_container_one.Layout()
+        
+        # self.introsizer.Add(logo,proportion=0)
+        self.introsizer.Add(sub_container_one,proportion=1,flag=wx.EXPAND)
+        self.introsizer.Add(sub_container_two,proportion=0,flag=wx.EXPAND)
 
         #--------------------------Buttons and events----------------------------------------      
         #calls (Enter) method
@@ -390,8 +392,9 @@ class Mypanel(object):
         #container for introsizer and Containers #1,#2,#3,#4,#5
         #-------------------------------------------
         self.main_container = wx.BoxSizer(wx.VERTICAL)
-        sub_container.Add(url_box,proportion=0,flag=wx.EXPAND)
-        sub_container.Add(dir_box,proportion=0,flag=wx.EXPAND)
+        sub_container_two.Add(url_box,proportion=0,flag=wx.EXPAND)
+        sub_container_two.Add(dir_box,proportion=0,flag=wx.EXPAND)
+        sub_container_two.Layout()
         self.main_container.Add(self.introsizer,proportion = 0,
                                 flag=wx.EXPAND|wx.ALL, border=1)
         self.main_container.Add(self.hbox,proportion=0,flag=wx.EXPAND)
