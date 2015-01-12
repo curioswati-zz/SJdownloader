@@ -11,46 +11,58 @@ I hope, it will be of help to all.
 Instructions:
 ------------
 The project is under work.
-Until now, it has individual python scripts for various tasks, which are all written here only. The GUI script is the main script to run.
-Build instructions:
-on windows:
-	clone the repository from [here][]
-	modify the generated spec file, in the current directory. Add following before pyz = PYZ(a.pure):
-		{{{
-		imagesList = []
-		import glob
-		allImages = glob.glob('..\\Icons\\*.png')
-		for eachImage in allImages:
-		    imageParts = eachImage.split('\\')
-		    imagesList.append( (imageParts[-1], eachImage,  'DATA') )
-		a.datas += imagesList
+Until now, it has individual python scripts for various tasks. The SJdownloader script in the downloader directory is the main script to run.  
+It can be run from command-line by:  
+	<code>python SJdownloader.py </code>  
+Windows users first need to check their system's path variable set to contain the path to python.exe.  
 
-		configList = []
-		allconfig = glob.glob('..\\config\\*.txt')
-		for eachfile in allconfig:
-		    configParts = eachfile.split('\\')
-		    configList.append( (configParts[-1], eachfile,  'DATA') )
-		a.datas += configList
-		}}}
-
+Build from source:
+------------------
+Windows:
+	Get the source from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.zip)  
+	After extracting the zip, from command line: 
+	{{{
+		cd /path/to/source  
+		pyi-makespec --noconsole --icon=downloader/Icons/Logo.ico --onedir downloader/SJdownloader.py
+	}}}
+   	modify the generated spec file, add the following after the call to analyse:  
+   	{{{
+    	images = Tree('downloader/Icons', prefix='Icons')  
+		configs = Tree('downloader/config', prefix='config')  
+    }}}
+    next, in call to COLLECT, add the following on the second line, keep the indentation same:
+    {{{
+    	[('README','README.txt','DATA')],
+        images,
+        configs,
+    }}}
+    run
+    {{{
+    	pyinstaller SJdownloader.spec
+    }}}
+    you will find the exe in dist/SJdownloader/
+    
 Dependencies:
 -------------
-All the dependencies are mentioned in the requirement file.
-For py2exe listed in requirements file, python 3 is required. For python 2 [follow the link][].
-For py2exe, you may require [msvcp90.dll][].
+wxpython:  
+  [for windows] (http://www.wxpython.org/download.php#msw)
+  for linux:  
+    <code>apt-get install wxpython</code>
+[pyinstaller] (https://pypi.python.org/pypi/PyInstaller/2.1)
+or else:
+<code>pip install pyinstaller</code>
 
 Standard modules used:
 ---------------------
-OS, urllib module and wxpython are used.
-It provides the script with some facilities of os, such as executing commands.
-In the script, it is used for listing files in directories, and checking existence of directories.
-For more information on OS, read the [documentation of OS][] .
+* OS - It provides the script with some facilities of os, such as executing commands.  
+       In the script, it is used for listing files in directories, and checking existence of directories.  
+       For more information on OS, read the [documentation of OS][] .  
 
-wxpython is a module used for creating GUIs in python.
-[documentation of wxpython][]
+* wxpython - is a module used for creating GUIs in python.  
+             [documentation of wxpython][]  
 
-urllib provides a high level interface for fetching data across the world wide web.
-For more information on OS, read the [documentation of urllib][]
+* urllib - provides a high level interface for fetching data across the world wide web.  
+           For more information on OS, read the [documentation of urllib][]
 
 Rest and required information is provided in the script itself.
 
