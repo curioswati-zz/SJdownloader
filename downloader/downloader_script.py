@@ -7,6 +7,7 @@ It imports:
   -wx
   -time
   -os
+  -json
   -Thread from threading
   -setupkwargs from wx.lib.pubsub
   -pub from wx.lib.pubsub
@@ -27,6 +28,7 @@ import urllib2
 import wx
 import time
 import os
+import json
 from threading import Thread
 from wx.lib.pubsub import setupkwargs
 from wx.lib.pubsub import pub
@@ -58,20 +60,18 @@ def read_config():
     '''
     global RENAME, SEGMENT
 
-    with open(opj('config/config.txt')) as config_file:
-        data = config_file.read()
+    try:
+        config_file = open(opj('config/config.json'))
+        data = json.load(config_file)
 
-    #rename option
-    radio_point = data.find('RENAME')
-    if radio_point >= 0:
-        end_point = data.find('\n',radio_point+1)
-        RENAME = data[radio_point+9:end_point].strip()
+        #rename option
+        RENAME = data["configuration"]["RENAME"]
 
-    #segment option
-    segment_point = data.find('SEGMENT')
-    if segment_point >= 0:
-        end_point = data.find('\n',segment_point+1)
-        SEGMENT = data[segment_point+10:end_point].strip()
+        #segment option
+        SEGMENT = data["configuration"]["SEGMENT"]
+        
+    except ValueError:
+        pass
 
     var = [RENAME, SEGMENT]
 

@@ -5,6 +5,7 @@ the OpenPref class defined here.
 It imports:
     -wx
     -sys
+    -json
     -listmix from wx.lib.mixins.listctrl
     -opj from utils
     -utils
@@ -28,6 +29,7 @@ It defines:
 """Required Modules"""
 import wx
 import sys
+import json
 import platform
 
 import  wx.lib.mixins.listctrl  as  listmix
@@ -57,7 +59,7 @@ CHOICE_LIST = ['Rename', 'Replace', 'Cancel']
 #segment options
 SEGMENT_OPTIONS = ['Default','2', '4', '8']
 
-DD=''; FILTERS=''; OPTION_SELECTED=''; RADIO_SELECTED=''; SEGMENT_SELECTED='';
+DEFAULT_DIR=''; FILTERS=''; OPTION_SELECTED=''; RADIO_SELECTED=''; SEGMENT_SELECTED='';
 
 #for some os specific features.
 PLATFORM = platform.system()
@@ -67,43 +69,33 @@ def read_config():
     '''
     Function to read configurations from config file.
     '''
-    global DD, FILTERS, OPTION_SELECTED, RADIO_SELECTED, SEGMENT_SELECTED
-    with open(opj('config/config.txt')) as config_file:
-        data = config_file.read()
+    global DEFAULT_DIR, FILTERS, OPTION_SELECTED, RADIO_SELECTED, SEGMENT_SELECTED
+    try:
+        config_file = open(opj('config/config.json'))
+        data = json.load(config_file)
+        config_file.close()
 
-    #default_dir
-    dir_point = data.find('PATH')
-    if dir_point >= 0:
-        end_point = data.find('\n',dir_point+1)
-        DD = data[dir_point+7:end_point]
+        #default_dir
+        DEFAULT_DIR = data["configuration"]["PATH"]
 
-    #filter
-    filter_point = data.find('FILTER')
-    if filter_point >= 0:
-        end_point = data.find('\n',filter_point+1)
-        FILTERS = data[filter_point+9:end_point]
+        #filter
+        FILTERS = data["configuration"]["FILTER"]
 
-    #history_option
-    opt_point = data.find('OPTION')
-    if opt_point >= 0:
-        end_point = data.find('\n',opt_point+1)
-        OPTION_SELECTED = data[opt_point+9:end_point]
+        #history_option
+        OPTION_SELECTED = data["configuration"]["OPTION"]
 
-    #rename option
-    radio_point = data.find('RENAME')
-    if radio_point >= 0:
-        end_point = data.find('\n',radio_point+1)
-        RADIO_SELECTED = data[radio_point+9:end_point].strip()
+        #rename option
+        RADIO_SELECTED = data["configuration"]["RENAME"]
 
-    #segment option
-    segment_point = data.find('SEGMENT')
-    if segment_point >= 0:
-    	end_point = data.find('\n', segment_point+1)
-    	SEGMENT_SELECTED = data[segment_point+10:end_point].strip()
+        #segment option
+        SEGMENT_SELECTED = data["configuration"]["SEGMENT"]
+
+    except ValueError:
+        pass
 
     #Trailing extra whitespaces
-    var = [DD, FILTERS, OPTION_SELECTED, RADIO_SELECTED, SEGMENT_SELECTED]
-    DD, FILTERS, OPTION_SELECTED, RADIO_SELECTED, SEGMENT_SELECTED = utils.sanitize_string(var)
+    var = [DEFAULT_DIR, FILTERS, OPTION_SELECTED, RADIO_SELECTED, SEGMENT_SELECTED]
+    DEFAULT_DIR, FILTERS, OPTION_SELECTED, RADIO_SELECTED, SEGMENT_SELECTED = utils.sanitize_string(var)
 
 #---------------------------------------------------------------------------------------------------------------------
 class OpenPref(object):
@@ -166,7 +158,7 @@ class OpenPref(object):
         #-------------------Text ctrl for showing selected location----------------------------
         self.dir = wx.TextCtrl(self.mainPanel,size=(400,25),
                                style=wx.TE_READONLY)
-        self.dir.SetValue(DD)
+        self.dir.SetValue(DEFAULT_DIR)
         self.dir.Disable()
         self.dir.SetToolTipString("Selected default location");
 
@@ -234,24 +226,19 @@ class OpenPref(object):
         
         #-----------------------------------History list------------------------------------------
         #fetching downloads from content file
-        with open(opj('config/content.txt')) as content_file:
-            data = content_file.read()
-            
-        history_point = data.find('HISTORY')
-        if history_point >= 0:
-            end_point = data.find(']', history_point+1)
-            HISTORY = data[history_point+10:end_point+1]
+        try:
+            content_file = open(opj('config/content.json'))
+            data = json.load(content_file)
+            content_file.close()
 
-            #Trailing extra whitespaces
-            HISTORY = utils.sanitize_string(HISTORY)
-            #converting the string of history to tuple.
-            history = utils.string_to_tuple(HISTORY)
-        else:
-            HISTORY = '[]'
+            history = data["content"]["HISTORY"]
+            history = utils.dicts_to_tuples(history)
+
+        except ValueError:
+            #setting empty tuple for history
             history = [('','')]
 
         self.history_list = {i+1:(entry[0],entry[1]) for i,entry in enumerate(history)}
-
         self.history_list_box = TestListCtrl(self.mainPanel, tID,
                                            (5,45),(472,240),
                                            style=wx.LC_REPORT
@@ -409,6 +396,7 @@ class OpenPref(object):
             self.subSizer.Hide(self.dir_sizer)
             self.subSizer.Hide(self.history_sizer)
             self.subSizer.Hide(self.rename_sizer)
+            self.subSizer.Hide(self.segment_sizer)
             self.subSizer.Hide(self.filter_list_box)
             self.subSizer.Hide(self.history_list_box)
         except Exception as e:
@@ -429,6 +417,7 @@ class OpenPref(object):
             self.subSizer.Hide(self.dir_sizer)
             self.subSizer.Hide(self.history_sizer)
             self.subSizer.Hide(self.rename_sizer)
+            self.subSizer.Hide(self.segment_sizer)
             self.subSizer.Hide(self.filter_list_box)
             self.subSizer.Hide(self.history_list_box)
         except Exception as e:
@@ -473,7 +462,7 @@ class OpenPref(object):
             box.SetStringItem(index, 1, data[1])
             box.SetItemData(index, key)
 
-        box.SetColumnWidth(0, 170)
+        box.SetColumnWidth(0, 300)
         box.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 
         box.currentItem = 0
@@ -503,7 +492,7 @@ class OpenPref(object):
         The function is bind with the browse button.
         It opens a directory location, and set it as default
         '''
-        global DD
+        global DEFAULT_DIR
         dir_= self.dir.GetValue()
         dlg = wx.DirDialog(self.win, "Choose a directory:",
                           style=wx.DD_DEFAULT_STYLE
@@ -513,8 +502,8 @@ class OpenPref(object):
 
         dlg.SetPath(dir_)
         if dlg.ShowModal() == wx.ID_OK:
-            DD = dlg.GetPath()
-            self.dir.SetValue(DD)
+            DEFAULT_DIR = dlg.GetPath()
+            self.dir.SetValue(DEFAULT_DIR)
 
         dlg.Destroy()
 
@@ -537,7 +526,8 @@ class OpenPref(object):
         select_index = [self.segment_list.index(x) for x in self.segment_list if x.GetValue()][0]
         SEGMENT_SELECTED = SEGMENT_OPTIONS[select_index]
         #changing configuration
-        utils.change_config(DD,FILTERS,OPTION_SELECTED,RADIO_SELECTED,SEGMENT_SELECTED)
+        utils.change_config(DEFAULT_DIR,FILTERS,OPTION_SELECTED,RADIO_SELECTED,SEGMENT_SELECTED)
+        
         self.win.MakeModal(False)
         self.win.Destroy()
     #-----------------------------------------------------------------------------------------------------------------

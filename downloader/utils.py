@@ -3,6 +3,7 @@ Script for some utility functions.
 It imports
     -os
     -time
+    -json
 It defines
     -opj
     -string_to_tuple
@@ -15,6 +16,7 @@ It defines
 """Required Modules"""
 import os
 import time
+import json
 
 #------------------------------------------------------------------------------------------------------
 def opj(path):
@@ -32,35 +34,49 @@ def opj(path):
     return apply(os.path.join,tuple(root_path))
 
 #------------------------------------------------------------------------------------------------------
-def string_to_tuple(string):
+def dicts_to_tuples(dicts):
     '''
     converts a string of tuple into an actual tuple.
     Used for showing history.
     '''
     all_entries = []
-    start = 1
-    while True:
-        end_entry = string.find('\n',start+1)
-        if end_entry > 0:
-            entry = string[start:end_entry]
-            entry = tuple(entry.replace('(','').replace(')','').split(','))
-            all_entries.append(entry)
-            string = string[end_entry:]
-        else:
-            break
+
+    for dict in dicts:
+        entry = (dict["URL"], dict["TIME"])
+        all_entries.append(entry)
+
     return all_entries
 #------------------------------------------------------------------------------------------------------
 def change_config(dir_,filters,option,radio,segment):
     '''
     Function for writing configurations in config file.
     '''
-    dir_file = open(opj('config/config.txt'),'w')
-    dir_file.write('PATH = '+dir_)
-    dir_file.write("\n"+'FILTER = '+filters)
-    dir_file.write("\n"+'OPTION = '+option)
-    dir_file.write("\n"+'RENAME = '+radio)
-    dir_file.write("\n"+'SEGMENT = '+str(segment)+"\n")
-    dir_file.close()
+
+    try:
+        #--------------------First read the old date-------------------
+        config_file = open(opj('config/config.json'),'r')
+        data = json.load(config_file)
+        config_file.close()
+
+    except ValueError:
+        #If file was empty
+        data = {"configuration": {
+                    "PATH": "", "FILTER": "", "OPTION": "",
+                    "RENAME": "", "SEGMENT": ""}
+                    }
+
+    #-------------------Now write new data-------------------------
+    config = data["configuration"]
+    config["PATH"] = dir_
+    config["FILTER"] = filters
+    config["OPTION"] = option
+    config["RENAME"] = radio
+    config["SEGMENT"] = segment
+    data = json.dumps(data)
+
+    config_file = open(opj('config/config.json'),'w')
+    config_file.write(data)
+    config_file.close()
      
 #------------------------------------------------------------------------------------------------------
 def sanitize_string(string):
@@ -91,31 +107,35 @@ def write_downloads(dl_list, clear=False):
     '''
     writing downloads in config file
     '''
+    try:
+        #------------------reading content file------------------------
+        content_file = open(opj('config/content.json'))
+        data = json.load(content_file)
+        content_file.close()
 
-    DL_list = []
-    for dl in dl_list:
-        DL_list.append("("+time.ctime()+","+dl+")\n")
+    except ValueError:
+        #If file was empty
+        data = {"content": {
+                    "DOWNLOADS": [],
+                    "HISTORY": []
+                    }
+                }
 
-    #reading content file
-    with open(opj('config/content.txt'),'a+') as content_file:
-        data = content_file.read()
-        content_file.seek(0)
-        download_point = data.find('DOWNLOADS')
+    #-----------------------modifying content--------------------------
+    #list of download entries
+    downloads = data["content"]["DOWNLOADS"]
 
-        if download_point >= 0:
-            if clear:
-               DOWNLOADS = '[]' 
-            else:
-                end_point = data.find(']', download_point+1)
-                DOWNLOADS = data[download_point+12:end_point+1]
-            content_file.seek(download_point)        
-        else:
-            DOWNLOADS = '[]'
+    if not clear:
+        for dl in dl_list:
+            downloads.append({"URL": dl, "TIME": time.ctime()})
+    else:
+        data["content"]["DOWNLOADS"] = []
 
-        DOWNLOADS = DOWNLOADS[:-1] + ''.join(DL_list) + ']'
-        #to avoid ioerror raised because of r+ mode
-        content_file.truncate()
-        content_file.write('DOWNLOADS = '+DOWNLOADS)
+    #----------------------writing content-----------------------------
+    data = json.dumps(data)
+    content_file = open(opj('config/content.json'),'w')
+    content_file.write(data)
+    content_file.close()
 
 #------------------------------------------------------------------------------------------------------
 def write_history(url, clear=False):
@@ -123,29 +143,38 @@ def write_history(url, clear=False):
     writing history configurations to config file
     '''
 
-    with open(opj('config/content.txt'),'r+') as content_file:
-        data = content_file.read()
-        content_file.seek(0)
-        history_point = data.find('HISTORY')
-        download_point = data.find("DOWNLOADS")
+    try:
+        #------------------reading content file------------------------
+        content_file = open(opj('config/content.json'))
+        data = json.load(content_file)
+        content_file.close()
 
-        if clear:
-            if download_point > -1:
-                #to avoid ioerror raised because of r+ mode
-                content_file.truncate()
-                content_file.write("HISTORY = []\n"+data[download_point:])
-        else:
-            if history_point >= 0:
-                end_point = data.find(']', history_point+1)
-                HISTORY = data[history_point+10:end_point+1]
-            else:
-                HISTORY = '[]'
+    except ValueError:
+        #If file was empty
+        data = {"content": {
+                    "DOWNLOADS": [
+                        {"URL": "None", "TIME": "None"}
+                        ],
+                    "HISTORY": [
+                        {"URL": "None", "TIME": "None"}
+                        ]
+                    }
+                }
 
-            HISTORY = HISTORY[:-1] + "("+url+","+time.ctime()+")\n"+HISTORY[-1]
+    #-----------------------modifying content--------------------------
+    #list of download entries
+    history = data["content"]["HISTORY"]
 
-            #to avoid ioerror raised because of r+ mode
-            content_file.truncate()
-            content_file.write('HISTORY = '+HISTORY+"\n"+data[download_point:])
+    if not clear:
+        history.append({"URL": url, "TIME": time.ctime()})
+    else:
+        data["content"]["HISTORY"] = []
+
+    #----------------------writing content-----------------------------
+    data = json.dumps(data)
+    content_file = open(opj('config/content.json'),'w')
+    content_file.write(data)
+    content_file.close()
 
 #------------------------------------------------------------------------------------------------------
 

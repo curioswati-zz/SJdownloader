@@ -5,6 +5,7 @@ the OpenDownloads class defined here.
 It imports:
     -wx
     -sys
+    -json
     -listmix from wx.lib.mixins.listctrl
     -opj from utils
     -utils
@@ -21,6 +22,7 @@ It defines:
 """Required Modules"""
 import wx
 import sys
+import json
 
 import  wx.lib.mixins.listctrl  as  listmix
 
@@ -45,7 +47,7 @@ class OpenDownloads(object):
         self.mainPanel = wx.Panel(panel)
         self.win.MakeModal()
 
-        #window icon
+        #--------------------------------------Window Icon------------------------------------------------------------
         self.win.SetIcon(wx.Icon(opj('Icons/Logo.png'),
                        wx.BITMAP_TYPE_PNG))
         
@@ -67,22 +69,17 @@ class OpenDownloads(object):
         #----------------------------------------------OTHER WIDGETS----------------------------------------------------
         #--------------------------------Downloads list--------------------------------------
         #fetching downloads from content file
-        with open(opj('config/content.txt')) as content_file:
-            data = content_file.read()
+        try:
+            content_file = open(opj('config/content.json'))
+            data = json.load(content_file)
+            content_file.close()
 
-        download_point = data.find('DOWNLOADS')
-        if download_point >= 0:
-            end_point = data.find(']', download_point+1)
-            DOWNLOADS = data[download_point+12:end_point+1]
-            downloads = utils.string_to_tuple(DOWNLOADS)
+            downloads = data["content"]["DOWNLOADS"]
+            downloads = utils.dicts_to_tuples(downloads)
 
-        else:
+        except ValueError:
         	#setting empty tuple for downloads
             downloads = [('','')]
-            DOWNLOADS = '[]'
-
-        #Trailing extra whitespaces
-        DOWNLOADS = utils.sanitize_string(DOWNLOADS)            
 
         self.downloads_list = {i+1:(entry[0],entry[1]) for i,entry in enumerate(downloads)}
         self.downloads_list_box = TestListCtrl(self.mainPanel, tID,
@@ -92,7 +89,7 @@ class OpenDownloads(object):
                                            | wx.LC_SORT_ASCENDING
                                            )
         
-        self.Populate(self.downloads_list,self.downloads_list_box,"Time","URL")        
+        self.Populate(self.downloads_list,self.downloads_list_box,"URL","TIME")        
 
         #------------------------------------BUTTON-CONTAINER---------------------------------
         button_cont = wx.BoxSizer()
@@ -135,8 +132,8 @@ class OpenDownloads(object):
     	'''
     	Method to close window.
     	'''
-        self.win.Destroy()
         self.win.MakeModal(False)
+        self.win.Destroy()
 
     #-----------------------------------------------------------------------------------------------------------------
     def Populate(self,list_,box,col1_head,col2_head):
@@ -154,7 +151,7 @@ class OpenDownloads(object):
             box.SetStringItem(index, 1, data[1])
             box.SetItemData(index, key)
 
-        box.SetColumnWidth(0, 150)
+        box.SetColumnWidth(0, 300)
         box.SetColumnWidth(1, wx.LIST_AUTOSIZE)
 
         box.currentItem = 0

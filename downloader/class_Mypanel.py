@@ -5,6 +5,7 @@ and its widgets using the Mypanel class defined here.
 It imports:
     -wx
     -re
+    -json
     -platform
     -aquabutton from wx.lib.agw
     -pygauge from wx.lib.agw
@@ -34,6 +35,7 @@ It defines:
 """Required modules"""
 import re
 import wx
+import json
 import platform
 from wx.lib.agw import aquabutton as AB
 from wx.lib.agw import pygauge as PG
@@ -46,7 +48,7 @@ from utils import opj
 import class_preferences
 
 #---------------------------Global constants---------------------------------
-DEFAULT_DIR=''
+DEFAULT_DIR='.'
 FILTERS=''
 
 #----------------reading configurations from config file---------------------
@@ -55,20 +57,21 @@ def read_config():
     Function to read configuration options from config file.
     '''
     global DEFAULT_DIR, FILTERS
-    with open(opj('config/config.txt')) as config_file:
-        data = config_file.read()
+    try:
+        config_file = open(opj('config/config.json'))
+        data = json.load(config_file)
+        config_file.close()
 
-    #default_dir
-    dir_point = data.find('PATH')
-    if dir_point >= 0:
-        end_point = data.find('\n',dir_point+1)
-        DEFAULT_DIR = data[dir_point+7:end_point]
+        #default_dir
+        DEFAULT_DIR = data["configuration"]["PATH"]
+        if DEFAULT_DIR == "":
+            DEFAULT_DIR = '.'
 
-    #filter
-    filter_point = data.find('FILTER')
-    if filter_point >= 0:
-        end_point = data.find('\n',filter_point+1)
-        FILTERS = data[filter_point+9:end_point]
+        #filter
+        FILTERS = data["configuration"]["FILTER"]
+
+    except ValueError:
+        pass
 
     #trailing extra whitespaces
     DEFAULT_DIR, FILTERS = utils.sanitize_string([DEFAULT_DIR, FILTERS])
