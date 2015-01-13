@@ -19,82 +19,66 @@ Windows users first need to check their system's path variable set to contain th
 ## Build from source:
 
 ### Windows:  
-Get the source from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.zip)  
-	
-After extracting the zip, from command line:  
+Get the source by either of following ways:  
+1. git clone https://github.com/swati-jaiswal/SJdownloader.git  
+2. Download the source from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.zip) and extract the archive.  
 
-	cd /path/to/source
-	pyi-makespec --noconsole --icon=downloader/Icons/Logo.ico --onedir downloader/SJdownloader.py  
+In both cases you get a source directory named sjdownloader and some text files.  
+When you clone the repository, you get this readme and  when you download the zip, you get another readme.  
+both will have this stuff to help you with build process.  
+Let's start the process.  
+
+	>cd /path/to/source
+	>pyi-makespec --noconsole --icon=sjdownloader/Icons/Logo.ico --onedir sjdownloader/SJdownloader.py  
 		
-modify the generated spec file, add the following after the call to analyse:  
+modify the generated SJdownloader.spec file, add the following after the call to Analyse, on next line:  
 
-    images = Tree('downloader/Icons', prefix='Icons')
-    configs = Tree('downloader/config', prefix='config')  
-        
-next, in call to COLLECT, add the following on the second line, keep the indentation same:  
+    images = Tree('sjdownloader/Icons', prefix='Icons')
+    configs = Tree('sjdownloader/config', prefix='config')  
+    texts = [('README.txt','README.txt','DATA'), ('LICENSE.txt', 'LICENSE.txt', 'DATA')]  
+    
+next, in call to COLLECT, add three following lines, it should look like:  
 
-    [('README','README.txt','DATA')],  
-    images,  
-    configs,  
-run  
+    coll = COLLECT(exe,
+               texts,
+               images,
+               configs,  
+               
+now from command line, run:  
 
     pyinstaller SJdownloader.spec  
-you will find the exe in dist/SJdownloader/  
+    
+you will find the exe in dist/SJdownloader/ under your current directory.   
 Then move the SJdownloader to C:\Program Files\  
 After that you can use the application in your system.  
 If you want to make an installation package, follow the instructions [here] (https://github.com/swati-jaiswal/SJdownloader/wiki/Build-instructions).
 
 ### Linux:
-Get the source from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.tar.gz)
+Get the source by downloading from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.tar.gz) and extract the archive.  
 open command prompt, then follow the commands:  
 
-	cd /home/{user}/wherever/you/wish/to/
-	mkdir SJdownloader
-	cd SJdownloader
-	mkdir sjdownloader-1.0.0
-	cd sjdownloader-1.0.0
-	cp /tar/archive/SJdownloader.tar.gz ./
-
-Then open the archive and copy the files inside SJdownloader-1.0.0 to current directory.  
-
-	dh_make -e <you email> -c BSD -f SJdownloader.tar.gz
-
-As you run the above command, you will see a debian directory created inside your current directory.  
-There are no. of files which need to modify. You will find the files [here] (https://github.com/swati-jaiswal/SJdownloader/wiki/Build-instructions).
-
-After editing all files properly, run  
-
-	dpkg -b sjdownloader-1.0.0
+	$cd /path/to/source  
+	$dpkg -b sjdownloader  
+	$dpkg -i sjdownloader-1.0.0.deb  
+	----to do------
 
 ## Dependencies:
 
-wxpython:  
+* wxpython:  
   [for windows] (http://www.wxpython.org/download.php#msw)  
   for linux:  
   
 	apt-get install wxpython  
-[pyinstaller] (https://pypi.python.org/pypi/PyInstaller/2.1)  
-or else:  
+
+* [pyinstaller] (https://pypi.python.org/pypi/PyInstaller/2.1)  
+  or else:  
 
 	pip install pyinstaller  
 
 Standard modules used:
 ---------------------
-* OS - It provides the script with some facilities of os, such as executing commands.  
-       In the script, it is used for listing files in directories, and checking existence of directories.  
-       For more information on OS, read the [documentation of OS][] .  
+* [OS] (https://docs.python.org/2/library/os.html).  
+* [urllib] (https://docs.python.org/2/library/urllib.html).  
+* [wxpython] (http://wxpython.org/Phoenix/docs/html/main.html).  
 
-* wxpython - is a module used for creating GUIs in python.  
-             [documentation of wxpython][]  
-
-* urllib - provides a high level interface for fetching data across the world wide web.  
-           For more information on OS, read the [documentation of urllib][]
-
-Rest and required information is provided in the script itself.
-
-[documentation of OS]: https://docs.python.org/2/library/os.html
-[documentation of urllib]:https://docs.python.org/2/library/urllib.html
-[documentation of wxpython]: http://wxpython.org/Phoenix/docs/html/main.html
-[follow the link]: http://sourceforge.net/projects/py2exe/files/py2exe/0.6.9/
-[msvcp90.dll]: http://www.dll-files.com/dllindex/dll-files.shtml?msvcp90
-[here]: https://github.com/swati-jaiswal/Downloader
+Rest and required information is provided in the script itself or you can visit the wiki.
