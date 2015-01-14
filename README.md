@@ -16,6 +16,19 @@ It can be run from command-line by:
 	<code>python SJdownloader.py </code>  
 Windows users first need to check their system's path variable set to contain the path to python.exe.  
 
+## Dependencies:
+
+* wxpython:  
+  [for windows] (http://www.wxpython.org/download.php#msw)  
+  for linux:  
+  
+	apt-get install python-wxgtk2.8  
+
+* [pyinstaller] (https://pypi.python.org/pypi/PyInstaller/2.1)  
+  Or else:  
+
+	pip install pyinstaller  
+
 ## Build from source:
 
 ### Windows:  
@@ -51,29 +64,15 @@ now from command line, run:
 you will find the exe in dist/SJdownloader/ under your current directory.   
 Then move the SJdownloader to C:\Program Files\  
 After that you can use the application in your system.  
-If you want to make an installation package, follow the instructions [here] (https://github.com/swati-jaiswal/SJdownloader/wiki/Build-instructions).
+For more info visit [here] (https://github.com/swati-jaiswal/SJdownloader/wiki/Build-instructions).
 
 ### Linux:
 Get the source by downloading from [here] (https://github.com/swati-jaiswal/SJdownloader/releases/download/v1.0.0/SJdownloader-1.0.0.tar.gz) and extract the archive.  
 open command prompt, then follow the commands:  
 
 	$cd /path/to/source  
-	$dpkg -b sjdownloader  
+	$dpkg --build SJdownloader/ sjdownloader-1.0.0.deb  
 	$dpkg -i sjdownloader-1.0.0.deb  
-	----to do------
-
-## Dependencies:
-
-* wxpython:  
-  [for windows] (http://www.wxpython.org/download.php#msw)  
-  for linux:  
-  
-	apt-get install wxpython  
-
-* [pyinstaller] (https://pypi.python.org/pypi/PyInstaller/2.1)  
-  or else:  
-
-	pip install pyinstaller  
 
 Standard modules used:
 ---------------------
@@ -81,4 +80,5 @@ Standard modules used:
 * [urllib] (https://docs.python.org/2/library/urllib.html).  
 * [wxpython] (http://wxpython.org/Phoenix/docs/html/main.html).  
 
-Rest and required information is provided in the script itself or you can visit the wiki.
+Rest and required information is provided in the script itself or you can visit the [wiki] (https://github.com/swati-jaiswal/SJdownloader/wiki/).
+For updates visit the [project page] (http://swati-jaiswal.github.io/SJdownloader/).
