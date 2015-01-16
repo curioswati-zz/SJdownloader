@@ -48,7 +48,7 @@ class OpenDownloads(object):
         self.win.MakeModal()
 
         #--------------------------------------Window Icon------------------------------------------------------------
-        self.win.SetIcon(wx.Icon(opj('Icons/Logo.png'),
+        self.win.SetIcon(wx.Icon(opj('Icons/sjdownloader-logo.png'),
                        wx.BITMAP_TYPE_PNG))
         
         #-------------------------------------------------------------------------------------------------------------

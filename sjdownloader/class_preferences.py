@@ -116,7 +116,7 @@ class OpenPref(object):
         self.win.MakeModal()
 
         #window icon
-        self.win.SetIcon(wx.Icon(opj('Icons/Logo.png'),
+        self.win.SetIcon(wx.Icon(opj('Icons/sjdownloader-logo.png'),
                        wx.BITMAP_TYPE_PNG))
 
         #reading configurations

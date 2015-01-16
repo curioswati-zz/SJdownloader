@@ -91,7 +91,7 @@ class Mypanel(object):
         self.panel.SetForegroundColour((60,60,60,255))
         
         #window icon
-        self.win.SetIcon(wx.Icon(opj('Icons/Logo.png'),
+        self.win.SetIcon(wx.Icon(opj('Icons/sjdownloader-logo.png'),
                        wx.BITMAP_TYPE_PNG))
 
         #reading configurations
@@ -103,7 +103,7 @@ class Mypanel(object):
 
         #---------------------------------Images---------------------------------------------
         #LOGO
-        png = wx.Image(opj('Icons/Logo.png'),
+        png = wx.Image(opj('Icons/sjdownloader-logo.png'),
                        wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         logo = wx.StaticBitmap(panel, -1, png)
         
